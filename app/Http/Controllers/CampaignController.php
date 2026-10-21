@@ -1,0 +1,165 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Domain\Audit\Services\AuditLogger;
+use App\Enums\CampaignStatus;
+use App\Http\Requests\Campaigns\CampaignRequest;
+use App\Models\Campaign;
+use App\Models\Client;
+use App\Models\Product;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class CampaignController extends Controller
+{
+    public function index(Request $request): Response
+    {
+        $this->authorize('viewAny', Campaign::class);
+
+        $campaigns = Campaign::query()
+            ->visibleTo($request->user())
+            ->with('client')
+            ->withCount(['locations', 'assignments', 'submissions'])
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return Inertia::render('campaigns/index', [
+            'campaigns' => $campaigns,
+        ]);
+    }
+
+    public function create(): Response
+    {
+        $this->authorize('create', Campaign::class);
+
+        return Inertia::render('campaigns/create', [
+            'clients' => Client::query()->orderBy('name')->get(['id', 'name']),
+            'products' => Product::query()->orderBy('name')->get(['id', 'name', 'client_id']),
+        ]);
+    }
+
+    public function store(CampaignRequest $request): RedirectResponse
+    {
+        $campaign = DB::transaction(function () use ($request) {
+            $campaign = Campaign::query()->create([
+                ...$request->safe()->only(['client_id', 'name', 'starts_on', 'ends_on', 'notes']),
+                'mask_identity_for_client' => $request->boolean('mask_identity_for_client', true),
+                'status' => CampaignStatus::Draft,
+            ]);
+
+            $campaign->products()->sync($request->input('product_ids', []));
+            $this->syncLocations($campaign, $request->input('locations', []));
+
+            return $campaign;
+        });
+
+        return redirect()->route('campaigns.show', $campaign)->with('success', 'Campaign berhasil dibuat.');
+    }
+
+    public function show(Campaign $campaign): Response
+    {
+        $this->authorize('view', $campaign);
+
+        $campaign->load(['client', 'products', 'locations', 'formTemplates.fields', 'assignments.user', 'assignments.location']);
+
+        return Inertia::render('campaigns/show', [
+            'campaign' => $campaign,
+        ]);
+    }
+
+    public function edit(Campaign $campaign): Response
+    {
+        $this->authorize('update', $campaign);
+
+        $campaign->load(['products', 'locations']);
+
+        return Inertia::render('campaigns/edit', [
+            'campaign' => $campaign,
+            'clients' => Client::query()->orderBy('name')->get(['id', 'name']),
+            'products' => Product::query()->orderBy('name')->get(['id', 'name', 'client_id']),
+        ]);
+    }
+
+    public function update(CampaignRequest $request, Campaign $campaign, AuditLogger $audit): RedirectResponse
+    {
+        $old = $campaign->only(['name', 'starts_on', 'ends_on', 'status']);
+
+        DB::transaction(function () use ($request, $campaign) {
+            $campaign->update([
+                ...$request->safe()->only(['client_id', 'name', 'starts_on', 'ends_on', 'notes']),
+                'mask_identity_for_client' => $request->boolean('mask_identity_for_client', true),
+            ]);
+            $campaign->products()->sync($request->input('product_ids', []));
+            $this->syncLocations($campaign, $request->input('locations', []));
+        });
+
+        $audit->record($request->user(), 'campaign.updated', $campaign, $old, $campaign->fresh()->only(['name', 'starts_on', 'ends_on', 'status']));
+
+        return redirect()->route('campaigns.show', $campaign)->with('success', 'Campaign diperbarui.');
+    }
+
+    public function activate(Request $request, Campaign $campaign, AuditLogger $audit): RedirectResponse
+    {
+        $this->authorize('update', $campaign);
+
+        $old = ['status' => $campaign->status->value];
+        $campaign->update(['status' => CampaignStatus::Active]);
+        $audit->record($request->user(), 'campaign.activated', $campaign, $old, ['status' => CampaignStatus::Active->value]);
+
+        return back()->with('success', 'Campaign diaktifkan.');
+    }
+
+    public function close(Request $request, Campaign $campaign, AuditLogger $audit): RedirectResponse
+    {
+        $this->authorize('update', $campaign);
+
+        $old = ['status' => $campaign->status->value];
+        $campaign->update(['status' => CampaignStatus::Closed]);
+        $audit->record($request->user(), 'campaign.closed', $campaign, $old, ['status' => CampaignStatus::Closed->value]);
+
+        return back()->with('success', 'Campaign ditutup.');
+    }
+
+    public function destroy(Campaign $campaign): RedirectResponse
+    {
+        $this->authorize('delete', $campaign);
+        $campaign->delete();
+
+        return redirect()->route('campaigns.index')->with('success', 'Campaign dihapus.');
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $locations
+     */
+    private function syncLocations(Campaign $campaign, array $locations): void
+    {
+        $kept = [];
+
+        foreach ($locations as $location) {
+            $payload = [
+                'name' => $location['name'],
+                'area' => $location['area'] ?? null,
+                'address' => $location['address'] ?? null,
+            ];
+
+            $model = ! empty($location['id'])
+                ? $campaign->locations()->whereKey($location['id'])->first()
+                : null;
+
+            if ($model) {
+                $model->update($payload);
+            } else {
+                $model = $campaign->locations()->create($payload);
+            }
+
+            $kept[] = $model->id;
+        }
+
+        $campaign->locations()->whereNotIn('id', $kept)->delete();
+    }
+}

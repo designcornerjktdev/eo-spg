@@ -1,0 +1,63 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Enums\UserRole;
+use App\Models\Client;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+
+/**
+ * @extends Factory<User>
+ */
+class UserFactory extends Factory
+{
+    protected static ?string $password;
+
+    public function definition(): array
+    {
+        return [
+            'name' => fake()->name(),
+            'email' => fake()->unique()->safeEmail(),
+            'email_verified_at' => now(),
+            'password' => static::$password ??= Hash::make('password'),
+            'remember_token' => Str::random(10),
+            'role' => UserRole::Superadmin,
+            'client_id' => null,
+            'is_active' => true,
+        ];
+    }
+
+    public function unverified(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'email_verified_at' => null,
+        ]);
+    }
+
+    public function superadmin(): static
+    {
+        return $this->state(fn () => [
+            'role' => UserRole::Superadmin,
+            'client_id' => null,
+        ]);
+    }
+
+    public function clientUser(?Client $client = null): static
+    {
+        return $this->state(fn () => [
+            'role' => UserRole::Client,
+            'client_id' => $client?->id ?? Client::factory(),
+        ]);
+    }
+
+    public function spg(): static
+    {
+        return $this->state(fn () => [
+            'role' => UserRole::Spg,
+            'client_id' => null,
+        ]);
+    }
+}

@@ -1,0 +1,124 @@
+import PageHeader from '@/components/page-header';
+import Pagination from '@/components/pagination';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import AppLayout from '@/layouts/app-layout';
+import { Head, Link, router } from '@inertiajs/react';
+import { FormEvent } from 'react';
+
+interface SubmissionRow {
+    id: number;
+    submitted_at: string;
+    status: string;
+    qualified: boolean | null;
+    campaign: { name: string };
+    location: { name: string } | null;
+    spg: { name: string } | null;
+}
+
+export default function SubmissionsIndex({
+    submissions,
+    filters,
+    campaigns,
+    locations,
+    spgs,
+}: {
+    submissions: { data: SubmissionRow[]; links: { url: string | null; label: string; active: boolean }[] };
+    filters: Record<string, string>;
+    campaigns: { id: number; name: string }[];
+    locations: { id: number; name: string }[];
+    spgs: { id: number; name: string }[];
+}) {
+    const apply = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        router.get(route('submissions.index'), Object.fromEntries(new FormData(event.currentTarget)), { preserveState: true });
+    };
+
+    return (
+        <AppLayout breadcrumbs={[{ title: 'Data', href: '/submissions' }]}>
+            <Head title="Data submission" />
+            <PageHeader title="Data campaign" description="Filter berlaku juga untuk export CSV." />
+            <form onSubmit={apply} className="grid gap-3 rounded-lg border p-4 md:grid-cols-6">
+                <FilterSelect name="campaign_id" label="Campaign" value={filters.campaign_id} options={campaigns} />
+                <FilterSelect name="location_id" label="Lokasi" value={filters.location_id} options={locations} />
+                {spgs.length > 0 && <FilterSelect name="spg_id" label="SPG" value={filters.spg_id} options={spgs} />}
+                <div>
+                    <Label>Dari</Label>
+                    <Input type="date" name="from" defaultValue={filters.from ?? ''} />
+                </div>
+                <div>
+                    <Label>Sampai</Label>
+                    <Input type="date" name="to" defaultValue={filters.to ?? ''} />
+                </div>
+                <div>
+                    <Label>Cari</Label>
+                    <Input name="q" defaultValue={filters.q ?? ''} />
+                </div>
+                <div className="flex items-end gap-2 md:col-span-6">
+                    <Button type="submit">Filter</Button>
+                    <Button asChild variant="outline">
+                        <a href={`${route('submissions.export')}?${new URLSearchParams(filters).toString()}`}>Export CSV</a>
+                    </Button>
+                </div>
+            </form>
+            <div className="overflow-x-auto rounded-lg border">
+                <table className="w-full text-sm">
+                    <thead className="bg-muted/50">
+                        <tr>
+                            <th className="px-3 py-2 text-left">Waktu</th>
+                            <th className="px-3 py-2 text-left">Campaign</th>
+                            <th className="px-3 py-2 text-left">Lokasi</th>
+                            <th className="px-3 py-2 text-left">SPG</th>
+                            <th className="px-3 py-2 text-left">Status</th>
+                            <th />
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {submissions.data.map((submission) => (
+                            <tr key={submission.id} className="border-t">
+                                <td className="px-3 py-2">{submission.submitted_at}</td>
+                                <td className="px-3 py-2">{submission.campaign?.name}</td>
+                                <td className="px-3 py-2">{submission.location?.name}</td>
+                                <td className="px-3 py-2">{submission.spg?.name}</td>
+                                <td className="px-3 py-2">{submission.status}</td>
+                                <td className="px-3 py-2 text-right">
+                                    <Button asChild size="sm" variant="outline">
+                                        <Link href={route('submissions.show', submission.id)}>Detail</Link>
+                                    </Button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            <Pagination links={submissions.links} />
+        </AppLayout>
+    );
+}
+
+function FilterSelect({
+    name,
+    label,
+    value,
+    options,
+}: {
+    name: string;
+    label: string;
+    value?: string;
+    options: { id: number; name: string }[];
+}) {
+    return (
+        <div>
+            <Label>{label}</Label>
+            <select name={name} defaultValue={value ?? ''} className="border-input h-9 w-full rounded-md border px-2 text-sm">
+                <option value="">Semua</option>
+                {options.map((option) => (
+                    <option key={option.id} value={option.id}>
+                        {option.name}
+                    </option>
+                ))}
+            </select>
+        </div>
+    );
+}
