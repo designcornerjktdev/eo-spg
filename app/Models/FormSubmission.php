@@ -29,6 +29,7 @@ class FormSubmission extends Model
         'voided_at',
         'voided_by',
         'void_reason',
+        'corrects_submission_id',
     ];
 
     protected function casts(): array
@@ -89,5 +90,13 @@ class FormSubmission extends Model
     public function isVoid(): bool
     {
         return $this->status === SubmissionStatus::Void;
+    }
+
+    /**
+     * SPG hanya boleh memperbaiki/membatalkan datanya sendiri di hari yang sama (zona waktu aplikasi).
+     */
+    public function isCorrectableBySubmitter(): bool
+    {
+        return ! $this->isVoid() && $this->submitted_at?->isToday();
     }
 }

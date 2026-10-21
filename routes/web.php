@@ -7,7 +7,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FormTemplateController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\Spg\MySubmissionController;
+use App\Http\Controllers\Spg\SubmissionCorrectionController;
 use App\Http\Controllers\Spg\TaskController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\UserController;
@@ -55,11 +55,13 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware('role:spg,superadmin')->prefix('tasks')->name('spg.tasks.')->group(function () {
         Route::get('/', [TaskController::class, 'index'])->name('index');
-        Route::get('{assignment}/fill', [TaskController::class, 'fill'])->name('fill');
-        Route::post('{assignment}/fill', [TaskController::class, 'store'])->name('store');
+        Route::post('{assignment}/submissions', [TaskController::class, 'store'])->name('store');
     });
 
-    Route::middleware('role:spg,superadmin')->get('my-submissions', [MySubmissionController::class, 'index'])->name('spg.submissions.index');
+    Route::middleware('role:spg')->prefix('submissions/{submission}')->name('spg.submissions.')->group(function () {
+        Route::post('correction', [SubmissionCorrectionController::class, 'correct'])->name('correct');
+        Route::post('cancellation', [SubmissionCorrectionController::class, 'cancel'])->name('cancel');
+    });
 });
 
 require __DIR__.'/settings.php';

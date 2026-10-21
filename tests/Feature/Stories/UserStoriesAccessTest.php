@@ -22,14 +22,14 @@ class UserStoriesAccessTest extends TestCase
         $this->actingAs($world['spg'])->get('/tasks')->assertOk()->assertSee('Sampling Kopi Lepas Haus');
         $this->actingAs($world['otherSpg'])->get('/tasks')->assertOk()->assertDontSee('Sampling Kopi Lepas Haus');
 
-        $this->actingAs($world['spg'])->post('/tasks/'.$world['assignment']->id.'/fill', [
+        $this->actingAs($world['spg'])->post('/tasks/'.$world['assignment']->id.'/submissions', [
             'answers' => $this->validAnswers(),
             'consent_accepted' => true,
             'add_another' => true,
-        ])->assertRedirect('/tasks/'.$world['assignment']->id.'/fill');
+        ])->assertRedirect('/tasks?assignment='.$world['assignment']->id);
 
         $this->assertSame(1, FormSubmission::query()->count());
-        $this->actingAs($world['spg'])->get('/my-submissions')->assertOk();
+        $this->actingAs($world['spg'])->get('/tasks')->assertOk();
 
         $submission = FormSubmission::query()->first();
         $this->actingAs($world['eo'])->get('/submissions?campaign_id='.$world['campaign']->id)->assertOk();

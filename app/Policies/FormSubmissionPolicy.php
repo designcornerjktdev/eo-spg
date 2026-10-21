@@ -40,6 +40,14 @@ class FormSubmissionPolicy
         return $user->isSuperadmin();
     }
 
+    /**
+     * Koreksi/pembatalan mandiri oleh SPG pemilik data; batas hari yang sama dicek di SubmissionCorrector.
+     */
+    public function correct(User $user, FormSubmission $submission): bool
+    {
+        return $user->isSpg() && $submission->submitted_by === $user->id;
+    }
+
     public function export(User $user): bool
     {
         return $user->isSuperadmin() || $user->isClient();

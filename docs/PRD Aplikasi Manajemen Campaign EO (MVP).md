@@ -96,7 +96,7 @@ Alur utama: EO membuat client, produk, campaign, dan form; EO menugaskan SPG; SP
 
 &#91;embedded content: siklus status · 4 objek\]
 
-Submission yang sudah dikirim tidak bisa diedit. Koreksi dilakukan EO dengan void dan alasan, bukan dengan menimpa data.
+Submission yang sudah dikirim tidak bisa ditimpa. Di hari yang sama SPG bisa memperbaiki (baris lama di-void, baris baru dibuat) atau membatalkan dengan alasan; setelah itu koreksi dilakukan EO dengan void dan alasan (ADR 003).
 
 ## User stories dan kriteria penerimaan
 
@@ -111,7 +111,7 @@ Setiap story dianggap selesai hanya jika kriteria fungsional dan tes akses-nya l
 | U5 | EO | menugaskan SPG ke campaign, lokasi, dan jadwal | Sistem menolak jadwal SPG yang bentrok |
 | U6 | SPG | melihat tugas yang ditugaskan kepada saya | Hanya assignment milik saya yang tampil; akses ke ID lain ditolak |
 | U7 | SPG | mengisi form dan langsung menambah baris berikutnya | Field wajib divalidasi di server; timestamp diisi server; baris muncul di daftar hari ini |
-| U8 | SPG | melihat data yang sudah saya kirim | Hanya submission saya yang tampil; tidak bisa diedit |
+| U8 | SPG | melihat data yang sudah saya kirim | Hanya submission saya yang tampil; tidak bisa ditimpa; perbaiki/batalkan hanya di hari yang sama |
 | U9 | EO | melihat, memfilter, dan mengoreksi data | Filter tanggal, lokasi, SPG; pembatalan (void) wajib beralasan dan tercatat di audit log |
 | U10 | Client | melihat data campaign saya | Hanya campaign client saya; hanya field yang ditandai terlihat untuk client |
 | U11 | Client | melihat ringkasan dan grafik | Angka dihitung dari data yang sama dengan daftar data |
@@ -145,7 +145,7 @@ Struktur form disimpan sebagai data, dan jawaban SPG disimpan sebagai JSON per b
 3. Form yang sudah punya submission tidak boleh diubah. Perubahan membuat versi baru, dan data lama tetap terbaca dengan versi lamanya.
 4. Validasi dibangun dari definisi field dan dijalankan di backend. Validasi di frontend hanya untuk kenyamanan.
 5. SPG bisa mengirim banyak baris per assignment. Setelah simpan, tombol "Simpan & tambah berikutnya" membuka form kosong.
-6. SPG tidak bisa mengedit data setelah dikirim. Koreksi dilakukan EO dengan pembatalan (void) dan alasan.
+6. SPG tidak bisa menimpa data setelah dikirim. Di hari yang sama SPG bisa memperbaiki atau membatalkan (void + baris pengganti, tercatat di audit log); setelah itu koreksi dilakukan EO dengan void dan alasan.
 7. Jika consent diaktifkan, SPG wajib mencentang sebelum menyimpan, dan versi teks consent ikut tersimpan.
 
 **Contoh: form Sampling Kopi Lepas Haus**
@@ -286,7 +286,7 @@ Upload foto dan video menjadi slice tambahan di fase 3 jika diputuskan masuk MVP
 
 1. Apakah upload foto dan video dokumentasi masuk MVP?
 2. Apakah client boleh melihat data personal konsumen (nama, HP, Instagram), atau hanya data yang dimasking atau agregat?
-3. Apakah SPG boleh mengedit data setelah dikirim? Usulan: tidak, hanya EO yang bisa void.
+3. ~~Apakah SPG boleh mengedit data setelah dikirim?~~ Diputuskan: boleh perbaiki/batalkan di hari yang sama lewat void + baris pengganti (ADR 003).
 4. Apakah export CSV wajib di MVP?
 5. Hosting dan database apa yang tersedia (MySQL atau PostgreSQL, versi PHP, batas upload)?
 6. Berapa jumlah SPG, submission per hari, dan ukuran media yang diperkirakan?
