@@ -22,8 +22,8 @@ export default function SpgMyData({
     return (
         <SpgLayout title="Data saya">
             <Head title="Data saya" />
-            <p className="text-sm text-muted-foreground">Hari ini: {todayCount} baris. Data tidak bisa diedit setelah dikirim.</p>
-            <div className="space-y-3">
+            <p className="text-muted-foreground text-sm">Hari ini: {todayCount} baris. Data tidak bisa diedit setelah dikirim.</p>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                 {submissions.data.map((submission) => (
                     <Card key={submission.id}>
                         <CardHeader>

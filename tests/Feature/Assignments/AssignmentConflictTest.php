@@ -29,7 +29,7 @@ class AssignmentConflictTest extends TestCase
         $world = $this->world();
 
         $this->actingAs($world['otherSpg'])
-            ->get('/tugas/'.$world['assignment']->id.'/isi')
+            ->get('/tasks/'.$world['assignment']->id.'/fill')
             ->assertForbidden();
     }
 }

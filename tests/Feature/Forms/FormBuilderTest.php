@@ -32,7 +32,7 @@ class FormBuilderTest extends TestCase
     {
         $world = $this->world();
 
-        $this->actingAs($world['spg'])->post('/tugas/'.$world['assignment']->id.'/isi', [
+        $this->actingAs($world['spg'])->post('/tasks/'.$world['assignment']->id.'/fill', [
             'answers' => $this->validAnswers(),
             'consent_accepted' => true,
         ])->assertRedirect();

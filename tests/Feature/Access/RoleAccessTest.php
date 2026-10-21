@@ -41,7 +41,7 @@ class RoleAccessTest extends TestCase
         $this->actingAs($spg)->get('/dashboard')->assertForbidden();
         $this->actingAs($spg)->get('/clients')->assertForbidden();
         $this->actingAs($spg)->get('/campaigns')->assertForbidden();
-        $this->actingAs($spg)->get('/tugas')->assertOk();
+        $this->actingAs($spg)->get('/tasks')->assertOk();
     }
 
     public function test_login_redirects_spg_to_tasks(): void
@@ -51,6 +51,6 @@ class RoleAccessTest extends TestCase
         $this->post('/login', [
             'email' => $spg->email,
             'password' => 'password',
-        ])->assertRedirect('/tugas');
+        ])->assertRedirect('/tasks');
     }
 }

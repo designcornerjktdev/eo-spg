@@ -16,7 +16,7 @@ class DashboardAndExportTest extends TestCase
     {
         $world = $this->world();
 
-        $this->actingAs($world['spg'])->post('/tugas/'.$world['assignment']->id.'/isi', [
+        $this->actingAs($world['spg'])->post('/tasks/'.$world['assignment']->id.'/fill', [
             'answers' => $this->validAnswers(),
             'consent_accepted' => true,
         ]);
@@ -41,7 +41,7 @@ class DashboardAndExportTest extends TestCase
         $world = $this->world();
         $world['form']->fields()->where('key', 'pekerjaan')->update(['visible_to_client' => false]);
 
-        $this->actingAs($world['spg'])->post('/tugas/'.$world['assignment']->id.'/isi', [
+        $this->actingAs($world['spg'])->post('/tasks/'.$world['assignment']->id.'/fill', [
             'answers' => $this->validAnswers(),
             'consent_accepted' => true,
         ]);
@@ -58,7 +58,7 @@ class DashboardAndExportTest extends TestCase
     {
         $world = $this->world();
 
-        $this->actingAs($world['spg'])->post('/tugas/'.$world['assignment']->id.'/isi', [
+        $this->actingAs($world['spg'])->post('/tasks/'.$world['assignment']->id.'/fill', [
             'answers' => $this->validAnswers(),
             'consent_accepted' => true,
         ]);
@@ -74,7 +74,7 @@ class DashboardAndExportTest extends TestCase
         $world = $this->world();
         $world['form']->fields()->where('key', 'pekerjaan')->update(['visible_to_client' => false]);
 
-        $this->actingAs($world['spg'])->post('/tugas/'.$world['assignment']->id.'/isi', [
+        $this->actingAs($world['spg'])->post('/tasks/'.$world['assignment']->id.'/fill', [
             'answers' => $this->validAnswers(),
             'consent_accepted' => true,
         ]);
@@ -88,7 +88,7 @@ class DashboardAndExportTest extends TestCase
     {
         $world = $this->world();
 
-        $this->actingAs($world['spg'])->post('/tugas/'.$world['assignment']->id.'/isi', [
+        $this->actingAs($world['spg'])->post('/tasks/'.$world['assignment']->id.'/fill', [
             'answers' => $this->validAnswers(),
             'consent_accepted' => true,
         ]);

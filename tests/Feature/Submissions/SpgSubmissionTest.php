@@ -15,7 +15,7 @@ class SpgSubmissionTest extends TestCase
     {
         $world = $this->world();
 
-        $this->actingAs($world['spg'])->post('/tugas/'.$world['assignment']->id.'/isi', [
+        $this->actingAs($world['spg'])->post('/tasks/'.$world['assignment']->id.'/fill', [
             'answers' => $this->validAnswers(),
             'consent_accepted' => true,
         ])->assertRedirect();
@@ -28,11 +28,29 @@ class SpgSubmissionTest extends TestCase
         $this->assertSame('Saya setuju data dipakai untuk campaign.', $submission->consent_text_version);
     }
 
+    public function test_assignment_page_lists_own_submissions_and_store_returns_there(): void
+    {
+        $world = $this->world();
+        $url = '/tasks/'.$world['assignment']->id.'/fill';
+
+        $this->actingAs($world['spg'])->post($url, [
+            'answers' => $this->validAnswers(),
+            'consent_accepted' => true,
+        ])->assertRedirect($url);
+
+        $this->actingAs($world['spg'])->get($url)
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('spg/fill')
+                ->has('submissions.data', 1)
+                ->where('todayCount', 1));
+    }
+
     public function test_required_fields_are_validated_on_server(): void
     {
         $world = $this->world();
 
-        $this->actingAs($world['spg'])->post('/tugas/'.$world['assignment']->id.'/isi', [
+        $this->actingAs($world['spg'])->post('/tasks/'.$world['assignment']->id.'/fill', [
             'answers' => ['nama' => 'Siti'],
             'consent_accepted' => true,
         ])->assertSessionHasErrors();
@@ -42,14 +60,14 @@ class SpgSubmissionTest extends TestCase
     {
         $world = $this->world();
 
-        $this->actingAs($world['spg'])->post('/tugas/'.$world['assignment']->id.'/isi', [
+        $this->actingAs($world['spg'])->post('/tasks/'.$world['assignment']->id.'/fill', [
             'answers' => $this->validAnswers(),
             'consent_accepted' => true,
         ]);
 
         $submission = FormSubmission::query()->first();
 
-        $this->actingAs($world['otherSpg'])->get('/data-saya')->assertOk()->assertDontSee('Sampling Kopi Lepas Haus');
+        $this->actingAs($world['otherSpg'])->get('/my-submissions')->assertOk()->assertDontSee('Sampling Kopi Lepas Haus');
         $this->actingAs($world['spg'])->put('/submissions/'.$submission->id, [
             'answers' => ['nama' => 'Diubah'],
         ])->assertMethodNotAllowed();

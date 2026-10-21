@@ -53,13 +53,13 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('users', UserController::class)->only(['index', 'create', 'store']);
     });
 
-    Route::middleware('role:spg,superadmin')->prefix('tugas')->name('spg.tasks.')->group(function () {
+    Route::middleware('role:spg,superadmin')->prefix('tasks')->name('spg.tasks.')->group(function () {
         Route::get('/', [TaskController::class, 'index'])->name('index');
-        Route::get('{assignment}/isi', [TaskController::class, 'fill'])->name('fill');
-        Route::post('{assignment}/isi', [TaskController::class, 'store'])->name('store');
+        Route::get('{assignment}/fill', [TaskController::class, 'fill'])->name('fill');
+        Route::post('{assignment}/fill', [TaskController::class, 'store'])->name('store');
     });
 
-    Route::middleware('role:spg,superadmin')->get('data-saya', [MySubmissionController::class, 'index'])->name('spg.submissions.index');
+    Route::middleware('role:spg,superadmin')->get('my-submissions', [MySubmissionController::class, 'index'])->name('spg.submissions.index');
 });
 
 require __DIR__.'/settings.php';

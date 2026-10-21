@@ -19,17 +19,17 @@ class UserStoriesAccessTest extends TestCase
         $this->actingAs($world['userA'])->get('/products')->assertOk()->assertSee('Kopi Lepas Haus');
         $this->actingAs($world['userB'])->get('/products')->assertOk()->assertDontSee('Kopi Lepas Haus');
 
-        $this->actingAs($world['spg'])->get('/tugas')->assertOk()->assertSee('Sampling Kopi Lepas Haus');
-        $this->actingAs($world['otherSpg'])->get('/tugas')->assertOk()->assertDontSee('Sampling Kopi Lepas Haus');
+        $this->actingAs($world['spg'])->get('/tasks')->assertOk()->assertSee('Sampling Kopi Lepas Haus');
+        $this->actingAs($world['otherSpg'])->get('/tasks')->assertOk()->assertDontSee('Sampling Kopi Lepas Haus');
 
-        $this->actingAs($world['spg'])->post('/tugas/'.$world['assignment']->id.'/isi', [
+        $this->actingAs($world['spg'])->post('/tasks/'.$world['assignment']->id.'/fill', [
             'answers' => $this->validAnswers(),
             'consent_accepted' => true,
             'add_another' => true,
-        ])->assertRedirect('/tugas/'.$world['assignment']->id.'/isi');
+        ])->assertRedirect('/tasks/'.$world['assignment']->id.'/fill');
 
         $this->assertSame(1, FormSubmission::query()->count());
-        $this->actingAs($world['spg'])->get('/data-saya')->assertOk();
+        $this->actingAs($world['spg'])->get('/my-submissions')->assertOk();
 
         $submission = FormSubmission::query()->first();
         $this->actingAs($world['eo'])->get('/submissions?campaign_id='.$world['campaign']->id)->assertOk();

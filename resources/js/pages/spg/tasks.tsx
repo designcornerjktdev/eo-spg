@@ -17,7 +17,7 @@ export default function SpgTasks({ assignments }: { assignments: Assignment[] })
     return (
         <SpgLayout title="Tugas saya">
             <Head title="Tugas" />
-            <div className="space-y-3">
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                 {assignments.map((assignment) => (
                     <Card key={assignment.id}>
                         <CardHeader>
@@ -26,18 +26,18 @@ export default function SpgTasks({ assignments }: { assignments: Assignment[] })
                         <CardContent className="space-y-2 text-sm">
                             <div>
                                 {assignment.location.name}
-                                {assignment.location.area ? ` · ${assignment.location.area}` : ''}
+                                {assignment.location.area ? ` Ã‚Â· ${assignment.location.area}` : ''}
                             </div>
                             <div>
-                                {assignment.starts_at} — {assignment.ends_at}
+                                {assignment.starts_at} Ã¢â‚¬â€ {assignment.ends_at}
                             </div>
-                            <Button asChild className="w-full" disabled={!assignment.fillable}>
-                                <Link href={route('spg.tasks.fill', assignment.id)}>Isi form</Link>
+                            <Button asChild className="w-full" variant={assignment.fillable ? 'default' : 'outline'}>
+                                <Link href={route('spg.tasks.fill', assignment.id)}>{assignment.fillable ? 'Lihat & input data' : 'Lihat data'}</Link>
                             </Button>
                         </CardContent>
                     </Card>
                 ))}
-                {assignments.length === 0 && <p className="text-sm text-muted-foreground">Belum ada tugas.</p>}
+                {assignments.length === 0 && <p className="text-muted-foreground text-sm">Belum ada tugas.</p>}
             </div>
         </SpgLayout>
     );
