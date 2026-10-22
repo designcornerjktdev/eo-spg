@@ -1,3 +1,4 @@
+import FormPage from '@/components/form-page';
 import InputError from '@/components/input-error';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -49,40 +50,42 @@ export default function ProductForm({
             ]}
         >
             <Head title={product ? 'Ubah produk' : 'Tambah produk'} />
-            <PageHeader title={product ? 'Ubah produk' : 'Tambah produk'} />
-            <form onSubmit={submit} className="grid max-w-xl gap-4">
-                <div className="grid gap-2">
-                    <Label>Client</Label>
-                    <select
-                        className="border-input h-9 rounded-md border px-2"
-                        value={data.client_id}
-                        onChange={(e) => setData('client_id', e.target.value)}
-                    >
-                        <option value="">Pilih client</option>
-                        {clients.map((client) => (
-                            <option key={client.id} value={client.id}>
-                                {client.name}
-                            </option>
-                        ))}
-                    </select>
-                    <InputError message={errors.client_id} />
-                </div>
-                <div className="grid gap-2">
-                    <Label>Nama</Label>
-                    <Input value={data.name} onChange={(e) => setData('name', e.target.value)} />
-                    <InputError message={errors.name} />
-                </div>
-                <div className="grid gap-2">
-                    <Label>SKU</Label>
-                    <Input value={data.sku} onChange={(e) => setData('sku', e.target.value)} />
-                </div>
-                <div className="grid gap-2">
-                    <Label>Deskripsi</Label>
-                    <Textarea value={data.description} onChange={(e) => setData('description', e.target.value)} />
-                </div>
-                <Button disabled={processing}>Simpan</Button>
-            </form>
-            {footer}
+            <FormPage>
+                <PageHeader title={product ? 'Ubah produk' : 'Tambah produk'} />
+                <form onSubmit={submit} className="grid gap-4 rounded-xl border p-4 sm:p-6">
+                    <div className="grid gap-2">
+                        <Label>Client</Label>
+                        <select
+                            className="border-input h-9 rounded-md border px-2"
+                            value={data.client_id}
+                            onChange={(e) => setData('client_id', e.target.value)}
+                        >
+                            <option value="">Pilih client</option>
+                            {clients.map((client) => (
+                                <option key={client.id} value={client.id}>
+                                    {client.name}
+                                </option>
+                            ))}
+                        </select>
+                        <InputError message={errors.client_id} />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label>Nama</Label>
+                        <Input value={data.name} onChange={(e) => setData('name', e.target.value)} />
+                        <InputError message={errors.name} />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label>SKU</Label>
+                        <Input value={data.sku} onChange={(e) => setData('sku', e.target.value)} />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label>Deskripsi</Label>
+                        <Textarea value={data.description} onChange={(e) => setData('description', e.target.value)} />
+                    </div>
+                    <Button disabled={processing}>Simpan</Button>
+                </form>
+                {footer}
+            </FormPage>
         </AppLayout>
     );
 }

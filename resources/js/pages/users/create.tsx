@@ -1,3 +1,4 @@
+import FormPage from '@/components/form-page';
 import InputError from '@/components/input-error';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -29,56 +30,62 @@ export default function UserCreate({ clients }: { clients: { id: number; name: s
             ]}
         >
             <Head title="Tambah akun" />
-            <PageHeader title="Tambah akun" />
-            <form onSubmit={submit} className="grid max-w-xl gap-4">
-                <div className="grid gap-2">
-                    <Label>Nama</Label>
-                    <Input value={data.name} onChange={(e) => setData('name', e.target.value)} />
-                    <InputError message={errors.name} />
-                </div>
-                <div className="grid gap-2">
-                    <Label htmlFor="username">Username</Label>
-                    <Input
-                        id="username"
-                        autoCapitalize="none"
-                        placeholder="huruf kecil, angka, titik, - atau _"
-                        value={data.username}
-                        onChange={(e) => setData('username', e.target.value.toLowerCase())}
-                    />
-                    <InputError message={errors.username} />
-                </div>
-                <div className="grid gap-2">
-                    <Label>Password</Label>
-                    <Input type="password" value={data.password} onChange={(e) => setData('password', e.target.value)} />
-                    <InputError message={errors.password} />
-                </div>
-                <div className="grid gap-2">
-                    <Label>Role</Label>
-                    <select className="border-input h-9 rounded-md border px-2" value={data.role} onChange={(e) => setData('role', e.target.value)}>
-                        <option value="spg">SPG</option>
-                        <option value="client">Client</option>
-                    </select>
-                </div>
-                {data.role === 'client' && (
+            <FormPage>
+                <PageHeader title="Tambah akun" />
+                <form onSubmit={submit} className="grid gap-4 rounded-xl border p-4 sm:p-6">
                     <div className="grid gap-2">
-                        <Label>Client</Label>
+                        <Label>Nama</Label>
+                        <Input value={data.name} onChange={(e) => setData('name', e.target.value)} />
+                        <InputError message={errors.name} />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="username">Username</Label>
+                        <Input
+                            id="username"
+                            autoCapitalize="none"
+                            placeholder="huruf kecil, angka, titik, - atau _"
+                            value={data.username}
+                            onChange={(e) => setData('username', e.target.value.toLowerCase())}
+                        />
+                        <InputError message={errors.username} />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label>Password</Label>
+                        <Input type="password" value={data.password} onChange={(e) => setData('password', e.target.value)} />
+                        <InputError message={errors.password} />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label>Role</Label>
                         <select
                             className="border-input h-9 rounded-md border px-2"
-                            value={data.client_id}
-                            onChange={(e) => setData('client_id', e.target.value)}
+                            value={data.role}
+                            onChange={(e) => setData('role', e.target.value)}
                         >
-                            <option value="">Pilih client</option>
-                            {clients.map((client) => (
-                                <option key={client.id} value={client.id}>
-                                    {client.name}
-                                </option>
-                            ))}
+                            <option value="spg">SPG</option>
+                            <option value="client">Client</option>
                         </select>
-                        <InputError message={errors.client_id} />
                     </div>
-                )}
-                <Button disabled={processing}>Simpan</Button>
-            </form>
+                    {data.role === 'client' && (
+                        <div className="grid gap-2">
+                            <Label>Client</Label>
+                            <select
+                                className="border-input h-9 rounded-md border px-2"
+                                value={data.client_id}
+                                onChange={(e) => setData('client_id', e.target.value)}
+                            >
+                                <option value="">Pilih client</option>
+                                {clients.map((client) => (
+                                    <option key={client.id} value={client.id}>
+                                        {client.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <InputError message={errors.client_id} />
+                        </div>
+                    )}
+                    <Button disabled={processing}>Simpan</Button>
+                </form>
+            </FormPage>
         </AppLayout>
     );
 }

@@ -31,7 +31,7 @@ export default function DangerZone({
     const errors = usePage().props.errors as Record<string, string>;
 
     return (
-        <div className="max-w-xl space-y-2 rounded-lg border border-red-200 p-4 dark:border-red-900">
+        <div className="space-y-2 rounded-lg border border-red-200 p-4 dark:border-red-900">
             <h2 className="font-semibold">{title}</h2>
             {blocker ? (
                 <p className="text-muted-foreground text-sm">{blocker}</p>

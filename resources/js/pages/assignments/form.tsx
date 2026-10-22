@@ -1,3 +1,4 @@
+import FormPage from '@/components/form-page';
 import InputError from '@/components/input-error';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -65,43 +66,51 @@ export default function AssignmentForm({
             ]}
         >
             <Head title={assignment ? 'Ubah assignment' : 'Tambah assignment'} />
-            <PageHeader title={assignment ? 'Ubah assignment' : 'Tugaskan SPG'} description="Sistem menolak jadwal yang bentrok." />
-            <form onSubmit={submit} className="grid max-w-xl gap-4">
-                <SelectField
-                    label="Campaign"
-                    value={data.campaign_id}
-                    error={errors.campaign_id}
-                    onChange={(value) => setData('campaign_id', value)}
-                    options={campaigns.map((item) => ({ id: item.id, name: item.name }))}
-                />
-                <SelectField
-                    label="Lokasi"
-                    value={data.location_id}
-                    error={errors.location_id}
-                    onChange={(value) => setData('location_id', value)}
-                    options={campaign?.locations ?? []}
-                />
-                <SelectField
-                    label="Form"
-                    value={data.form_template_id}
-                    error={errors.form_template_id}
-                    onChange={(value) => setData('form_template_id', value)}
-                    options={(campaign?.form_templates ?? []).map((form) => ({ id: form.id, name: `${form.name} v${form.version}` }))}
-                />
-                <SelectField label="SPG" value={data.user_id} error={errors.user_id} onChange={(value) => setData('user_id', value)} options={spgs} />
-                <div className="grid gap-2">
-                    <Label>Mulai</Label>
-                    <Input type="datetime-local" value={data.starts_at} onChange={(e) => setData('starts_at', e.target.value)} />
-                    <InputError message={errors.starts_at} />
-                </div>
-                <div className="grid gap-2">
-                    <Label>Selesai</Label>
-                    <Input type="datetime-local" value={data.ends_at} onChange={(e) => setData('ends_at', e.target.value)} />
-                    <InputError message={errors.ends_at} />
-                </div>
-                <Button disabled={processing}>Simpan</Button>
-            </form>
-            {footer}
+            <FormPage>
+                <PageHeader title={assignment ? 'Ubah assignment' : 'Tugaskan SPG'} description="Sistem menolak jadwal yang bentrok." />
+                <form onSubmit={submit} className="grid gap-4 rounded-xl border p-4 sm:p-6">
+                    <SelectField
+                        label="Campaign"
+                        value={data.campaign_id}
+                        error={errors.campaign_id}
+                        onChange={(value) => setData('campaign_id', value)}
+                        options={campaigns.map((item) => ({ id: item.id, name: item.name }))}
+                    />
+                    <SelectField
+                        label="Lokasi"
+                        value={data.location_id}
+                        error={errors.location_id}
+                        onChange={(value) => setData('location_id', value)}
+                        options={campaign?.locations ?? []}
+                    />
+                    <SelectField
+                        label="Form"
+                        value={data.form_template_id}
+                        error={errors.form_template_id}
+                        onChange={(value) => setData('form_template_id', value)}
+                        options={(campaign?.form_templates ?? []).map((form) => ({ id: form.id, name: `${form.name} v${form.version}` }))}
+                    />
+                    <SelectField
+                        label="SPG"
+                        value={data.user_id}
+                        error={errors.user_id}
+                        onChange={(value) => setData('user_id', value)}
+                        options={spgs}
+                    />
+                    <div className="grid gap-2">
+                        <Label>Mulai</Label>
+                        <Input type="datetime-local" value={data.starts_at} onChange={(e) => setData('starts_at', e.target.value)} />
+                        <InputError message={errors.starts_at} />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label>Selesai</Label>
+                        <Input type="datetime-local" value={data.ends_at} onChange={(e) => setData('ends_at', e.target.value)} />
+                        <InputError message={errors.ends_at} />
+                    </div>
+                    <Button disabled={processing}>Simpan</Button>
+                </form>
+                {footer}
+            </FormPage>
         </AppLayout>
     );
 }

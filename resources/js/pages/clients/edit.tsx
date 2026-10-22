@@ -1,3 +1,4 @@
+import FormPage from '@/components/form-page';
 import InputError from '@/components/input-error';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -39,66 +40,68 @@ export default function ClientEdit({ client, deleteBlocker }: { client: Client; 
             ]}
         >
             <Head title={`Edit ${client.name}`} />
-            <PageHeader title="Edit client" />
-            <form onSubmit={submit} className="grid max-w-xl gap-4">
-                <div className="grid gap-2">
-                    <Label htmlFor="name">Nama</Label>
-                    <Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} />
-                    <InputError message={errors.name} />
-                </div>
-                <div className="grid gap-2">
-                    <Label htmlFor="code">Kode</Label>
-                    <Input id="code" value={data.code} onChange={(e) => setData('code', e.target.value)} />
-                    <InputError message={errors.code} />
-                </div>
-                <div className="grid gap-2">
-                    <Label htmlFor="notes">Catatan</Label>
-                    <Textarea id="notes" value={data.notes} onChange={(e) => setData('notes', e.target.value)} />
-                </div>
-                <div className="flex gap-2">
-                    <Button disabled={processing}>Simpan</Button>
-                    <Button type="button" variant="outline" asChild>
-                        <Link href={route('clients.show', client.id)}>Batal</Link>
-                    </Button>
-                </div>
-            </form>
-
-            <div className="max-w-xl space-y-2 rounded-lg border border-red-200 p-4 dark:border-red-900">
-                <h2 className="font-semibold">Hapus client</h2>
-                {deleteBlocker ? (
-                    <p className="text-muted-foreground text-sm">{deleteBlocker}</p>
-                ) : (
-                    <>
-                        <p className="text-muted-foreground text-sm">
-                            Client belum punya campaign atau produk. Menghapusnya juga menonaktifkan semua akun login client ini.
-                        </p>
-                        <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
-                            Hapus client
-                        </Button>
-                    </>
-                )}
-                <InputError message={pageErrors.client} />
-            </div>
-
-            <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-                <DialogContent className="max-w-[calc(100%-1rem)] md:max-w-md">
-                    <DialogHeader className="text-left">
-                        <DialogTitle>Hapus client {client.name}?</DialogTitle>
-                        <DialogDescription>Semua akun login client ini akan dinonaktifkan.</DialogDescription>
-                    </DialogHeader>
-                    <div className="flex justify-end gap-2">
-                        <Button variant="outline" onClick={() => setConfirmDelete(false)}>
-                            Kembali
-                        </Button>
-                        <Button
-                            variant="destructive"
-                            onClick={() => router.delete(route('clients.destroy', client.id), { onFinish: () => setConfirmDelete(false) })}
-                        >
-                            Hapus client
+            <FormPage>
+                <PageHeader title="Edit client" />
+                <form onSubmit={submit} className="grid gap-4 rounded-xl border p-4 sm:p-6">
+                    <div className="grid gap-2">
+                        <Label htmlFor="name">Nama</Label>
+                        <Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} />
+                        <InputError message={errors.name} />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="code">Kode</Label>
+                        <Input id="code" value={data.code} onChange={(e) => setData('code', e.target.value)} />
+                        <InputError message={errors.code} />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="notes">Catatan</Label>
+                        <Textarea id="notes" value={data.notes} onChange={(e) => setData('notes', e.target.value)} />
+                    </div>
+                    <div className="flex gap-2">
+                        <Button disabled={processing}>Simpan</Button>
+                        <Button type="button" variant="outline" asChild>
+                            <Link href={route('clients.show', client.id)}>Batal</Link>
                         </Button>
                     </div>
-                </DialogContent>
-            </Dialog>
+                </form>
+
+                <div className="space-y-2 rounded-lg border border-red-200 p-4 dark:border-red-900">
+                    <h2 className="font-semibold">Hapus client</h2>
+                    {deleteBlocker ? (
+                        <p className="text-muted-foreground text-sm">{deleteBlocker}</p>
+                    ) : (
+                        <>
+                            <p className="text-muted-foreground text-sm">
+                                Client belum punya campaign atau produk. Menghapusnya juga menonaktifkan semua akun login client ini.
+                            </p>
+                            <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
+                                Hapus client
+                            </Button>
+                        </>
+                    )}
+                    <InputError message={pageErrors.client} />
+                </div>
+
+                <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+                    <DialogContent className="max-w-[calc(100%-1rem)] md:max-w-md">
+                        <DialogHeader className="text-left">
+                            <DialogTitle>Hapus client {client.name}?</DialogTitle>
+                            <DialogDescription>Semua akun login client ini akan dinonaktifkan.</DialogDescription>
+                        </DialogHeader>
+                        <div className="flex justify-end gap-2">
+                            <Button variant="outline" onClick={() => setConfirmDelete(false)}>
+                                Kembali
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={() => router.delete(route('clients.destroy', client.id), { onFinish: () => setConfirmDelete(false) })}
+                            >
+                                Hapus client
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            </FormPage>
         </AppLayout>
     );
 }
