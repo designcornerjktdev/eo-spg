@@ -87,6 +87,17 @@ class UserManagementTest extends TestCase
         $this->assertSame(1, FormSubmission::query()->count());
     }
 
+    public function test_superadmin_cannot_delete_or_deactivate_own_account(): void
+    {
+        $eo = User::factory()->superadmin()->create();
+
+        $this->actingAs($eo)->delete('/users/'.$eo->id)->assertForbidden();
+        $this->actingAs($eo)->put('/users/'.$eo->id, ['name' => 'X', 'username' => 'x', 'is_active' => false])->assertForbidden();
+
+        $this->assertModelExists($eo);
+        $this->assertTrue($eo->refresh()->is_active);
+    }
+
     public function test_superadmin_accounts_and_non_admins_are_protected(): void
     {
         $eo = User::factory()->superadmin()->create();
