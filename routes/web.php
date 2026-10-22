@@ -26,13 +26,13 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware('role:superadmin,client')->group(function () {
         Route::get('clients', [ClientController::class, 'index'])->name('clients.index');
-        Route::get('clients/{client}', [ClientController::class, 'show'])->name('clients.show');
+        Route::get('clients/{client}', [ClientController::class, 'show'])->whereNumber('client')->name('clients.show');
         Route::get('products', [ProductController::class, 'index'])->name('products.index');
         Route::get('campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
-        Route::get('campaigns/{campaign}', [CampaignController::class, 'show'])->name('campaigns.show');
+        Route::get('campaigns/{campaign}', [CampaignController::class, 'show'])->whereNumber('campaign')->name('campaigns.show');
         Route::get('submissions', [SubmissionController::class, 'index'])->name('submissions.index');
         Route::get('submissions/export', [SubmissionController::class, 'export'])->name('submissions.export');
-        Route::get('submissions/{submission}', [SubmissionController::class, 'show'])->name('submissions.show');
+        Route::get('submissions/{submission}', [SubmissionController::class, 'show'])->whereNumber('submission')->name('submissions.show');
     });
 
     Route::middleware('role:superadmin')->group(function () {
