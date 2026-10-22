@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,8 +21,13 @@ class ClientController extends Controller
     {
         $this->authorize('viewAny', Client::class);
 
+        $search = $request->string('search')->trim()->value();
+
         $clients = Client::query()
             ->when($request->user()->isClient(), fn ($query) => $query->whereKey($request->user()->client_id))
+            ->when($search !== '', fn ($query) => $query->where(fn ($query) => $query
+                ->where('name', 'like', '%'.$search.'%')
+                ->orWhere('code', 'like', '%'.$search.'%')))
             ->withCount(['products', 'campaigns', 'users'])
             ->latest()
             ->paginate(15)
@@ -29,6 +35,7 @@ class ClientController extends Controller
 
         return Inertia::render('clients/index', [
             'clients' => $clients,
+            'filters' => ['search' => $search],
         ]);
     }
 
@@ -79,6 +86,7 @@ class ClientController extends Controller
 
         return Inertia::render('clients/edit', [
             'client' => $client,
+            'deleteBlocker' => $this->deleteBlocker($client),
         ]);
     }
 
@@ -94,9 +102,37 @@ class ClientController extends Controller
     public function destroy(Request $request, Client $client, AuditLogger $audit): RedirectResponse
     {
         $this->authorize('delete', $client);
-        $audit->record($request->user(), 'client.deleted', $client, $client->toArray());
-        $client->delete();
 
-        return redirect()->route('clients.index')->with('success', 'Client dihapus.');
+        if ($blocker = $this->deleteBlocker($client)) {
+            throw ValidationException::withMessages(['client' => $blocker]);
+        }
+
+        DB::transaction(function () use ($request, $client, $audit) {
+            // Akun login client ikut dinonaktifkan dan dikeluarkan agar tidak tersisa akses ke client yang dihapus.
+            $userIds = $client->users()->pluck('id');
+            $client->users()->update(['is_active' => false]);
+            DB::table(config('session.table', 'sessions'))->whereIn('user_id', $userIds)->delete();
+
+            $audit->record($request->user(), 'client.deleted', $client, $client->toArray());
+            $client->delete();
+        });
+
+        return redirect()->route('clients.index')->with('success', 'Client '.$client->name.' dihapus.');
+    }
+
+    /**
+     * Client yang sudah punya campaign atau produk tidak boleh dihapus agar laporan dan riwayatnya tetap utuh.
+     */
+    private function deleteBlocker(Client $client): ?string
+    {
+        if ($client->campaigns()->exists()) {
+            return 'Client ini sudah punya campaign, jadi tidak bisa dihapus.';
+        }
+
+        if ($client->products()->exists()) {
+            return 'Client ini masih punya produk. Hapus produknya dulu.';
+        }
+
+        return null;
     }
 }

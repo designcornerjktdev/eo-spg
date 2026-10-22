@@ -30,7 +30,7 @@ export default function ClientShow({ client }: { client: ClientShow }) {
                 <PageHeader title={client.name} description={`Kode ${client.code}`} />
                 {canEdit && (
                     <Button asChild variant="outline">
-                        <Link href={route('clients.edit', client.id)}>Ubah</Link>
+                        <Link href={route('clients.edit', client.id)}>Edit</Link>
                     </Button>
                 )}
             </div>
