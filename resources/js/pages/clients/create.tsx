@@ -1,6 +1,7 @@
 import FormPage from '@/components/form-page';
 import InputError from '@/components/input-error';
 import PageHeader from '@/components/page-header';
+import { PasswordInput } from '@/components/password-input';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -57,7 +58,7 @@ export default function ClientCreate() {
                         />
                     </Field>
                     <Field label="Account password" error={errors.account_password}>
-                        <Input type="password" value={data.account_password} onChange={(e) => setData('account_password', e.target.value)} />
+                        <PasswordInput value={data.account_password} onChange={(e) => setData('account_password', e.target.value)} />
                     </Field>
                     <Button disabled={processing}>Save</Button>
                 </form>

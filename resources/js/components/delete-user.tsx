@@ -1,10 +1,10 @@
+import { PasswordInput } from '@/components/password-input';
 import { useForm } from '@inertiajs/react';
 import { FormEventHandler, useRef } from 'react';
 
 // Components...
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 import HeadingSmall from '@/components/heading-small';
@@ -56,9 +56,8 @@ export default function DeleteUser() {
                                     Password
                                 </Label>
 
-                                <Input
+                                <PasswordInput
                                     id="password"
-                                    type="password"
                                     name="password"
                                     ref={passwordInput}
                                     value={data.password}

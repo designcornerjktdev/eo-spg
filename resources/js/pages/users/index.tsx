@@ -2,6 +2,7 @@ import IconAction from '@/components/icon-action';
 import InputError from '@/components/input-error';
 import PageHeader from '@/components/page-header';
 import Pagination from '@/components/pagination';
+import { PasswordInput } from '@/components/password-input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -158,9 +159,8 @@ function ResetPasswordDialog({ user, onClose }: { user: Row | null; onClose: () 
                 <form className="space-y-4" onSubmit={submit}>
                     <div className="grid gap-2">
                         <Label htmlFor="new-password">New password</Label>
-                        <Input
+                        <PasswordInput
                             id="new-password"
-                            type="password"
                             autoComplete="new-password"
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
@@ -169,9 +169,8 @@ function ResetPasswordDialog({ user, onClose }: { user: Row | null; onClose: () 
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="new-password-confirmation">Repeat new password</Label>
-                        <Input
+                        <PasswordInput
                             id="new-password-confirmation"
-                            type="password"
                             autoComplete="new-password"
                             value={data.password_confirmation}
                             onChange={(e) => setData('password_confirmation', e.target.value)}

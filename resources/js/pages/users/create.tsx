@@ -1,6 +1,7 @@
 import FormPage from '@/components/form-page';
 import InputError from '@/components/input-error';
 import PageHeader from '@/components/page-header';
+import { PasswordInput } from '@/components/password-input';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -51,7 +52,7 @@ export default function UserCreate({ clients }: { clients: { id: number; name: s
                     </div>
                     <div className="grid gap-2">
                         <Label>Password</Label>
-                        <Input type="password" value={data.password} onChange={(e) => setData('password', e.target.value)} />
+                        <PasswordInput value={data.password} onChange={(e) => setData('password', e.target.value)} />
                         <InputError message={errors.password} />
                     </div>
                     <div className="grid gap-2">
