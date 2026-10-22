@@ -22,7 +22,7 @@ class SubmissionCorrectionController extends Controller
         $corrector->correct($submission, $request->user(), $request->input('answers', []), $request->boolean('consent_accepted'));
 
         return redirect()
-            ->route('spg.tasks.index', ['assignment' => $submission->assignment_id])
+            ->route('spg.tasks.show', $submission->assignment_id)
             ->with('success', 'Data diperbaiki. Baris lama ditandai batal.');
     }
 
@@ -37,7 +37,7 @@ class SubmissionCorrectionController extends Controller
         $corrector->cancel($submission, $request->user(), $request->string('reason'));
 
         return redirect()
-            ->route('spg.tasks.index', ['assignment' => $submission->assignment_id])
+            ->route('spg.tasks.show', $submission->assignment_id)
             ->with('success', 'Data dibatalkan.');
     }
 }

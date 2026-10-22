@@ -26,7 +26,7 @@ class UserStoriesAccessTest extends TestCase
             'answers' => $this->validAnswers(),
             'consent_accepted' => true,
             'add_another' => true,
-        ])->assertRedirect('/tasks?assignment='.$world['assignment']->id);
+        ])->assertRedirect('/tasks/'.$world['assignment']->id);
 
         $this->assertSame(1, FormSubmission::query()->count());
         $this->actingAs($world['spg'])->get('/tasks')->assertOk();

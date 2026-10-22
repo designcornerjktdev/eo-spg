@@ -55,6 +55,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware('role:spg,superadmin')->prefix('tasks')->name('spg.tasks.')->group(function () {
         Route::get('/', [TaskController::class, 'index'])->name('index');
+        Route::get('{assignment}', [TaskController::class, 'show'])->name('show');
         Route::post('{assignment}/submissions', [TaskController::class, 'store'])->name('store');
     });
 

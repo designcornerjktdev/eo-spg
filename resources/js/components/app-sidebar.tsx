@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { ClipboardList, FileSpreadsheet, LayoutGrid, MapPin, Package, ScrollText, Users, Building2, ListChecks } from 'lucide-react';
+import { Building2, ClipboardList, FileSpreadsheet, LayoutGrid, ListChecks, MapPin, Package, ScrollText, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const eoNav: NavItem[] = [
@@ -24,9 +24,12 @@ const clientNav: NavItem[] = [
     { title: 'Data', url: '/submissions', icon: ListChecks },
 ];
 
+const spgNav: NavItem[] = [{ title: 'Tugas', url: '/tasks', icon: ClipboardList }];
+
 export function AppSidebar() {
     const { auth } = usePage<SharedData>().props;
-    const items = auth.user?.role === 'client' ? clientNav : eoNav;
+    const role = auth.user?.role;
+    const items = role === 'client' ? clientNav : role === 'spg' ? spgNav : eoNav;
 
     return (
         <Sidebar collapsible="icon" variant="inset">

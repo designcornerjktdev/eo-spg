@@ -32,7 +32,7 @@ class SpgSubmissionTest extends TestCase
     {
         $world = $this->world();
         $url = '/tasks/'.$world['assignment']->id.'/submissions';
-        $index = '/tasks?assignment='.$world['assignment']->id;
+        $index = '/tasks/'.$world['assignment']->id;
 
         $this->actingAs($world['spg'])->post($url, [
             'answers' => $this->validAnswers(),
@@ -42,7 +42,7 @@ class SpgSubmissionTest extends TestCase
         $this->actingAs($world['spg'])->get($index)
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->component('spg/index')
+                ->component('spg/show')
                 ->has('submissions.data', 1)
                 ->where('todayCount', 1));
     }

@@ -47,7 +47,7 @@ class AssignmentConflictTest extends TestCase
         $world = $this->world();
 
         $this->actingAs($world['otherSpg'])
-            ->get('/tasks?assignment='.$world['assignment']->id)
+            ->get('/tasks/'.$world['assignment']->id)
             ->assertForbidden();
     }
 }

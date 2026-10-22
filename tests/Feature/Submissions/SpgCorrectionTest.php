@@ -31,7 +31,7 @@ class SpgCorrectionTest extends TestCase
         $this->actingAs($world['spg'])->post('/submissions/'.$original->id.'/correction', [
             'answers' => [...$this->validAnswers(), 'no_handphone' => '089999999999'],
             'consent_accepted' => true,
-        ])->assertSessionHasNoErrors()->assertRedirect('/tasks?assignment='.$world['assignment']->id);
+        ])->assertSessionHasNoErrors()->assertRedirect('/tasks/'.$world['assignment']->id);
 
         $original->refresh();
         $replacement = FormSubmission::query()->where('corrects_submission_id', $original->id)->firstOrFail();
