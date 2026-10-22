@@ -1,3 +1,4 @@
+import IconAction from '@/components/icon-action';
 import InputError from '@/components/input-error';
 import Pagination from '@/components/pagination';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { Head, useForm } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
+import { Ban, Pencil, Plus } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 interface Field {
@@ -131,25 +132,15 @@ export default function SpgShow({
                                         </span>
                                     ) : submission.can_correct ? (
                                         <div className="flex gap-1">
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                className="h-8"
+                                            <IconAction
+                                                icon={Pencil}
+                                                label="Perbaiki data"
                                                 onClick={() => {
                                                     setCorrecting(submission);
                                                     setOpen(true);
                                                 }}
-                                            >
-                                                Perbaiki
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                className="text-destructive h-8"
-                                                onClick={() => setCancelling(submission)}
-                                            >
-                                                Batalkan
-                                            </Button>
+                                            />
+                                            <IconAction icon={Ban} label="Batalkan data" destructive onClick={() => setCancelling(submission)} />
                                         </div>
                                     ) : (
                                         <span className="text-muted-foreground text-xs">-</span>

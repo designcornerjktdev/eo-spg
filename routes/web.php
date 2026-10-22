@@ -50,7 +50,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('assignments', AssignmentController::class)->except(['show', 'destroy']);
         Route::post('submissions/{submission}/void', [SubmissionController::class, 'void'])->name('submissions.void');
         Route::get('audit', [AuditLogController::class, 'index'])->name('audit.index');
-        Route::resource('users', UserController::class)->only(['index', 'create', 'store']);
+        Route::resource('users', UserController::class)->except(['show']);
         Route::put('users/{user}/password', [UserController::class, 'resetPassword'])->name('users.password');
     });
 

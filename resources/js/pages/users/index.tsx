@@ -1,12 +1,16 @@
+import IconAction from '@/components/icon-action';
 import InputError from '@/components/input-error';
 import PageHeader from '@/components/page-header';
 import Pagination from '@/components/pagination';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
-import { Head, useForm } from '@inertiajs/react';
+import { cn } from '@/lib/utils';
+import { Head, router, useForm } from '@inertiajs/react';
+import { KeyRound, Pencil } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 interface Row {
@@ -14,11 +18,31 @@ interface Row {
     name: string;
     username: string | null;
     role: string;
+    is_active: boolean;
     client?: { name: string } | null;
 }
 
-export default function UsersIndex({ users }: { users: { data: Row[]; links: { url: string | null; label: string; active: boolean }[] } }) {
+interface Filters {
+    search?: string;
+    role?: string;
+    status?: string;
+}
+
+const roleLabels: Record<string, string> = { client: 'Client', spg: 'SPG' };
+
+export default function UsersIndex({
+    users,
+    filters,
+}: {
+    users: { data: Row[]; links: { url: string | null; label: string; active: boolean }[] };
+    filters: Filters;
+}) {
     const [resetting, setResetting] = useState<Row | null>(null);
+    const [search, setSearch] = useState(filters.search ?? '');
+
+    const applyFilters = (next: Filters) => {
+        router.get(route('users.index'), { ...filters, ...next }, { preserveState: true, replace: true });
+    };
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Pengguna', href: '/users' }]}>
@@ -28,6 +52,40 @@ export default function UsersIndex({ users }: { users: { data: Row[]; links: { u
                 description="Client dan SPG login dengan username. Jika lupa password, reset dari sini."
                 action={{ href: route('users.create'), label: 'Tambah akun' }}
             />
+
+            <form
+                className="flex flex-wrap gap-2"
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    applyFilters({ search });
+                }}
+            >
+                <Input className="w-full sm:w-64" placeholder="Cari nama atau username" value={search} onChange={(e) => setSearch(e.target.value)} />
+                <select
+                    aria-label="Filter role"
+                    className="border-input bg-background h-9 rounded-md border px-2 text-sm"
+                    value={filters.role ?? ''}
+                    onChange={(e) => applyFilters({ role: e.target.value })}
+                >
+                    <option value="">Semua role</option>
+                    <option value="client">Client</option>
+                    <option value="spg">SPG</option>
+                </select>
+                <select
+                    aria-label="Filter status"
+                    className="border-input bg-background h-9 rounded-md border px-2 text-sm"
+                    value={filters.status ?? ''}
+                    onChange={(e) => applyFilters({ status: e.target.value })}
+                >
+                    <option value="">Semua status</option>
+                    <option value="active">Aktif</option>
+                    <option value="inactive">Nonaktif</option>
+                </select>
+                <Button type="submit" variant="outline">
+                    Cari
+                </Button>
+            </form>
+
             <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full text-sm">
                     <thead className="bg-muted/50">
@@ -36,23 +94,35 @@ export default function UsersIndex({ users }: { users: { data: Row[]; links: { u
                             <th className="px-3 py-2 text-left">Username</th>
                             <th className="px-3 py-2 text-left">Role</th>
                             <th className="px-3 py-2 text-left">Client</th>
+                            <th className="px-3 py-2 text-left">Status</th>
                             <th className="px-3 py-2 text-left">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         {users.data.map((user) => (
-                            <tr key={user.id} className="border-t">
+                            <tr key={user.id} className={cn('border-t', !user.is_active && 'text-muted-foreground')}>
                                 <td className="px-3 py-2">{user.name}</td>
                                 <td className="px-3 py-2 font-mono">{user.username ?? '-'}</td>
-                                <td className="px-3 py-2">{user.role}</td>
+                                <td className="px-3 py-2">{roleLabels[user.role] ?? user.role}</td>
                                 <td className="px-3 py-2">{user.client?.name ?? '-'}</td>
+                                <td className="px-3 py-2">
+                                    {user.is_active ? <Badge variant="secondary">Aktif</Badge> : <Badge variant="outline">Nonaktif</Badge>}
+                                </td>
                                 <td className="px-3 py-1">
-                                    <Button size="sm" variant="ghost" onClick={() => setResetting(user)}>
-                                        Reset password
-                                    </Button>
+                                    <div className="flex gap-1">
+                                        <IconAction icon={Pencil} label="Edit akun" href={route('users.edit', user.id)} />
+                                        <IconAction icon={KeyRound} label="Reset password" onClick={() => setResetting(user)} />
+                                    </div>
                                 </td>
                             </tr>
                         ))}
+                        {users.data.length === 0 && (
+                            <tr>
+                                <td colSpan={6} className="text-muted-foreground px-3 py-8 text-center">
+                                    Tidak ada akun yang cocok.
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             </div>
