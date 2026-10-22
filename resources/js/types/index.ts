@@ -32,7 +32,8 @@ export interface SharedData {
 export interface User {
     id: number;
     name: string;
-    email: string;
+    email: string | null;
+    username?: string | null;
     role?: 'superadmin' | 'client' | 'spg';
     client_id?: number | null;
     home?: string;

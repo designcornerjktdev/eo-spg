@@ -14,7 +14,7 @@ export default function ClientCreate() {
         code: '',
         notes: '',
         account_name: '',
-        account_email: '',
+        account_username: '',
         account_password: '',
     });
 
@@ -24,7 +24,12 @@ export default function ClientCreate() {
     };
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Client', href: '/clients' }, { title: 'Tambah', href: '/clients/create' }]}>
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Client', href: '/clients' },
+                { title: 'Tambah', href: '/clients/create' },
+            ]}
+        >
             <Head title="Tambah client" />
             <PageHeader title="Tambah client" description="Buat perusahaan client dan opsional akun login-nya." />
             <form onSubmit={submit} className="grid max-w-xl gap-4">
@@ -41,8 +46,13 @@ export default function ClientCreate() {
                 <Field label="Nama akun" error={errors.account_name}>
                     <Input value={data.account_name} onChange={(e) => setData('account_name', e.target.value)} />
                 </Field>
-                <Field label="Email akun" error={errors.account_email}>
-                    <Input type="email" value={data.account_email} onChange={(e) => setData('account_email', e.target.value)} />
+                <Field label="Username akun" error={errors.account_username}>
+                    <Input
+                        value={data.account_username}
+                        autoCapitalize="none"
+                        placeholder="huruf kecil, angka, titik, - atau _"
+                        onChange={(e) => setData('account_username', e.target.value.toLowerCase())}
+                    />
                 </Field>
                 <Field label="Password akun" error={errors.account_password}>
                     <Input type="password" value={data.account_password} onChange={(e) => setData('account_password', e.target.value)} />

@@ -10,7 +10,7 @@ import { FormEvent } from 'react';
 export default function UserCreate({ clients }: { clients: { id: number; name: string }[] }) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
-        email: '',
+        username: '',
         password: '',
         role: 'spg',
         client_id: '',
@@ -22,7 +22,12 @@ export default function UserCreate({ clients }: { clients: { id: number; name: s
     };
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Pengguna', href: '/users' }, { title: 'Tambah', href: '#' }]}>
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Pengguna', href: '/users' },
+                { title: 'Tambah', href: '#' },
+            ]}
+        >
             <Head title="Tambah akun" />
             <PageHeader title="Tambah akun" />
             <form onSubmit={submit} className="grid max-w-xl gap-4">
@@ -32,9 +37,15 @@ export default function UserCreate({ clients }: { clients: { id: number; name: s
                     <InputError message={errors.name} />
                 </div>
                 <div className="grid gap-2">
-                    <Label>Email</Label>
-                    <Input type="email" value={data.email} onChange={(e) => setData('email', e.target.value)} />
-                    <InputError message={errors.email} />
+                    <Label htmlFor="username">Username</Label>
+                    <Input
+                        id="username"
+                        autoCapitalize="none"
+                        placeholder="huruf kecil, angka, titik, - atau _"
+                        value={data.username}
+                        onChange={(e) => setData('username', e.target.value.toLowerCase())}
+                    />
+                    <InputError message={errors.username} />
                 </div>
                 <div className="grid gap-2">
                     <Label>Password</Label>
@@ -51,7 +62,11 @@ export default function UserCreate({ clients }: { clients: { id: number; name: s
                 {data.role === 'client' && (
                     <div className="grid gap-2">
                         <Label>Client</Label>
-                        <select className="border-input h-9 rounded-md border px-2" value={data.client_id} onChange={(e) => setData('client_id', e.target.value)}>
+                        <select
+                            className="border-input h-9 rounded-md border px-2"
+                            value={data.client_id}
+                            onChange={(e) => setData('client_id', e.target.value)}
+                        >
                             <option value="">Pilih client</option>
                             {clients.map((client) => (
                                 <option key={client.id} value={client.id}>

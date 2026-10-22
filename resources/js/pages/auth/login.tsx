@@ -12,7 +12,7 @@ import AuthLayout from '@/layouts/auth-layout';
 
 interface LoginForm {
     [key: string]: string | boolean;
-    email: string;
+    login: string;
     password: string;
     remember: boolean;
 }
@@ -24,7 +24,7 @@ interface LoginProps {
 
 export default function Login({ status, canResetPassword }: LoginProps) {
     const { data, setData, post, processing, errors, reset } = useForm<LoginForm>({
-        email: '',
+        login: '',
         password: '',
         remember: false,
     });
@@ -43,19 +43,21 @@ export default function Login({ status, canResetPassword }: LoginProps) {
             <form className="flex flex-col gap-6" onSubmit={submit}>
                 <div className="grid gap-6">
                     <div className="grid gap-2">
-                        <Label htmlFor="email">Email</Label>
+                        <Label htmlFor="login">Email atau username</Label>
                         <Input
-                            id="email"
-                            type="email"
+                            id="login"
+                            type="text"
                             required
                             autoFocus
                             tabIndex={1}
-                            autoComplete="email"
-                            value={data.email}
-                            onChange={(e) => setData('email', e.target.value)}
-                            placeholder="email@perusahaan.com"
+                            autoComplete="username"
+                            autoCapitalize="none"
+                            spellCheck={false}
+                            value={data.login}
+                            onChange={(e) => setData('login', e.target.value)}
+                            placeholder="Admin EO: email · Client/SPG: username"
                         />
-                        <InputError message={errors.email} />
+                        <InputError message={errors.login} />
                     </div>
 
                     <div className="grid gap-2">

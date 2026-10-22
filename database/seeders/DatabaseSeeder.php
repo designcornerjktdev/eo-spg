@@ -38,22 +38,22 @@ class DatabaseSeeder extends Seeder
 
         User::factory()->clientUser($mayora)->create([
             'name' => 'Client Mayora',
-            'email' => 'client.mayora@eo.test',
+            'username' => 'mayora',
         ]);
 
         User::factory()->clientUser($imoby)->create([
             'name' => 'Client IMOBY',
-            'email' => 'client.imoby@eo.test',
+            'username' => 'imoby',
         ]);
 
         $spg1 = User::factory()->spg()->create([
             'name' => 'Siti SPG',
-            'email' => 'spg1@eo.test',
+            'username' => 'spg1',
         ]);
 
         User::factory()->spg()->create([
             'name' => 'Budi SPG',
-            'email' => 'spg2@eo.test',
+            'username' => 'spg2',
         ]);
 
         $product = Product::query()->create([

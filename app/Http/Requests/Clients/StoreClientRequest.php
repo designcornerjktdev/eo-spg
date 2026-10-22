@@ -21,9 +21,9 @@ class StoreClientRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'code' => ['required', 'string', 'max:50', 'unique:clients,code'],
             'notes' => ['nullable', 'string'],
-            'account_name' => ['nullable', 'required_with:account_email', 'string', 'max:255'],
-            'account_email' => ['nullable', 'required_with:account_name', 'email', 'unique:users,email'],
-            'account_password' => ['nullable', 'required_with:account_email', Password::defaults()],
+            'account_name' => ['nullable', 'required_with:account_username', 'string', 'max:255'],
+            'account_username' => ['nullable', 'required_with:account_name', 'string', 'max:50', 'regex:/^[a-z0-9._-]+$/', 'unique:users,username'],
+            'account_password' => ['nullable', 'required_with:account_username', Password::defaults()],
         ];
     }
 }

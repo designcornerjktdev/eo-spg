@@ -24,8 +24,9 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
 
     const { data, setData, patch, errors, processing, recentlySuccessful } = useForm({
         name: auth.user.name,
-        email: auth.user.email,
+        email: auth.user.email ?? '',
     });
+    const isEo = auth.user.role === 'superadmin';
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -58,24 +59,34 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                             <InputError className="mt-2" message={errors.name} />
                         </div>
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="email">Email address</Label>
+                        {!isEo && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="username">Username</Label>
+                                <Input id="username" className="mt-1 block w-full" value={auth.user.username ?? ''} disabled readOnly />
+                                <p className="text-muted-foreground text-sm">Username dan password diatur oleh admin EO.</p>
+                            </div>
+                        )}
 
-                            <Input
-                                id="email"
-                                type="email"
-                                className="mt-1 block w-full"
-                                value={data.email}
-                                onChange={(e) => setData('email', e.target.value)}
-                                required
-                                autoComplete="username"
-                                placeholder="Email address"
-                            />
+                        {isEo && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="email">Email address</Label>
 
-                            <InputError className="mt-2" message={errors.email} />
-                        </div>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    className="mt-1 block w-full"
+                                    value={data.email}
+                                    onChange={(e) => setData('email', e.target.value)}
+                                    required
+                                    autoComplete="username"
+                                    placeholder="Email address"
+                                />
 
-                        {mustVerifyEmail && auth.user.email_verified_at === null && (
+                                <InputError className="mt-2" message={errors.email} />
+                            </div>
+                        )}
+
+                        {isEo && mustVerifyEmail && auth.user.email_verified_at === null && (
                             <div>
                                 <p className="mt-2 text-sm text-neutral-800">
                                     Your email address is unverified.

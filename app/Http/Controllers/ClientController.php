@@ -44,10 +44,10 @@ class ClientController extends Controller
         $client = DB::transaction(function () use ($request, $audit) {
             $client = Client::query()->create($request->only(['name', 'code', 'notes']));
 
-            if ($request->filled('account_email')) {
+            if ($request->filled('account_username')) {
                 User::query()->create([
                     'name' => $request->string('account_name'),
-                    'email' => $request->string('account_email'),
+                    'username' => $request->string('account_username'),
                     'password' => $request->string('account_password'),
                     'role' => UserRole::Client,
                     'client_id' => $client->id,

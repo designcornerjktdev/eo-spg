@@ -21,7 +21,7 @@ class StoreUserRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:users,email'],
+            'username' => ['required', 'string', 'max:50', 'regex:/^[a-z0-9._-]+$/', 'unique:users,username'],
             'password' => ['required', Password::defaults()],
             'role' => ['required', Rule::in([UserRole::Spg->value, UserRole::Client->value])],
             'client_id' => ['required_if:role,client', 'nullable', 'exists:clients,id'],

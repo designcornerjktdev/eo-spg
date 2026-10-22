@@ -51,6 +51,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('submissions/{submission}/void', [SubmissionController::class, 'void'])->name('submissions.void');
         Route::get('audit', [AuditLogController::class, 'index'])->name('audit.index');
         Route::resource('users', UserController::class)->only(['index', 'create', 'store']);
+        Route::put('users/{user}/password', [UserController::class, 'resetPassword'])->name('users.password');
     });
 
     Route::middleware('role:spg,superadmin')->prefix('tasks')->name('spg.tasks.')->group(function () {

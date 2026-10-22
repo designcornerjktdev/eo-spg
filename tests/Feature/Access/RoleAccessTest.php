@@ -49,7 +49,7 @@ class RoleAccessTest extends TestCase
         $spg = User::factory()->spg()->create();
 
         $this->post('/login', [
-            'email' => $spg->email,
+            'login' => $spg->username,
             'password' => 'password',
         ])->assertRedirect('/tasks');
     }

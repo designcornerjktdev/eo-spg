@@ -2,8 +2,8 @@ import PageHeader from '@/components/page-header';
 import Pagination from '@/components/pagination';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, usePage } from '@inertiajs/react';
 import { SharedData } from '@/types';
+import { Head, Link, usePage } from '@inertiajs/react';
 
 interface ClientRow {
     id: number;
@@ -14,7 +14,11 @@ interface ClientRow {
     users_count: number;
 }
 
-export default function ClientsIndex({ clients }: { clients: { data: ClientRow[]; links: { url: string | null; label: string; active: boolean }[] } }) {
+export default function ClientsIndex({
+    clients,
+}: {
+    clients: { data: ClientRow[]; links: { url: string | null; label: string; active: boolean }[] };
+}) {
     const role = usePage<SharedData>().props.auth.user?.role;
 
     return (

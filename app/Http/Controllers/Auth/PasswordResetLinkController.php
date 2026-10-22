@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,10 +34,12 @@ class PasswordResetLinkController extends Controller
             'email' => 'required|email',
         ]);
 
-        Password::sendResetLink(
-            $request->only('email')
-        );
+        // Reset mandiri hanya untuk akun EO (superadmin); client & SPG minta reset ke admin.
+        Password::sendResetLink([
+            ...$request->only('email'),
+            'role' => UserRole::Superadmin->value,
+        ]);
 
-        return back()->with('status', __('A reset link will be sent if the account exists.'));
+        return back()->with('status', 'Jika email terdaftar sebagai akun EO, link reset password akan dikirim.');
     }
 }

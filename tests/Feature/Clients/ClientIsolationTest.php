@@ -21,14 +21,14 @@ class ClientIsolationTest extends TestCase
             'name' => 'PT Baru',
             'code' => 'BARU',
             'account_name' => 'Admin Baru',
-            'account_email' => 'baru@client.test',
+            'account_username' => 'adminbaru',
             'account_password' => 'password',
         ])->assertRedirect();
 
         $client = Client::query()->where('code', 'BARU')->first();
         $this->assertNotNull($client);
 
-        $account = User::query()->where('email', 'baru@client.test')->first();
+        $account = User::query()->where('username', 'adminbaru')->first();
         $this->assertSame($client->id, $account->client_id);
         $this->assertTrue(Hash::check('password', $account->password));
     }

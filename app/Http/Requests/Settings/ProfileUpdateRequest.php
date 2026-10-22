@@ -16,6 +16,13 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Hanya EO (superadmin) yang memakai email; client & SPG login dengan username yang diatur admin.
+        if (! $this->user()->isSuperadmin()) {
+            return [
+                'name' => ['required', 'string', 'max:255'],
+            ];
+        }
+
         return [
             'name' => ['required', 'string', 'max:255'],
 

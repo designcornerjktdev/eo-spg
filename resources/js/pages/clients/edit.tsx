@@ -28,7 +28,12 @@ export default function ClientEdit({ client }: { client: Client }) {
     };
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Client', href: '/clients' }, { title: client.name, href: route('clients.show', client.id) }]}>
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Client', href: '/clients' },
+                { title: client.name, href: route('clients.show', client.id) },
+            ]}
+        >
             <Head title={`Ubah ${client.name}`} />
             <PageHeader title="Ubah client" />
             <form onSubmit={submit} className="grid max-w-xl gap-4">

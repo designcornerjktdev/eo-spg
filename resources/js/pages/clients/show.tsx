@@ -2,15 +2,15 @@ import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, usePage } from '@inertiajs/react';
 import { SharedData } from '@/types';
+import { Head, Link, usePage } from '@inertiajs/react';
 
 interface ClientShow {
     id: number;
     name: string;
     code: string;
     notes: string | null;
-    users: { id: number; name: string; email: string }[];
+    users: { id: number; name: string; username: string | null; email: string | null }[];
     products: { id: number; name: string }[];
     campaigns: { id: number; name: string; status: string }[];
 }
@@ -19,7 +19,12 @@ export default function ClientShow({ client }: { client: ClientShow }) {
     const canEdit = usePage<SharedData>().props.auth.user?.role === 'superadmin';
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Client', href: '/clients' }, { title: client.name, href: route('clients.show', client.id) }]}>
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Client', href: '/clients' },
+                { title: client.name, href: route('clients.show', client.id) },
+            ]}
+        >
             <Head title={client.name} />
             <div className="flex items-start justify-between">
                 <PageHeader title={client.name} description={`Kode ${client.code}`} />
@@ -29,7 +34,7 @@ export default function ClientShow({ client }: { client: ClientShow }) {
                     </Button>
                 )}
             </div>
-            {client.notes && <p className="text-sm text-muted-foreground">{client.notes}</p>}
+            {client.notes && <p className="text-muted-foreground text-sm">{client.notes}</p>}
             <div className="grid gap-4 md:grid-cols-3">
                 <Card>
                     <CardHeader>
@@ -38,7 +43,7 @@ export default function ClientShow({ client }: { client: ClientShow }) {
                     <CardContent className="space-y-1 text-sm">
                         {client.users.map((user) => (
                             <div key={user.id}>
-                                {user.name} · {user.email}
+                                {user.name} · {user.username ?? user.email}
                             </div>
                         ))}
                         {client.users.length === 0 && <div>Belum ada akun.</div>}

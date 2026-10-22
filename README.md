@@ -10,12 +10,14 @@ Development memakai SQLite. PostgreSQL diutamakan untuk production; MySQL jika s
 
 ## Akun demo (`php artisan db:seed`)
 
-| Role | Email | Password |
+EO (superadmin) login dengan email dan bisa reset password sendiri. Client dan SPG login dengan username; jika lupa password, EO meresetnya dari menu Pengguna.
+
+| Role | Login | Password |
 | --- | --- | --- |
-| Superadmin EO | eo@eo.test | password |
-| Client Mayora | client.mayora@eo.test | password |
-| Client IMOBY | client.imoby@eo.test | password |
-| SPG | spg1@eo.test | password |
+| Superadmin EO | eo@eo.test (email) | password |
+| Client Mayora | mayora (username) | password |
+| Client IMOBY | imoby (username) | password |
+| SPG | spg1 (username) | password |
 
 ## Perintah lokal
 

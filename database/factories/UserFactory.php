@@ -50,6 +50,8 @@ class UserFactory extends Factory
         return $this->state(fn () => [
             'role' => UserRole::Client,
             'client_id' => $client?->id ?? Client::factory(),
+            'username' => fake()->unique()->userName(),
+            'email' => null,
         ]);
     }
 
@@ -58,6 +60,8 @@ class UserFactory extends Factory
         return $this->state(fn () => [
             'role' => UserRole::Spg,
             'client_id' => null,
+            'username' => fake()->unique()->userName(),
+            'email' => null,
         ]);
     }
 }
