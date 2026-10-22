@@ -1,3 +1,4 @@
+import DangerZone from '@/components/danger-zone';
 import FormPage from '@/components/form-page';
 import InputError from '@/components/input-error';
 import PageHeader from '@/components/page-header';
@@ -55,12 +56,14 @@ export default function FormEdit({
     selectedCampaignId,
     fieldTypes,
     locked = false,
+    deleteBlocker = null,
 }: {
     template: Template | null;
     campaigns: { id: number; name: string }[];
     selectedCampaignId: number | null;
     fieldTypes: { value: string; label: string }[];
     locked?: boolean;
+    deleteBlocker?: string | null;
 }) {
     const { data, setData, post, put, processing, errors } = useForm({
         campaign_id: (template?.campaign_id ?? selectedCampaignId ?? '').toString(),
@@ -275,6 +278,16 @@ export default function FormEdit({
                     </div>
                     {!locked && <Button disabled={processing}>Simpan form</Button>}
                 </form>
+                {template && (
+                    <DangerZone
+                        title="Hapus form"
+                        description="Form masih draf dan belum dipakai di penugasan SPG."
+                        confirmTitle={`Hapus form ${template.name} v${template.version}?`}
+                        deleteUrl={route('forms.destroy', template.id)}
+                        blocker={deleteBlocker}
+                        errorKey="form"
+                    />
+                )}
             </FormPage>
         </AppLayout>
     );

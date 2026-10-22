@@ -42,7 +42,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('campaigns/{campaign}/activate', [CampaignController::class, 'activate'])->name('campaigns.activate');
         Route::post('campaigns/{campaign}/close', [CampaignController::class, 'close'])->name('campaigns.close');
 
-        Route::resource('forms', FormTemplateController::class)->except(['show', 'destroy']);
+        Route::resource('forms', FormTemplateController::class)->except(['show']);
         Route::get('forms/{form}/preview', [FormTemplateController::class, 'preview'])->name('forms.preview');
         Route::post('forms/{form}/publish', [FormTemplateController::class, 'publish'])->name('forms.publish');
         Route::post('forms/{form}/version', [FormTemplateController::class, 'version'])->name('forms.version');

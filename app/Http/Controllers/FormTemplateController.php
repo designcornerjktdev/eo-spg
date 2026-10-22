@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Domain\Audit\Services\AuditLogger;
 use App\Domain\Forms\Services\FormDefinitionService;
 use App\Enums\FieldType;
+use App\Enums\FormStatus;
 use App\Http\Requests\Forms\FormTemplateRequest;
+use App\Models\Assignment;
 use App\Models\Campaign;
 use App\Models\FormTemplate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -65,6 +68,7 @@ class FormTemplateController extends Controller
             'selectedCampaignId' => $form->campaign_id,
             'fieldTypes' => $this->fieldTypes(),
             'locked' => $form->isLocked(),
+            'deleteBlocker' => $this->deleteBlocker($form),
         ]);
     }
 
@@ -102,6 +106,36 @@ class FormTemplateController extends Controller
         $audit->record($request->user(), 'form.versioned', $copy, ['from' => $form->version], ['to' => $copy->version]);
 
         return redirect()->route('forms.edit', $copy)->with('success', 'Versi baru dibuat.');
+    }
+
+    public function destroy(Request $request, FormTemplate $form, AuditLogger $audit): RedirectResponse
+    {
+        $this->authorize('delete', $form);
+
+        if ($blocker = $this->deleteBlocker($form)) {
+            throw ValidationException::withMessages(['form' => $blocker]);
+        }
+
+        $audit->record($request->user(), 'form.deleted', $form, $form->only(['name', 'campaign_id', 'version', 'status']));
+        $form->delete();
+
+        return redirect()->route('forms.index')->with('success', 'Form '.$form->name.' dihapus.');
+    }
+
+    /**
+     * FK penugasan & submission ke form memakai cascade, jadi hanya draf yang belum dipakai yang boleh dihapus.
+     */
+    private function deleteBlocker(FormTemplate $form): ?string
+    {
+        if ($form->status !== FormStatus::Draft) {
+            return 'Hanya form berstatus draf yang bisa dihapus. Form yang sudah diterbitkan tetap disimpan sebagai riwayat.';
+        }
+
+        if (Assignment::query()->where('form_template_id', $form->id)->exists() || $form->submissions()->exists()) {
+            return 'Form ini sudah dipakai di penugasan SPG, jadi tidak bisa dihapus.';
+        }
+
+        return null;
     }
 
     public function preview(FormTemplate $form): Response
