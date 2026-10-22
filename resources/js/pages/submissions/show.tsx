@@ -2,6 +2,7 @@ import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
+import { formatDateTime, label } from '@/lib/format';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
 
@@ -33,12 +34,22 @@ export default function SubmissionShow({ submission }: { submission: Submission 
     };
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Data', href: '/submissions' }, { title: `#${submission.id}`, href: '#' }]}>
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Data', href: '/submissions' },
+                { title: `#${submission.id}`, href: '#' },
+            ]}
+        >
             <Head title={`Submission #${submission.id}`} />
-            <PageHeader title={`Submission #${submission.id}`} description={`${submission.campaign?.name} · ${submission.status}`} />
+            <PageHeader
+                title={`Submission #${submission.id}`}
+                description={`${submission.campaign?.name} · ${label('submissionStatus', submission.status)}`}
+            />
             <div className="grid gap-2 text-sm">
-                <div>Waktu server: {submission.submitted_at}</div>
-                <div>Lokasi: {submission.location?.name} {submission.location?.area ? `(${submission.location.area})` : ''}</div>
+                <div>Waktu input: {formatDateTime(submission.submitted_at)}</div>
+                <div>
+                    Lokasi: {submission.location?.name} {submission.location?.area ? `(${submission.location.area})` : ''}
+                </div>
                 <div>SPG: {submission.spg?.name}</div>
                 <div>Kualifikasi: {submission.qualified === null ? '-' : submission.qualified ? 'Lolos' : 'Tidak lolos'}</div>
             </div>
@@ -63,7 +74,7 @@ export default function SubmissionShow({ submission }: { submission: Submission 
                     </Button>
                 </form>
             )}
-            {submission.void_reason && <p className="text-sm text-muted-foreground">Alasan void: {submission.void_reason}</p>}
+            {submission.void_reason && <p className="text-muted-foreground text-sm">Alasan void: {submission.void_reason}</p>}
         </AppLayout>
     );
 }

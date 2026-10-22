@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { formatDateTime, label } from '@/lib/format';
 import { Head, Link, router } from '@inertiajs/react';
 import { FormEvent } from 'react';
 
@@ -77,11 +78,11 @@ export default function SubmissionsIndex({
                     <tbody>
                         {submissions.data.map((submission) => (
                             <tr key={submission.id} className="border-t">
-                                <td className="px-3 py-2">{submission.submitted_at}</td>
+                                <td className="px-3 py-2 whitespace-nowrap">{formatDateTime(submission.submitted_at)}</td>
                                 <td className="px-3 py-2">{submission.campaign?.name}</td>
                                 <td className="px-3 py-2">{submission.location?.name}</td>
                                 <td className="px-3 py-2">{submission.spg?.name}</td>
-                                <td className="px-3 py-2">{submission.status}</td>
+                                <td className="px-3 py-2">{label('submissionStatus', submission.status)}</td>
                                 <td className="px-3 py-2 text-right">
                                     <Button asChild size="sm" variant="outline">
                                         <Link href={route('submissions.show', submission.id)}>Detail</Link>
@@ -97,17 +98,7 @@ export default function SubmissionsIndex({
     );
 }
 
-function FilterSelect({
-    name,
-    label,
-    value,
-    options,
-}: {
-    name: string;
-    label: string;
-    value?: string;
-    options: { id: number; name: string }[];
-}) {
+function FilterSelect({ name, label, value, options }: { name: string; label: string; value?: string; options: { id: number; name: string }[] }) {
     return (
         <div>
             <Label>{label}</Label>

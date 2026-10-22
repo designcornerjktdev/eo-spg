@@ -2,6 +2,7 @@ import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
+import { label } from '@/lib/format';
 import { SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 
@@ -66,7 +67,7 @@ export default function ClientShow({ client }: { client: ClientShow }) {
                     <CardContent className="space-y-1 text-sm">
                         {client.campaigns.map((campaign) => (
                             <Link key={campaign.id} href={route('campaigns.show', campaign.id)} className="block underline">
-                                {campaign.name} ({campaign.status})
+                                {campaign.name} ({label('campaignStatus', campaign.status)})
                             </Link>
                         ))}
                     </CardContent>

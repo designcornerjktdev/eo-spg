@@ -4,6 +4,7 @@ import PageHeader from '@/components/page-header';
 import Pagination from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
+import { formatDateRange, label, labelOptions } from '@/lib/format';
 import { SharedData } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import { Eye, Pencil } from 'lucide-react';
@@ -18,8 +19,6 @@ interface CampaignRow {
     locations_count: number;
     submissions_count: number;
 }
-
-const statusLabels: Record<string, string> = { draft: 'Draf', active: 'Aktif', closed: 'Ditutup' };
 
 export default function CampaignsIndex({
     campaigns,
@@ -45,7 +44,7 @@ export default function CampaignsIndex({
                 filters={filters}
                 searchPlaceholder="Cari nama campaign"
                 selects={[
-                    { name: 'status', label: 'Semua status', options: Object.entries(statusLabels).map(([value, label]) => ({ value, label })) },
+                    { name: 'status', label: 'Semua status', options: labelOptions('campaignStatus') },
                     ...(canEdit ? [{ name: 'client_id', label: 'Semua client', options: clients.map((c) => ({ value: c.id, label: c.name })) }] : []),
                 ]}
             />
@@ -67,12 +66,10 @@ export default function CampaignsIndex({
                             <tr key={campaign.id} className="border-t">
                                 <td className="px-3 py-2">{campaign.name}</td>
                                 <td className="px-3 py-2">{campaign.client.name}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">
-                                    {campaign.starts_on?.slice(0, 10)} — {campaign.ends_on?.slice(0, 10)}
-                                </td>
+                                <td className="px-3 py-2 whitespace-nowrap">{formatDateRange(campaign.starts_on, campaign.ends_on)}</td>
                                 <td className="px-3 py-2">
                                     <Badge variant={campaign.status === 'active' ? 'default' : 'secondary'}>
-                                        {statusLabels[campaign.status] ?? campaign.status}
+                                        {label('campaignStatus', campaign.status)}
                                     </Badge>
                                 </td>
                                 <td className="px-3 py-2">{campaign.locations_count}</td>

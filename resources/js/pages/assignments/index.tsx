@@ -4,6 +4,7 @@ import PageHeader from '@/components/page-header';
 import Pagination from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
+import { formatDateTimeRange, label, labelOptions } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { Head } from '@inertiajs/react';
 import { Pencil } from 'lucide-react';
@@ -16,15 +17,6 @@ interface Row {
     campaign: { name: string };
     location: { name: string };
     user: { name: string };
-}
-
-const statusLabels: Record<string, string> = { scheduled: 'Terjadwal', active: 'Berjalan', done: 'Selesai', cancelled: 'Dibatalkan' };
-
-function formatTime(value: string) {
-    const date = new Date(value);
-    return Number.isNaN(date.getTime())
-        ? value
-        : date.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 export default function AssignmentsIndex({
@@ -50,7 +42,7 @@ export default function AssignmentsIndex({
                 searchPlaceholder="Cari nama SPG atau lokasi"
                 selects={[
                     { name: 'campaign_id', label: 'Semua campaign', options: campaigns.map((c) => ({ value: c.id, label: c.name })) },
-                    { name: 'status', label: 'Semua status', options: Object.entries(statusLabels).map(([value, label]) => ({ value, label })) },
+                    { name: 'status', label: 'Semua status', options: labelOptions('assignmentStatus') },
                 ]}
             />
             <div className="overflow-x-auto rounded-lg border">
@@ -71,12 +63,10 @@ export default function AssignmentsIndex({
                                 <td className="px-3 py-2">{assignment.user.name}</td>
                                 <td className="px-3 py-2">{assignment.campaign.name}</td>
                                 <td className="px-3 py-2">{assignment.location.name}</td>
-                                <td className="px-3 py-2 whitespace-nowrap">
-                                    {formatTime(assignment.starts_at)} — {formatTime(assignment.ends_at)}
-                                </td>
+                                <td className="px-3 py-2 whitespace-nowrap">{formatDateTimeRange(assignment.starts_at, assignment.ends_at)}</td>
                                 <td className="px-3 py-2">
                                     <Badge variant={assignment.status === 'cancelled' ? 'outline' : 'secondary'}>
-                                        {statusLabels[assignment.status] ?? assignment.status}
+                                        {label('assignmentStatus', assignment.status)}
                                     </Badge>
                                 </td>
                                 <td className="px-3 py-1">

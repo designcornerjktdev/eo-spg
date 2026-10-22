@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
+import { formatDateTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { Head, useForm } from '@inertiajs/react';
 import { Ban, Pencil, Plus } from 'lucide-react';
@@ -119,7 +120,7 @@ export default function SpgShow({
                                 className={cn('hover:bg-muted/40', submission.status === 'void' && 'text-muted-foreground [&>td.cell]:line-through')}
                             >
                                 <td className="bg-muted/50 text-muted-foreground border-r border-b px-2 py-1.5 text-center">{rowOffset + index}</td>
-                                <td className="cell border-r border-b px-3 py-1.5 whitespace-nowrap">{formatTime(submission.submitted_at)}</td>
+                                <td className="cell border-r border-b px-3 py-1.5 whitespace-nowrap">{formatDateTime(submission.submitted_at)}</td>
                                 {fields.map((field) => (
                                     <td key={field.key} className="cell max-w-64 truncate border-r border-b px-3 py-1.5">
                                         {formatAnswer(submission.answers?.[field.key])}
@@ -327,13 +328,6 @@ function toAnswer(value: unknown, fallback: Answer): Answer {
     if (value === null || value === undefined) return fallback;
     if (typeof value === 'boolean' || Array.isArray(value)) return value as Answer;
     return String(value);
-}
-
-function formatTime(value: string) {
-    const date = new Date(value);
-    return Number.isNaN(date.getTime())
-        ? value
-        : date.toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
 function formatAnswer(value: unknown): string {

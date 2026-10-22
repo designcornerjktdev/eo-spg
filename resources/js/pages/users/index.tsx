@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { label } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { Head, router, useForm } from '@inertiajs/react';
 import { KeyRound, Pencil } from 'lucide-react';
@@ -27,8 +28,6 @@ interface Filters {
     role?: string;
     status?: string;
 }
-
-const roleLabels: Record<string, string> = { client: 'Client', spg: 'SPG' };
 
 export default function UsersIndex({
     users,
@@ -103,7 +102,7 @@ export default function UsersIndex({
                             <tr key={user.id} className={cn('border-t', !user.is_active && 'text-muted-foreground')}>
                                 <td className="px-3 py-2">{user.name}</td>
                                 <td className="px-3 py-2 font-mono">{user.username ?? '-'}</td>
-                                <td className="px-3 py-2">{roleLabels[user.role] ?? user.role}</td>
+                                <td className="px-3 py-2">{label('role', user.role)}</td>
                                 <td className="px-3 py-2">{user.client?.name ?? '-'}</td>
                                 <td className="px-3 py-2">
                                     {user.is_active ? <Badge variant="secondary">Aktif</Badge> : <Badge variant="outline">Nonaktif</Badge>}

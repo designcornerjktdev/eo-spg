@@ -1,6 +1,7 @@
 import PageHeader from '@/components/page-header';
 import Pagination from '@/components/pagination';
 import AppLayout from '@/layouts/app-layout';
+import { formatDateTime, label } from '@/lib/format';
 import { Head } from '@inertiajs/react';
 
 interface LogRow {
@@ -16,7 +17,7 @@ export default function AuditIndex({ logs }: { logs: { data: LogRow[]; links: { 
     return (
         <AppLayout breadcrumbs={[{ title: 'Audit log', href: '/audit' }]}>
             <Head title="Audit log" />
-            <PageHeader title="Audit log" description="Perubahan form, assignment, dan void submission." />
+            <PageHeader title="Audit log" description="Riwayat perubahan penting oleh admin dan SPG." />
             <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full text-sm">
                     <thead className="bg-muted/50">
@@ -30,11 +31,11 @@ export default function AuditIndex({ logs }: { logs: { data: LogRow[]; links: { 
                     <tbody>
                         {logs.data.map((log) => (
                             <tr key={log.id} className="border-t">
-                                <td className="px-3 py-2">{log.created_at}</td>
+                                <td className="px-3 py-2 whitespace-nowrap">{formatDateTime(log.created_at)}</td>
                                 <td className="px-3 py-2">{log.user?.name ?? '-'}</td>
-                                <td className="px-3 py-2">{log.action}</td>
+                                <td className="px-3 py-2">{label('auditAction', log.action)}</td>
                                 <td className="px-3 py-2">
-                                    {log.auditable_type} #{log.auditable_id}
+                                    {label('auditableType', log.auditable_type)} <span className="text-muted-foreground">#{log.auditable_id}</span>
                                 </td>
                             </tr>
                         ))}

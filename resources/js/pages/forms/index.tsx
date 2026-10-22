@@ -3,6 +3,7 @@ import PageHeader from '@/components/page-header';
 import Pagination from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
+import { label } from '@/lib/format';
 import { Head } from '@inertiajs/react';
 import { Eye, Pencil } from 'lucide-react';
 
@@ -13,8 +14,6 @@ interface TemplateRow {
     status: string;
     campaign: { name: string };
 }
-
-const statusLabels: Record<string, string> = { draft: 'Draf', published: 'Terbit', locked: 'Terkunci' };
 
 export default function FormsIndex({
     templates,
@@ -48,7 +47,7 @@ export default function FormsIndex({
                                 <td className="px-3 py-2">v{template.version}</td>
                                 <td className="px-3 py-2">
                                     <Badge variant={template.status === 'draft' ? 'outline' : 'secondary'}>
-                                        {statusLabels[template.status] ?? template.status}
+                                        {label('formStatus', template.status)}
                                     </Badge>
                                 </td>
                                 <td className="px-3 py-1">

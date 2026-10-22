@@ -2,6 +2,7 @@ import PageHeader from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
+import { formatDateTimeRange } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { Head, Link } from '@inertiajs/react';
 
@@ -65,7 +66,7 @@ function TaskCard({ task }: { task: Task }) {
                 {task.fillable ? <Badge>Aktif</Badge> : <Badge variant="secondary">Tutup</Badge>}
             </div>
             <div className="text-muted-foreground text-sm">
-                {formatTime(task.starts_at)} – {formatTime(task.ends_at)}
+                {formatDateTimeRange(task.starts_at, task.ends_at)}
                 <br />
                 {task.my_count} data terinput
             </div>
@@ -74,11 +75,4 @@ function TaskCard({ task }: { task: Task }) {
             </Button>
         </div>
     );
-}
-
-function formatTime(value: string) {
-    const date = new Date(value);
-    return Number.isNaN(date.getTime())
-        ? value
-        : date.toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 }

@@ -1,9 +1,10 @@
 import PageHeader from '@/components/page-header';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { label } from '@/lib/format';
 import { Head, Link } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
 
 interface Field {
     key: string;
@@ -19,7 +20,12 @@ export default function FormPreview({
     template: { id: number; name: string; version: number; requires_consent: boolean; consent_text: string | null; fields: Field[] };
 }) {
     return (
-        <AppLayout breadcrumbs={[{ title: 'Form', href: '/forms' }, { title: 'Pratinjau', href: '#' }]}>
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Form', href: '/forms' },
+                { title: 'Pratinjau', href: '#' },
+            ]}
+        >
             <Head title={`Pratinjau ${template.name}`} />
             <PageHeader title={`Pratinjau ${template.name} v${template.version}`} />
             <div className="mx-auto w-full max-w-md space-y-4 rounded-xl border p-4">
@@ -41,7 +47,7 @@ export default function FormPreview({
                         ) : field.type === 'long_text' ? (
                             <textarea className="border-input min-h-24 rounded-md border p-2" disabled />
                         ) : (
-                            <Input disabled placeholder={field.type} />
+                            <Input disabled placeholder={label('fieldType', field.type)} />
                         )}
                     </div>
                 ))}
