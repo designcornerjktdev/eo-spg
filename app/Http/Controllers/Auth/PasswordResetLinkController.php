@@ -34,12 +34,12 @@ class PasswordResetLinkController extends Controller
             'email' => 'required|email',
         ]);
 
-        // Reset mandiri hanya untuk akun EO (superadmin); client & SPG minta reset ke admin.
+        // Self-service reset is only for EO (superadmin) accounts; clients & SPGs ask an admin to reset.
         Password::sendResetLink([
             ...$request->only('email'),
             'role' => UserRole::Superadmin->value,
         ]);
 
-        return back()->with('status', 'Jika email terdaftar sebagai akun EO, link reset password akan dikirim.');
+        return back()->with('status', 'If this email belongs to an EO admin account, a password reset link will be sent.');
     }
 }

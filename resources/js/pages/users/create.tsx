@@ -25,16 +25,16 @@ export default function UserCreate({ clients }: { clients: { id: number; name: s
     return (
         <AppLayout
             breadcrumbs={[
-                { title: 'Pengguna', href: '/users' },
-                { title: 'Tambah', href: '#' },
+                { title: 'Users', href: '/users' },
+                { title: 'New', href: '#' },
             ]}
         >
-            <Head title="Tambah akun" />
+            <Head title="New account" />
             <FormPage>
-                <PageHeader title="Tambah akun" />
+                <PageHeader title="New account" />
                 <form onSubmit={submit} className="grid gap-4 rounded-xl border p-4 sm:p-6">
                     <div className="grid gap-2">
-                        <Label>Nama</Label>
+                        <Label>Name</Label>
                         <Input value={data.name} onChange={(e) => setData('name', e.target.value)} />
                         <InputError message={errors.name} />
                     </div>
@@ -43,7 +43,7 @@ export default function UserCreate({ clients }: { clients: { id: number; name: s
                         <Input
                             id="username"
                             autoCapitalize="none"
-                            placeholder="huruf kecil, angka, titik, - atau _"
+                            placeholder="lowercase letters, numbers, dot, - or _"
                             value={data.username}
                             onChange={(e) => setData('username', e.target.value.toLowerCase())}
                         />
@@ -73,7 +73,7 @@ export default function UserCreate({ clients }: { clients: { id: number; name: s
                                 value={data.client_id}
                                 onChange={(e) => setData('client_id', e.target.value)}
                             >
-                                <option value="">Pilih client</option>
+                                <option value="">Select a client</option>
                                 {clients.map((client) => (
                                     <option key={client.id} value={client.id}>
                                         {client.name}
@@ -83,7 +83,7 @@ export default function UserCreate({ clients }: { clients: { id: number; name: s
                             <InputError message={errors.client_id} />
                         </div>
                     )}
-                    <Button disabled={processing}>Simpan</Button>
+                    <Button disabled={processing}>Save</Button>
                 </form>
             </FormPage>
         </AppLayout>

@@ -36,7 +36,7 @@ export default function SubmissionShow({ submission }: { submission: Submission 
     return (
         <AppLayout
             breadcrumbs={[
-                { title: 'Data', href: '/submissions' },
+                { title: 'Entries', href: '/submissions' },
                 { title: `#${submission.id}`, href: '#' },
             ]}
         >
@@ -46,12 +46,12 @@ export default function SubmissionShow({ submission }: { submission: Submission 
                 description={`${submission.campaign?.name} · ${label('submissionStatus', submission.status)}`}
             />
             <div className="grid gap-2 text-sm">
-                <div>Waktu input: {formatDateTime(submission.submitted_at)}</div>
+                <div>Submitted at: {formatDateTime(submission.submitted_at)}</div>
                 <div>
-                    Lokasi: {submission.location?.name} {submission.location?.area ? `(${submission.location.area})` : ''}
+                    Location: {submission.location?.name} {submission.location?.area ? `(${submission.location.area})` : ''}
                 </div>
                 <div>SPG: {submission.spg?.name}</div>
-                <div>Kualifikasi: {submission.qualified === null ? '-' : submission.qualified ? 'Lolos' : 'Tidak lolos'}</div>
+                <div>Qualification: {submission.qualified === null ? '-' : submission.qualified ? 'Qualified' : 'Not qualified'}</div>
             </div>
             <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full text-sm">
@@ -67,14 +67,14 @@ export default function SubmissionShow({ submission }: { submission: Submission 
             </div>
             {submission.can_void && (
                 <form onSubmit={voidSubmit} className="grid max-w-lg gap-3 rounded-lg border p-4">
-                    <p className="text-sm">Pembatalan wajib beralasan dan tercatat di audit log. Data tidak ditimpa.</p>
-                    <Textarea value={data.void_reason} onChange={(e) => setData('void_reason', e.target.value)} placeholder="Alasan void" />
+                    <p className="text-sm">Voiding requires a reason and is recorded in the audit log. Data is never overwritten.</p>
+                    <Textarea value={data.void_reason} onChange={(e) => setData('void_reason', e.target.value)} placeholder="Void reason" />
                     <Button variant="destructive" disabled={processing}>
-                        Batalkan submission
+                        Void entry
                     </Button>
                 </form>
             )}
-            {submission.void_reason && <p className="text-muted-foreground text-sm">Alasan void: {submission.void_reason}</p>}
+            {submission.void_reason && <p className="text-muted-foreground text-sm">Void reason: {submission.void_reason}</p>}
         </AppLayout>
     );
 }
@@ -85,7 +85,7 @@ function formatAnswer(value: string | string[] | boolean | number | undefined): 
     }
 
     if (typeof value === 'boolean') {
-        return value ? 'Ya' : 'Tidak';
+        return value ? 'Yes' : 'No';
     }
 
     return value === undefined || value === null ? '-' : String(value);

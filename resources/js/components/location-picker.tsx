@@ -9,7 +9,7 @@ import { LoaderCircle, MapPin, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 
-// Ikon default Leaflet tidak ikut ter-bundle oleh Vite; arahkan manual ke aset paketnya.
+// Leaflet's default icons aren't bundled by Vite; point them at the package assets manually.
 const pinIcon = L.icon({
     iconUrl: markerIcon,
     iconRetinaUrl: markerIcon2x,
@@ -37,10 +37,10 @@ interface NominatimResult {
     address?: Record<string, string>;
 }
 
-// Area = kota/kabupaten bila ada, supaya cocok dengan kolom "Area" yang dipakai untuk filter laporan.
+// Area = city/regency when available, to match the "Area" column used by report filters.
 function areaFrom(address?: Record<string, string>): string | undefined {
     if (!address) return undefined;
-    // Di Jakarta, OSM menaruh provinsi di `city` dan kota administrasi (mis. Jakarta Pusat) di `city_district`.
+    // In Jakarta, OSM stores the province in `city` and the administrative city (e.g. Jakarta Pusat) in `city_district`.
     return address.city_district ?? address.city ?? address.regency ?? address.county ?? address.state_district ?? address.town ?? address.state;
 }
 
@@ -68,8 +68,8 @@ function FlyTo({ position }: { position: [number, number] | null }) {
 }
 
 /**
- * Pilih titik lokasi: cari alamat, klik peta, atau geser pin. Alamat & area terisi otomatis lewat
- * geocoding OpenStreetMap (Nominatim); EO tetap bisa mengubahnya manual di kolom form.
+ * Pick a location point: search an address, click the map or drag the pin. Address & area are filled in
+ * automatically via OpenStreetMap geocoding (Nominatim); the EO can still edit them in the form.
  */
 export default function LocationPicker({
     latitude,
@@ -102,9 +102,9 @@ export default function LocationPicker({
             const response = await fetch(`${NOMINATIM}/search?${params}`);
             const data: NominatimResult[] = await response.json();
             setResults(data);
-            if (data.length === 0) setMessage('Tempat tidak ditemukan. Coba kata kunci lain atau klik langsung di peta.');
+            if (data.length === 0) setMessage('No place found. Try another keyword or click directly on the map.');
         } catch {
-            setMessage('Pencarian sedang tidak bisa dipakai. Klik langsung di peta untuk memilih titik.');
+            setMessage('Search is unavailable right now. Click on the map to pick a point.');
         } finally {
             setBusy(false);
         }
@@ -124,7 +124,7 @@ export default function LocationPicker({
             const data: NominatimResult = await response.json();
             if (data?.display_name) onPick({ ...toPicked(data), latitude: lat, longitude: lng, name: undefined });
         } catch {
-            // Titik tetap tersimpan walau alamat gagal diambil.
+            // The point is kept even if the address lookup fails.
         }
     };
 
@@ -132,7 +132,7 @@ export default function LocationPicker({
         <div className="space-y-2">
             <div className="flex gap-2">
                 <Input
-                    placeholder="Cari tempat, mis. PIK Avenue Jakarta"
+                    placeholder="Search a place, e.g. PIK Avenue Jakarta"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyDown={(e) => {
@@ -142,7 +142,7 @@ export default function LocationPicker({
                         }
                     }}
                 />
-                <Button type="button" variant="outline" onClick={search} disabled={busy} aria-label="Cari tempat">
+                <Button type="button" variant="outline" onClick={search} disabled={busy} aria-label="Search place">
                     {busy ? <LoaderCircle className="size-4 animate-spin" /> : <Search className="size-4" />}
                 </Button>
             </div>
@@ -191,8 +191,8 @@ export default function LocationPicker({
             </div>
             <p className="text-muted-foreground text-xs">
                 {position
-                    ? `Titik: ${position[0].toFixed(6)}, ${position[1].toFixed(6)} — klik peta atau geser pin untuk memindahkan.`
-                    : 'Belum ada titik. Cari tempat atau klik peta.'}
+                    ? `Point: ${position[0].toFixed(6)}, ${position[1].toFixed(6)} — click the map or drag the pin to move it.`
+                    : 'No point yet. Search a place or click the map.'}
             </p>
         </div>
     );

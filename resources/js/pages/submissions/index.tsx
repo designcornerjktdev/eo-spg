@@ -37,23 +37,23 @@ export default function SubmissionsIndex({
     };
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Data', href: '/submissions' }]}>
-            <Head title="Data submission" />
-            <PageHeader title="Data campaign" description="Filter berlaku juga untuk export CSV." />
+        <AppLayout breadcrumbs={[{ title: 'Entries', href: '/submissions' }]}>
+            <Head title="Entries" />
+            <PageHeader title="Campaign entries" description="Filters also apply to the CSV export." />
             <form onSubmit={apply} className="grid gap-3 rounded-lg border p-4 md:grid-cols-6">
                 <FilterSelect name="campaign_id" label="Campaign" value={filters.campaign_id} options={campaigns} />
-                <FilterSelect name="location_id" label="Lokasi" value={filters.location_id} options={locations} />
+                <FilterSelect name="location_id" label="Location" value={filters.location_id} options={locations} />
                 {spgs.length > 0 && <FilterSelect name="spg_id" label="SPG" value={filters.spg_id} options={spgs} />}
                 <div>
-                    <Label>Dari</Label>
+                    <Label>From</Label>
                     <Input type="date" name="from" defaultValue={filters.from ?? ''} />
                 </div>
                 <div>
-                    <Label>Sampai</Label>
+                    <Label>To</Label>
                     <Input type="date" name="to" defaultValue={filters.to ?? ''} />
                 </div>
                 <div>
-                    <Label>Cari</Label>
+                    <Label>Search</Label>
                     <Input name="q" defaultValue={filters.q ?? ''} />
                 </div>
                 <div className="flex items-end gap-2 md:col-span-6">
@@ -67,9 +67,9 @@ export default function SubmissionsIndex({
                 <table className="w-full text-sm">
                     <thead className="bg-muted/50">
                         <tr>
-                            <th className="px-3 py-2 text-left">Waktu</th>
+                            <th className="px-3 py-2 text-left">Time</th>
                             <th className="px-3 py-2 text-left">Campaign</th>
-                            <th className="px-3 py-2 text-left">Lokasi</th>
+                            <th className="px-3 py-2 text-left">Location</th>
                             <th className="px-3 py-2 text-left">SPG</th>
                             <th className="px-3 py-2 text-left">Status</th>
                             <th />
@@ -103,7 +103,7 @@ function FilterSelect({ name, label, value, options }: { name: string; label: st
         <div>
             <Label>{label}</Label>
             <select name={name} defaultValue={value ?? ''} className="border-input h-9 w-full rounded-md border px-2 text-sm">
-                <option value="">Semua</option>
+                <option value="">All</option>
                 {options.map((option) => (
                     <option key={option.id} value={option.id}>
                         {option.name}

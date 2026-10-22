@@ -66,7 +66,7 @@ class ClientController extends Controller
             return $client;
         });
 
-        return redirect()->route('clients.show', $client)->with('success', 'Client berhasil dibuat.');
+        return redirect()->route('clients.show', $client)->with('success', 'Client created.');
     }
 
     public function show(Client $client): Response
@@ -96,7 +96,7 @@ class ClientController extends Controller
         $client->update($request->validated());
         $audit->record($request->user(), 'client.updated', $client, $old, $client->only(['name', 'code', 'notes']));
 
-        return redirect()->route('clients.show', $client)->with('success', 'Client diperbarui.');
+        return redirect()->route('clients.show', $client)->with('success', 'Client updated.');
     }
 
     public function destroy(Request $request, Client $client, AuditLogger $audit): RedirectResponse
@@ -108,7 +108,7 @@ class ClientController extends Controller
         }
 
         DB::transaction(function () use ($request, $client, $audit) {
-            // Akun login client ikut dinonaktifkan dan dikeluarkan agar tidak tersisa akses ke client yang dihapus.
+            // Deactivate and sign out the client's accounts so no access remains to a deleted client.
             $userIds = $client->users()->pluck('id');
             $client->users()->update(['is_active' => false]);
             DB::table(config('session.table', 'sessions'))->whereIn('user_id', $userIds)->delete();
@@ -117,20 +117,20 @@ class ClientController extends Controller
             $client->delete();
         });
 
-        return redirect()->route('clients.index')->with('success', 'Client '.$client->name.' dihapus.');
+        return redirect()->route('clients.index')->with('success', 'Client '.$client->name.' deleted.');
     }
 
     /**
-     * Client yang sudah punya campaign atau produk tidak boleh dihapus agar laporan dan riwayatnya tetap utuh.
+     * Clients with campaigns or products must not be deleted so their reports and history stay intact.
      */
     private function deleteBlocker(Client $client): ?string
     {
         if ($client->campaigns()->exists()) {
-            return 'Client ini sudah punya campaign, jadi tidak bisa dihapus.';
+            return 'This client already has campaigns, so it cannot be deleted.';
         }
 
         if ($client->products()->exists()) {
-            return 'Client ini masih punya produk. Hapus produknya dulu.';
+            return 'This client still has products. Delete them first.';
         }
 
         return null;

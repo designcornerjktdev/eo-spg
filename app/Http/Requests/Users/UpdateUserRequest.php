@@ -16,7 +16,7 @@ class UpdateUserRequest extends FormRequest
     }
 
     /**
-     * Role tidak bisa diubah setelah akun dibuat agar data tugas/submission tetap konsisten.
+     * The role cannot change after creation so assignment/submission data stays consistent.
      *
      * @return array<string, mixed>
      */

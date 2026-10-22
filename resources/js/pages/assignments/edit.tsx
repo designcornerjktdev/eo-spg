@@ -20,9 +20,9 @@ export default function AssignmentEdit({
             {...props}
             footer={
                 <DangerZone
-                    title="Hapus penugasan"
-                    description="Penugasan belum punya data dari SPG."
-                    confirmTitle="Hapus penugasan ini?"
+                    title="Delete assignment"
+                    description="This assignment has no SPG entries yet."
+                    confirmTitle="Delete this assignment?"
                     deleteUrl={route('assignments.destroy', assignment.id)}
                     blocker={deleteBlocker}
                     errorKey="assignment"
@@ -32,15 +32,15 @@ export default function AssignmentEdit({
                             variant="outline"
                             className="text-destructive"
                             onClick={() => {
-                                if (confirm('Batalkan penugasan ini? SPG tidak bisa input data lagi dan jadwalnya jadi bebas.')) {
+                                if (confirm('Cancel this assignment? The SPG can no longer submit entries and their schedule is freed.')) {
                                     router.post(route('assignments.cancel', assignment.id));
                                 }
                             }}
                         >
-                            Batalkan penugasan
+                            Cancel assignment
                         </Button>
                     )}
-                    {cancelled && <p className="text-muted-foreground text-sm">Penugasan ini sudah dibatalkan.</p>}
+                    {cancelled && <p className="text-muted-foreground text-sm">This assignment has been cancelled.</p>}
                 </DangerZone>
             }
         />

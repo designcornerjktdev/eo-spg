@@ -63,7 +63,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                             <div className="grid gap-2">
                                 <Label htmlFor="username">Username</Label>
                                 <Input id="username" className="mt-1 block w-full" value={auth.user.username ?? ''} disabled readOnly />
-                                <p className="text-muted-foreground text-sm">Username dan password diatur oleh admin EO.</p>
+                                <p className="text-muted-foreground text-sm">Your username and password are managed by the EO admin.</p>
                             </div>
                         )}
 

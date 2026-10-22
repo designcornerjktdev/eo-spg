@@ -54,9 +54,9 @@ class CampaignLocationTest extends TestCase
     {
         $world = $this->world();
 
-        // Mengganti daftar lokasi tanpa lokasi lama yang sudah dipakai penugasan harus ditolak.
+        // Replacing the location list without the old location that assignments use must be rejected.
         $this->actingAs($world['eo'])->put('/campaigns/'.$world['campaign']->id, $this->payload($world, [
-            ['name' => 'Lokasi Baru', 'area' => 'Bandung'],
+            ['name' => 'New Location', 'area' => 'Bandung'],
         ]))->assertSessionHasErrors('locations');
 
         $this->assertModelExists($world['location']);
@@ -67,7 +67,7 @@ class CampaignLocationTest extends TestCase
     public function test_unused_location_can_be_removed(): void
     {
         $world = $this->world();
-        $unused = CampaignLocation::factory()->create(['campaign_id' => $world['campaign']->id, 'name' => 'Tidak dipakai']);
+        $unused = CampaignLocation::factory()->create(['campaign_id' => $world['campaign']->id, 'name' => 'Unused']);
 
         $this->actingAs($world['eo'])->put('/campaigns/'.$world['campaign']->id, $this->payload($world, [
             ['id' => $world['location']->id, 'name' => $world['location']->name],

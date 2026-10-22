@@ -29,7 +29,7 @@ class AssignmentConflictTest extends TestCase
         $world = $this->world();
         $existing = $world['assignment'];
 
-        // Input datetime-local browser memakai pemisah "T" dan tanpa detik.
+        // Browser datetime-local input uses a "T" separator and no seconds.
         $this->actingAs($world['eo'])->post('/assignments', [
             'campaign_id' => $world['campaign']->id,
             'location_id' => $world['location']->id,

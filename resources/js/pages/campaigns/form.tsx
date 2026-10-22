@@ -63,14 +63,16 @@ export default function CampaignForm({
         mask_identity_for_client: campaign?.mask_identity_for_client ?? true,
         product_ids: (campaign?.products ?? []).map((product) => product.id.toString()),
         locations: campaign?.locations?.length
-            ? campaign.locations.map((location): FormLocation => ({
-                  id: location.id,
-                  name: location.name,
-                  area: location.area ?? '',
-                  address: location.address ?? '',
-                  latitude: location.latitude ?? null,
-                  longitude: location.longitude ?? null,
-              }))
+            ? campaign.locations.map(
+                  (location): FormLocation => ({
+                      id: location.id,
+                      name: location.name,
+                      area: location.area ?? '',
+                      address: location.address ?? '',
+                      latitude: location.latitude ?? null,
+                      longitude: location.longitude ?? null,
+                  }),
+              )
             : [{ ...EMPTY_LOCATION }],
     });
 
@@ -89,12 +91,12 @@ export default function CampaignForm({
         <AppLayout
             breadcrumbs={[
                 { title: 'Campaign', href: '/campaigns' },
-                { title: campaign ? 'Ubah' : 'Tambah', href: '#' },
+                { title: campaign ? 'Edit' : 'New', href: '#' },
             ]}
         >
-            <Head title={campaign ? 'Ubah campaign' : 'Tambah campaign'} />
+            <Head title={campaign ? 'Edit campaign' : 'New campaign'} />
             <FormPage width="lg">
-                <PageHeader title={campaign ? 'Ubah campaign' : 'Tambah campaign'} />
+                <PageHeader title={campaign ? 'Edit campaign' : 'New campaign'} />
                 <form onSubmit={submit} className="grid gap-4 rounded-xl border p-4 sm:p-6">
                     <div className="grid gap-2">
                         <Label>Client</Label>
@@ -103,7 +105,7 @@ export default function CampaignForm({
                             value={data.client_id}
                             onChange={(e) => setData('client_id', e.target.value)}
                         >
-                            <option value="">Pilih client</option>
+                            <option value="">Select a client</option>
                             {clients.map((client) => (
                                 <option key={client.id} value={client.id}>
                                     {client.name}
@@ -113,18 +115,18 @@ export default function CampaignForm({
                         <InputError message={errors.client_id} />
                     </div>
                     <div className="grid gap-2">
-                        <Label>Nama</Label>
+                        <Label>Name</Label>
                         <Input value={data.name} onChange={(e) => setData('name', e.target.value)} />
                         <InputError message={errors.name} />
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="grid gap-2">
-                            <Label>Mulai</Label>
+                            <Label>Start</Label>
                             <Input type="date" value={data.starts_on} onChange={(e) => setData('starts_on', e.target.value)} />
                             <InputError message={errors.starts_on} />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Selesai</Label>
+                            <Label>End</Label>
                             <Input type="date" value={data.ends_on} onChange={(e) => setData('ends_on', e.target.value)} />
                             <InputError message={errors.ends_on} />
                         </div>
@@ -134,10 +136,10 @@ export default function CampaignForm({
                             checked={data.mask_identity_for_client}
                             onCheckedChange={(checked) => setData('mask_identity_for_client', checked === true)}
                         />
-                        <Label>Masking field identitas untuk client</Label>
+                        <Label>Mask identity fields for the client</Label>
                     </div>
                     <div className="grid gap-2">
-                        <Label>Produk</Label>
+                        <Label>Products</Label>
                         {clientProducts.map((product) => (
                             <label key={product.id} className="flex items-center gap-2 text-sm">
                                 <input
@@ -158,14 +160,14 @@ export default function CampaignForm({
                     </div>
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                            <Label>Lokasi</Label>
+                            <Label>Location</Label>
                             <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setData('locations', [...data.locations, { ...EMPTY_LOCATION }])}
                             >
-                                Tambah lokasi
+                                Add location
                             </Button>
                         </div>
                         {data.locations.map((location, index) => {
@@ -179,7 +181,7 @@ export default function CampaignForm({
                             return (
                                 <div key={location.id ?? `new-${index}`} className="space-y-3 rounded-md border p-3">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm font-medium">Lokasi {index + 1}</span>
+                                        <span className="text-sm font-medium">Location {index + 1}</span>
                                         {data.locations.length > 1 && (
                                             <Button
                                                 type="button"
@@ -193,22 +195,22 @@ export default function CampaignForm({
                                                     )
                                                 }
                                             >
-                                                Hapus lokasi
+                                                Remove location
                                             </Button>
                                         )}
                                     </div>
                                     <div className="grid gap-2 md:grid-cols-2">
                                         <div className="grid gap-1">
                                             <Input
-                                                placeholder="Nama lokasi, mis. PIK Avenue"
+                                                placeholder="Location name, e.g. PIK Avenue"
                                                 value={location.name}
                                                 onChange={(e) => update({ name: e.target.value })}
                                             />
                                             <InputError message={fieldError('name')} />
                                         </div>
-                                        <Input placeholder="Area / kota" value={location.area} onChange={(e) => update({ area: e.target.value })} />
+                                        <Input placeholder="Area / city" value={location.area} onChange={(e) => update({ area: e.target.value })} />
                                     </div>
-                                    <Input placeholder="Alamat" value={location.address} onChange={(e) => update({ address: e.target.value })} />
+                                    <Input placeholder="Address" value={location.address} onChange={(e) => update({ address: e.target.value })} />
                                     <Suspense fallback={<div className="bg-muted h-64 animate-pulse rounded-md" />}>
                                         <LocationPicker
                                             latitude={location.latitude}
@@ -219,7 +221,7 @@ export default function CampaignForm({
                                                     longitude: picked.longitude,
                                                     ...(picked.address ? { address: picked.address } : {}),
                                                     ...(picked.area ? { area: picked.area } : {}),
-                                                    // Nama hanya diisi otomatis bila EO belum mengetik nama sendiri.
+                                                    // Only auto-fill the name when the EO hasn't typed one yet.
                                                     ...(picked.name && !location.name ? { name: picked.name } : {}),
                                                 })
                                             }
@@ -231,7 +233,7 @@ export default function CampaignForm({
                         })}
                         <InputError message={errors.locations} />
                     </div>
-                    <Button disabled={processing}>Simpan</Button>
+                    <Button disabled={processing}>Save</Button>
                 </form>
                 {footer}
             </FormPage>

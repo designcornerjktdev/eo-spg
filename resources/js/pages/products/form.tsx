@@ -45,13 +45,13 @@ export default function ProductForm({
     return (
         <AppLayout
             breadcrumbs={[
-                { title: 'Produk', href: '/products' },
-                { title: product ? 'Ubah' : 'Tambah', href: '#' },
+                { title: 'Products', href: '/products' },
+                { title: product ? 'Edit' : 'New', href: '#' },
             ]}
         >
-            <Head title={product ? 'Ubah produk' : 'Tambah produk'} />
+            <Head title={product ? 'Edit product' : 'New product'} />
             <FormPage>
-                <PageHeader title={product ? 'Ubah produk' : 'Tambah produk'} />
+                <PageHeader title={product ? 'Edit product' : 'New product'} />
                 <form onSubmit={submit} className="grid gap-4 rounded-xl border p-4 sm:p-6">
                     <div className="grid gap-2">
                         <Label>Client</Label>
@@ -60,7 +60,7 @@ export default function ProductForm({
                             value={data.client_id}
                             onChange={(e) => setData('client_id', e.target.value)}
                         >
-                            <option value="">Pilih client</option>
+                            <option value="">Select a client</option>
                             {clients.map((client) => (
                                 <option key={client.id} value={client.id}>
                                     {client.name}
@@ -70,7 +70,7 @@ export default function ProductForm({
                         <InputError message={errors.client_id} />
                     </div>
                     <div className="grid gap-2">
-                        <Label>Nama</Label>
+                        <Label>Name</Label>
                         <Input value={data.name} onChange={(e) => setData('name', e.target.value)} />
                         <InputError message={errors.name} />
                     </div>
@@ -79,10 +79,10 @@ export default function ProductForm({
                         <Input value={data.sku} onChange={(e) => setData('sku', e.target.value)} />
                     </div>
                     <div className="grid gap-2">
-                        <Label>Deskripsi</Label>
+                        <Label>Description</Label>
                         <Textarea value={data.description} onChange={(e) => setData('description', e.target.value)} />
                     </div>
-                    <Button disabled={processing}>Simpan</Button>
+                    <Button disabled={processing}>Save</Button>
                 </form>
                 {footer}
             </FormPage>

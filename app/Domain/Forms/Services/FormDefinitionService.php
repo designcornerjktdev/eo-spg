@@ -34,7 +34,7 @@ class FormDefinitionService
     {
         if ($template->isLocked()) {
             throw ValidationException::withMessages([
-                'form' => 'Form sudah terkunci karena ada submission. Buat versi baru untuk mengubahnya.',
+                'form' => 'This form is locked because it already has submissions. Create a new version to change it.',
             ]);
         }
 
@@ -50,13 +50,13 @@ class FormDefinitionService
     {
         if ($template->fields()->count() === 0) {
             throw ValidationException::withMessages([
-                'form' => 'Form harus punya minimal satu field sebelum diterbitkan.',
+                'form' => 'A form needs at least one field before it can be published.',
             ]);
         }
 
         if ($template->status === FormStatus::Locked) {
             throw ValidationException::withMessages([
-                'form' => 'Form terkunci tidak bisa diterbitkan ulang.',
+                'form' => 'A locked form cannot be published again.',
             ]);
         }
 
@@ -122,7 +122,7 @@ class FormDefinitionService
 
             if ($key === '' || in_array($key, $keys, true)) {
                 throw ValidationException::withMessages([
-                    'fields' => 'Setiap field harus punya kunci unik.',
+                    'fields' => 'Every field needs a unique key.',
                 ]);
             }
 
@@ -131,7 +131,7 @@ class FormDefinitionService
 
             if (($field['show_on_dashboard'] ?? false) && ! $type->canShowOnDashboard()) {
                 throw ValidationException::withMessages([
-                    'fields' => "Field {$field['label']} tidak bisa ditampilkan di dashboard.",
+                    'fields' => "Field {$field['label']} cannot be shown on the dashboard.",
                 ]);
             }
 

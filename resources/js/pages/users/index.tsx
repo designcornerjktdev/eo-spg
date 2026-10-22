@@ -44,12 +44,12 @@ export default function UsersIndex({
     };
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Pengguna', href: '/users' }]}>
-            <Head title="Pengguna" />
+        <AppLayout breadcrumbs={[{ title: 'Users', href: '/users' }]}>
+            <Head title="Users" />
             <PageHeader
-                title="Akun Client & SPG"
-                description="Client dan SPG login dengan username. Jika lupa password, reset dari sini."
-                action={{ href: route('users.create'), label: 'Tambah akun' }}
+                title="Client & SPG accounts"
+                description="Clients and SPGs sign in with a username. Reset forgotten passwords here."
+                action={{ href: route('users.create'), label: 'New account' }}
             />
 
             <form
@@ -59,14 +59,14 @@ export default function UsersIndex({
                     applyFilters({ search });
                 }}
             >
-                <Input className="w-full sm:w-64" placeholder="Cari nama atau username" value={search} onChange={(e) => setSearch(e.target.value)} />
+                <Input className="w-full sm:w-64" placeholder="Search name or username" value={search} onChange={(e) => setSearch(e.target.value)} />
                 <select
                     aria-label="Filter role"
                     className="border-input bg-background h-9 rounded-md border px-2 text-sm"
                     value={filters.role ?? ''}
                     onChange={(e) => applyFilters({ role: e.target.value })}
                 >
-                    <option value="">Semua role</option>
+                    <option value="">All roles</option>
                     <option value="client">Client</option>
                     <option value="spg">SPG</option>
                 </select>
@@ -76,12 +76,12 @@ export default function UsersIndex({
                     value={filters.status ?? ''}
                     onChange={(e) => applyFilters({ status: e.target.value })}
                 >
-                    <option value="">Semua status</option>
-                    <option value="active">Aktif</option>
-                    <option value="inactive">Nonaktif</option>
+                    <option value="">All statuses</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
                 </select>
                 <Button type="submit" variant="outline">
-                    Cari
+                    Search
                 </Button>
             </form>
 
@@ -89,12 +89,12 @@ export default function UsersIndex({
                 <table className="w-full text-sm">
                     <thead className="bg-muted/50">
                         <tr>
-                            <th className="px-3 py-2 text-left">Nama</th>
+                            <th className="px-3 py-2 text-left">Name</th>
                             <th className="px-3 py-2 text-left">Username</th>
                             <th className="px-3 py-2 text-left">Role</th>
                             <th className="px-3 py-2 text-left">Client</th>
                             <th className="px-3 py-2 text-left">Status</th>
-                            <th className="px-3 py-2 text-left">Aksi</th>
+                            <th className="px-3 py-2 text-left">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -105,11 +105,11 @@ export default function UsersIndex({
                                 <td className="px-3 py-2">{label('role', user.role)}</td>
                                 <td className="px-3 py-2">{user.client?.name ?? '-'}</td>
                                 <td className="px-3 py-2">
-                                    {user.is_active ? <Badge variant="secondary">Aktif</Badge> : <Badge variant="outline">Nonaktif</Badge>}
+                                    {user.is_active ? <Badge variant="secondary">Active</Badge> : <Badge variant="outline">Inactive</Badge>}
                                 </td>
                                 <td className="px-3 py-1">
                                     <div className="flex gap-1">
-                                        <IconAction icon={Pencil} label="Edit akun" href={route('users.edit', user.id)} />
+                                        <IconAction icon={Pencil} label="Edit account" href={route('users.edit', user.id)} />
                                         <IconAction icon={KeyRound} label="Reset password" onClick={() => setResetting(user)} />
                                     </div>
                                 </td>
@@ -118,7 +118,7 @@ export default function UsersIndex({
                         {users.data.length === 0 && (
                             <tr>
                                 <td colSpan={6} className="text-muted-foreground px-3 py-8 text-center">
-                                    Tidak ada akun yang cocok.
+                                    No matching accounts.
                                 </td>
                             </tr>
                         )}
@@ -152,12 +152,12 @@ function ResetPasswordDialog({ user, onClose }: { user: Row | null; onClose: () 
                 <DialogHeader className="text-left">
                     <DialogTitle>Reset password</DialogTitle>
                     <DialogDescription>
-                        Password baru untuk {user?.name} ({user?.username}). Berikan password ini langsung ke yang bersangkutan.
+                        New password for {user?.name} ({user?.username}). Give this password directly to the account owner.
                     </DialogDescription>
                 </DialogHeader>
                 <form className="space-y-4" onSubmit={submit}>
                     <div className="grid gap-2">
-                        <Label htmlFor="new-password">Password baru</Label>
+                        <Label htmlFor="new-password">New password</Label>
                         <Input
                             id="new-password"
                             type="password"
@@ -168,7 +168,7 @@ function ResetPasswordDialog({ user, onClose }: { user: Row | null; onClose: () 
                         <InputError message={errors.password} />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="new-password-confirmation">Ulangi password baru</Label>
+                        <Label htmlFor="new-password-confirmation">Repeat new password</Label>
                         <Input
                             id="new-password-confirmation"
                             type="password"
@@ -179,10 +179,10 @@ function ResetPasswordDialog({ user, onClose }: { user: Row | null; onClose: () 
                     </div>
                     <div className="flex justify-end gap-2">
                         <Button type="button" variant="outline" onClick={close}>
-                            Batal
+                            Cancel
                         </Button>
                         <Button type="submit" disabled={processing}>
-                            Simpan password
+                            Save password
                         </Button>
                     </div>
                 </form>

@@ -51,7 +51,7 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'login' => 'Email/username atau password salah, atau akun tidak aktif.',
+                'login' => 'Incorrect email/username or password, or the account is inactive.',
             ]);
         }
 
@@ -61,7 +61,7 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Superadmin (EO) hanya bisa login dengan email; client & SPG hanya dengan username.
+     * The superadmin (EO) can only sign in with email; clients & SPGs only with a username.
      */
     private function findUser(): ?User
     {

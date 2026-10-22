@@ -40,7 +40,7 @@ class SubmissionExporter
      */
     private function headers(User $viewer, Collection $submissions): array
     {
-        $fixed = ['id', 'campaign', 'lokasi', 'area', 'spg', 'submitted_at', 'status', 'qualified'];
+        $fixed = ['id', 'campaign', 'location', 'area', 'spg', 'submitted_at', 'status', 'qualified'];
         $fieldKeys = [];
 
         foreach ($submissions as $submission) {
@@ -69,12 +69,12 @@ class SubmissionExporter
         $base = [
             'id' => (string) $submission->id,
             'campaign' => $submission->campaign?->name,
-            'lokasi' => $submission->assignment?->location?->name,
+            'location' => $submission->assignment?->location?->name,
             'area' => $submission->assignment?->location?->area,
             'spg' => $submission->submitter?->name,
             'submitted_at' => $submission->submitted_at?->toDateTimeString(),
             'status' => $submission->status->value,
-            'qualified' => $submission->qualified === null ? '' : ($submission->qualified ? 'ya' : 'tidak'),
+            'qualified' => $submission->qualified === null ? '' : ($submission->qualified ? 'yes' : 'no'),
         ];
 
         $row = [];

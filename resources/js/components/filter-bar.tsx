@@ -10,7 +10,7 @@ export interface FilterSelect {
 }
 
 /**
- * Pencarian + dropdown filter untuk halaman daftar. Nilai dikirim sebagai query string ke `url`.
+ * Search + dropdown filters for list pages. Values are sent as a query string to `url`.
  */
 export default function FilterBar({
     url,
@@ -55,7 +55,7 @@ export default function FilterBar({
                 </select>
             ))}
             <Button type="submit" variant="outline">
-                Cari
+                Search
             </Button>
         </form>
     );

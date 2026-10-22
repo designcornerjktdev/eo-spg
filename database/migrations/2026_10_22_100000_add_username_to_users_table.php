@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 return new class extends Migration
 {
     /**
-     * Superadmin login dengan email; client & SPG login dengan username (email opsional).
+     * The superadmin signs in with email; clients & SPGs sign in with a username (email optional).
      */
     public function up(): void
     {
@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('email')->nullable()->change();
         });
 
-        // Isi username akun lama dari bagian depan email, dibuat unik bila bentrok.
+        // Backfill usernames for existing accounts from the email local part, made unique on collision.
         DB::table('users')->where('role', '!=', 'superadmin')->orderBy('id')->get(['id', 'email'])->each(function ($user) {
             $base = Str::of((string) $user->email)->before('@')->lower()->replaceMatches('/[^a-z0-9._-]/', '')->value() ?: 'user';
             $username = $base;

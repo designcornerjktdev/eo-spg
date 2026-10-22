@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Koreksi mandiri SPG di hari yang sama. Data lama tidak ditimpa: baris lama di-void
- * dan baris baru dibuat (lihat ADR 003).
+ * Same-day self-correction by the SPG. Old data is never overwritten: the old row is voided
+ * and a new row is created (see ADR 003).
  */
 class SubmissionCorrector
 {
@@ -31,7 +31,7 @@ class SubmissionCorrector
             $replacement = $this->recorder->record($submission->assignment, $actor, $answers, $consentAccepted);
             $replacement->update(['corrects_submission_id' => $submission->id]);
 
-            $this->voider->void($submission, $actor, 'Dikoreksi SPG, diganti data #'.$replacement->id);
+            $this->voider->void($submission, $actor, 'Corrected by SPG, replaced by entry #'.$replacement->id);
             $this->audit->record($actor, 'submission.corrected', $replacement, ['corrects_submission_id' => $submission->id], $replacement->only(['answers']));
 
             return $replacement->refresh();
@@ -42,14 +42,14 @@ class SubmissionCorrector
     {
         $this->assertCorrectable($submission);
 
-        return $this->voider->void($submission, $actor, 'Dibatalkan SPG: '.trim($reason));
+        return $this->voider->void($submission, $actor, 'Cancelled by SPG: '.trim($reason));
     }
 
     private function assertCorrectable(FormSubmission $submission): void
     {
         if (! $submission->isCorrectableBySubmitter()) {
             throw ValidationException::withMessages([
-                'submission' => 'Data hanya bisa diperbaiki atau dibatalkan di hari yang sama. Hubungi EO untuk koreksi.',
+                'submission' => 'Entries can only be corrected or cancelled on the same day. Contact the EO admin for corrections.',
             ]);
         }
     }

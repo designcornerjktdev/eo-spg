@@ -5,7 +5,7 @@ import { Link } from '@inertiajs/react';
 import { type LucideIcon } from 'lucide-react';
 
 /**
- * Tombol aksi tabel berupa ikon saja; label tampil sebagai tooltip saat hover dan dibaca screen reader.
+ * Icon-only table action button; the label shows as a tooltip on hover and is read by screen readers.
  */
 export default function IconAction({
     icon: Icon,

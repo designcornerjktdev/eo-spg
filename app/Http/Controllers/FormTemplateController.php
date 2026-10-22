@@ -55,7 +55,7 @@ class FormTemplateController extends Controller
 
         $audit->record($request->user(), 'form.created', $template);
 
-        return redirect()->route('forms.edit', $template)->with('success', 'Form berhasil dibuat.');
+        return redirect()->route('forms.edit', $template)->with('success', 'Form created.');
     }
 
     public function edit(FormTemplate $form): Response
@@ -87,7 +87,7 @@ class FormTemplateController extends Controller
         );
         $audit->record($request->user(), 'form.updated', $form, $old, $form->only(['name', 'status', 'version']));
 
-        return redirect()->route('forms.edit', $form)->with('success', 'Form diperbarui.');
+        return redirect()->route('forms.edit', $form)->with('success', 'Form updated.');
     }
 
     public function publish(Request $request, FormTemplate $form, AuditLogger $audit): RedirectResponse
@@ -96,7 +96,7 @@ class FormTemplateController extends Controller
         $this->forms->publish($form);
         $audit->record($request->user(), 'form.published', $form);
 
-        return back()->with('success', 'Form diterbitkan.');
+        return back()->with('success', 'Form published.');
     }
 
     public function version(Request $request, FormTemplate $form, AuditLogger $audit): RedirectResponse
@@ -105,7 +105,7 @@ class FormTemplateController extends Controller
         $copy = $this->forms->createNewVersion($form);
         $audit->record($request->user(), 'form.versioned', $copy, ['from' => $form->version], ['to' => $copy->version]);
 
-        return redirect()->route('forms.edit', $copy)->with('success', 'Versi baru dibuat.');
+        return redirect()->route('forms.edit', $copy)->with('success', 'New version created.');
     }
 
     public function destroy(Request $request, FormTemplate $form, AuditLogger $audit): RedirectResponse
@@ -119,20 +119,20 @@ class FormTemplateController extends Controller
         $audit->record($request->user(), 'form.deleted', $form, $form->only(['name', 'campaign_id', 'version', 'status']));
         $form->delete();
 
-        return redirect()->route('forms.index')->with('success', 'Form '.$form->name.' dihapus.');
+        return redirect()->route('forms.index')->with('success', 'Form '.$form->name.' deleted.');
     }
 
     /**
-     * FK penugasan & submission ke form memakai cascade, jadi hanya draf yang belum dipakai yang boleh dihapus.
+     * The assignment & submission -> form FKs cascade, so only unused drafts may be deleted.
      */
     private function deleteBlocker(FormTemplate $form): ?string
     {
         if ($form->status !== FormStatus::Draft) {
-            return 'Hanya form berstatus draf yang bisa dihapus. Form yang sudah diterbitkan tetap disimpan sebagai riwayat.';
+            return 'Only draft forms can be deleted. Published forms are kept as history.';
         }
 
         if (Assignment::query()->where('form_template_id', $form->id)->exists() || $form->submissions()->exists()) {
-            return 'Form ini sudah dipakai di penugasan SPG, jadi tidak bisa dihapus.';
+            return 'This form is used by SPG assignments, so it cannot be deleted.';
         }
 
         return null;

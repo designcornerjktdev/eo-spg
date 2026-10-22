@@ -5,8 +5,8 @@ import { router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 /**
- * Bagian "hapus" di halaman edit. Jika server mengirim `blocker`, tombol hapus diganti penjelasan
- * kenapa data tidak boleh dihapus (biasanya karena sudah punya riwayat).
+ * "Delete" section on edit pages. When the server sends a `blocker`, the delete button is replaced
+ * by an explanation of why the record cannot be deleted (usually because it already has history).
  */
 export default function DangerZone({
     title,
@@ -50,11 +50,11 @@ export default function DangerZone({
                 <DialogContent className="max-w-[calc(100%-1rem)] md:max-w-md">
                     <DialogHeader className="text-left">
                         <DialogTitle>{confirmTitle}</DialogTitle>
-                        <DialogDescription>{confirmDescription ?? 'Tindakan ini tidak bisa dibatalkan.'}</DialogDescription>
+                        <DialogDescription>{confirmDescription ?? 'This action cannot be undone.'}</DialogDescription>
                     </DialogHeader>
                     <div className="flex justify-end gap-2">
                         <Button variant="outline" onClick={() => setOpen(false)}>
-                            Kembali
+                            Back
                         </Button>
                         <Button variant="destructive" onClick={() => router.delete(deleteUrl, { onFinish: () => setOpen(false) })}>
                             {title}

@@ -24,14 +24,14 @@ export default function FormPreview({
         <AppLayout
             breadcrumbs={[
                 { title: 'Form', href: '/forms' },
-                { title: 'Pratinjau', href: '#' },
+                { title: 'Preview', href: '#' },
             ]}
         >
-            <Head title={`Pratinjau ${template.name}`} />
+            <Head title={`Preview ${template.name}`} />
             <FormPage>
                 <PageHeader
-                    title={`Pratinjau ${template.name} v${template.version}`}
-                    description="Tampilan form seperti yang dilihat SPG saat input data."
+                    title={`Preview ${template.name} v${template.version}`}
+                    description="How the form looks to SPGs when they submit entries."
                 />
                 <div className="space-y-4 rounded-xl border p-4 sm:p-6">
                     {template.fields.map((field) => (
@@ -43,10 +43,10 @@ export default function FormPreview({
                             {field.type === 'yes_no' ? (
                                 <div className="grid grid-cols-2 gap-2">
                                     <Button type="button" variant="outline" className="h-14">
-                                        Ya
+                                        Yes
                                     </Button>
                                     <Button type="button" variant="outline" className="h-14">
-                                        Tidak
+                                        No
                                     </Button>
                                 </div>
                             ) : field.type === 'long_text' ? (
@@ -60,10 +60,10 @@ export default function FormPreview({
                 </div>
                 <div className="flex justify-end gap-2">
                     <Button asChild variant="outline">
-                        <Link href={route('forms.index')}>Kembali ke daftar</Link>
+                        <Link href={route('forms.index')}>Back to list</Link>
                     </Button>
                     <Button asChild>
-                        <Link href={route('forms.edit', template.id)}>Kelola form</Link>
+                        <Link href={route('forms.edit', template.id)}>Manage form</Link>
                     </Button>
                 </div>
             </FormPage>

@@ -33,8 +33,8 @@ export default function ClientsIndex({
             <Head title="Client" />
             <PageHeader
                 title="Client"
-                description="Perusahaan pemilik produk dan campaign."
-                action={isEo ? { href: route('clients.create'), label: 'Tambah client' } : undefined}
+                description="Companies that own products and campaigns."
+                action={isEo ? { href: route('clients.create'), label: 'New client' } : undefined}
             />
 
             {isEo && (
@@ -45,9 +45,9 @@ export default function ClientsIndex({
                         router.get(route('clients.index'), { search }, { preserveState: true, replace: true });
                     }}
                 >
-                    <Input className="w-full sm:w-64" placeholder="Cari nama atau kode" value={search} onChange={(e) => setSearch(e.target.value)} />
+                    <Input className="w-full sm:w-64" placeholder="Search name or code" value={search} onChange={(e) => setSearch(e.target.value)} />
                     <Button type="submit" variant="outline">
-                        Cari
+                        Search
                     </Button>
                 </form>
             )}
@@ -56,12 +56,12 @@ export default function ClientsIndex({
                 <table className="w-full text-sm">
                     <thead className="bg-muted/50">
                         <tr>
-                            <th className="px-3 py-2 text-left">Nama</th>
-                            <th className="px-3 py-2 text-left">Kode</th>
-                            <th className="px-3 py-2 text-left">Produk</th>
+                            <th className="px-3 py-2 text-left">Name</th>
+                            <th className="px-3 py-2 text-left">Code</th>
+                            <th className="px-3 py-2 text-left">Products</th>
                             <th className="px-3 py-2 text-left">Campaign</th>
-                            <th className="px-3 py-2 text-left">Akun</th>
-                            <th className="px-3 py-2 text-left">Aksi</th>
+                            <th className="px-3 py-2 text-left">Accounts</th>
+                            <th className="px-3 py-2 text-left">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -74,7 +74,7 @@ export default function ClientsIndex({
                                 <td className="px-3 py-2">{client.users_count}</td>
                                 <td className="px-3 py-1">
                                     <div className="flex gap-1">
-                                        <IconAction icon={Eye} label="Lihat detail" href={route('clients.show', client.id)} />
+                                        <IconAction icon={Eye} label="View details" href={route('clients.show', client.id)} />
                                         {isEo && <IconAction icon={Pencil} label="Edit client" href={route('clients.edit', client.id)} />}
                                     </div>
                                 </td>
@@ -83,7 +83,7 @@ export default function ClientsIndex({
                         {clients.data.length === 0 && (
                             <tr>
                                 <td colSpan={6} className="text-muted-foreground px-3 py-8 text-center">
-                                    Tidak ada client yang cocok.
+                                    No matching clients.
                                 </td>
                             </tr>
                         )}

@@ -56,7 +56,7 @@ class ProductController extends Controller
         $product = Product::query()->create($request->validated());
         $audit->record($request->user(), 'product.created', $product, null, $product->only(['name', 'sku', 'client_id']));
 
-        return redirect()->route('products.index')->with('success', 'Produk berhasil ditambah.');
+        return redirect()->route('products.index')->with('success', 'Product created.');
     }
 
     public function edit(Product $product): Response
@@ -76,7 +76,7 @@ class ProductController extends Controller
         $product->update($request->validated());
         $audit->record($request->user(), 'product.updated', $product, $old, $product->only(array_keys($old)));
 
-        return redirect()->route('products.index')->with('success', 'Produk diperbarui.');
+        return redirect()->route('products.index')->with('success', 'Product updated.');
     }
 
     public function destroy(Request $request, Product $product, AuditLogger $audit): RedirectResponse
@@ -90,16 +90,16 @@ class ProductController extends Controller
         $audit->record($request->user(), 'product.deleted', $product, $product->only(['name', 'sku', 'client_id']));
         $product->delete();
 
-        return redirect()->route('products.index')->with('success', 'Produk '.$product->name.' dihapus.');
+        return redirect()->route('products.index')->with('success', 'Product '.$product->name.' deleted.');
     }
 
     /**
-     * Produk yang sudah dipakai campaign tetap disimpan agar laporan campaign tidak kehilangan referensi produknya.
+     * Products used by campaigns are kept so campaign reports never lose their product reference.
      */
     private function deleteBlocker(Product $product): ?string
     {
         return $product->campaigns()->exists()
-            ? 'Produk ini sudah dipakai di campaign, jadi tidak bisa dihapus.'
+            ? 'This product is used in a campaign, so it cannot be deleted.'
             : null;
     }
 }

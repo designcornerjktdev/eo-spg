@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('campaign_locations', function (Blueprint $table) {
-            // Titik lokasi dari peta di form campaign; opsional agar lokasi lama tetap valid.
+            // Location point picked on the campaign form map; optional so older locations stay valid.
             $table->decimal('latitude', 10, 7)->nullable()->after('address');
             $table->decimal('longitude', 10, 7)->nullable()->after('latitude');
         });

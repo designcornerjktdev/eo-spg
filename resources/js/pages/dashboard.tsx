@@ -1,11 +1,11 @@
 import PageHeader from '@/components/page-header';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
 import { FormEvent } from 'react';
-import { Button } from '@/components/ui/button';
 
 interface Summary {
     totals: { submissions: number; voided: number; qualified: number; campaigns: number };
@@ -43,13 +43,17 @@ export default function Dashboard({
     return (
         <AppLayout breadcrumbs={[{ title: 'Dashboard', href: '/dashboard' }]}>
             <Head title="Dashboard" />
-            <PageHeader title="Dashboard" description="Ringkasan dihitung dari data submission yang sama dengan daftar data." />
+            <PageHeader title="Dashboard" description="Totals are calculated from the same entries shown in the entries list." />
 
             <form onSubmit={apply} className="grid gap-3 rounded-lg border p-4 md:grid-cols-5">
                 <div>
                     <Label>Campaign</Label>
-                    <select name="campaign_id" defaultValue={filters.campaign_id ?? ''} className="border-input h-9 w-full rounded-md border px-2 text-sm">
-                        <option value="">Semua</option>
+                    <select
+                        name="campaign_id"
+                        defaultValue={filters.campaign_id ?? ''}
+                        className="border-input h-9 w-full rounded-md border px-2 text-sm"
+                    >
+                        <option value="">All</option>
                         {campaigns.map((item) => (
                             <option key={item.id} value={item.id}>
                                 {item.name}
@@ -58,9 +62,13 @@ export default function Dashboard({
                     </select>
                 </div>
                 <div>
-                    <Label>Lokasi</Label>
-                    <select name="location_id" defaultValue={filters.location_id ?? ''} className="border-input h-9 w-full rounded-md border px-2 text-sm">
-                        <option value="">Semua</option>
+                    <Label>Location</Label>
+                    <select
+                        name="location_id"
+                        defaultValue={filters.location_id ?? ''}
+                        className="border-input h-9 w-full rounded-md border px-2 text-sm"
+                    >
+                        <option value="">All</option>
                         {locations.map((item) => (
                             <option key={item.id} value={item.id}>
                                 {item.name}
@@ -72,7 +80,7 @@ export default function Dashboard({
                     <div>
                         <Label>SPG</Label>
                         <select name="spg_id" defaultValue={filters.spg_id ?? ''} className="border-input h-9 w-full rounded-md border px-2 text-sm">
-                            <option value="">Semua</option>
+                            <option value="">All</option>
                             {spgs.map((item) => (
                                 <option key={item.id} value={item.id}>
                                     {item.name}
@@ -82,38 +90,38 @@ export default function Dashboard({
                     </div>
                 )}
                 <div>
-                    <Label>Dari</Label>
+                    <Label>From</Label>
                     <Input type="date" name="from" defaultValue={filters.from ?? ''} />
                 </div>
                 <div>
-                    <Label>Sampai</Label>
+                    <Label>To</Label>
                     <Input type="date" name="to" defaultValue={filters.to ?? ''} />
                 </div>
                 <div className="md:col-span-5">
-                    <Button type="submit">Terapkan filter</Button>
+                    <Button type="submit">Apply filters</Button>
                 </div>
             </form>
 
             <div className="grid gap-4 md:grid-cols-4">
                 <Metric title="Submission" value={summary.totals.submissions} />
-                <Metric title="Lolos kualifikasi" value={summary.totals.qualified} />
-                <Metric title="Dibatalkan" value={summary.totals.voided} />
+                <Metric title="Qualified" value={summary.totals.qualified} />
+                <Metric title="Voided" value={summary.totals.voided} />
                 <Metric title="Campaign" value={summary.totals.campaigns} />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-                <BarCard title="Per hari" rows={summary.per_day.map((row) => ({ label: row.day, total: row.total }))} />
-                <BarCard title="Per lokasi" rows={summary.per_location} />
+                <BarCard title="Per day" rows={summary.per_day.map((row) => ({ label: row.day, total: row.total }))} />
+                <BarCard title="Per location" rows={summary.per_location} />
                 {summary.per_spg.length > 0 && <BarCard title="Per SPG" rows={summary.per_spg} />}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Status assignment</CardTitle>
+                        <CardTitle>Assignment status</CardTitle>
                     </CardHeader>
                     <CardContent className="grid grid-cols-2 gap-2 text-sm">
-                        <div>Terjadwal: {summary.assignments.scheduled}</div>
-                        <div>Aktif: {summary.assignments.active}</div>
-                        <div>Selesai: {summary.assignments.done}</div>
-                        <div>Batal: {summary.assignments.cancelled}</div>
+                        <div>Scheduled: {summary.assignments.scheduled}</div>
+                        <div>Active: {summary.assignments.active}</div>
+                        <div>Done: {summary.assignments.done}</div>
+                        <div>Cancelled: {summary.assignments.cancelled}</div>
                     </CardContent>
                 </Card>
             </div>
@@ -128,7 +136,7 @@ export default function Dashboard({
                             <CardContent>
                                 {field.type === 'number' ? (
                                     <div className="text-sm">
-                                        Jumlah {field.sum} · Rata-rata {field.avg}
+                                        Count {field.sum} · Average {field.avg}
                                     </div>
                                 ) : (
                                     <BarList rows={field.options ?? []} />
@@ -146,7 +154,7 @@ function Metric({ title, value }: { title: string; value: number }) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+                <CardTitle className="text-muted-foreground text-sm font-medium">{title}</CardTitle>
             </CardHeader>
             <CardContent className="text-3xl font-semibold">{value}</CardContent>
         </Card>
@@ -170,7 +178,7 @@ function BarList({ rows }: { rows: { label: string; total: number }[] }) {
     const max = Math.max(...rows.map((row) => row.total), 1);
 
     if (rows.length === 0) {
-        return <p className="text-sm text-muted-foreground">Belum ada data.</p>;
+        return <p className="text-muted-foreground text-sm">No entries yet.</p>;
     }
 
     return (

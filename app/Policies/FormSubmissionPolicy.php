@@ -41,7 +41,7 @@ class FormSubmissionPolicy
     }
 
     /**
-     * Koreksi/pembatalan mandiri oleh SPG pemilik data; batas hari yang sama dicek di SubmissionCorrector.
+     * Self-correction/cancellation by the owning SPG; the same-day limit is checked in SubmissionCorrector.
      */
     public function correct(User $user, FormSubmission $submission): bool
     {

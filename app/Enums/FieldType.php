@@ -16,14 +16,14 @@ enum FieldType: string
     public function label(): string
     {
         return match ($this) {
-            self::ShortText => 'Teks pendek',
-            self::LongText => 'Teks panjang',
-            self::Number => 'Angka',
-            self::Phone => 'Nomor telepon',
-            self::SingleChoice => 'Pilihan tunggal',
-            self::MultipleChoice => 'Pilihan ganda',
-            self::YesNo => 'Ya/Tidak',
-            self::Date => 'Tanggal',
+            self::ShortText => 'Short text',
+            self::LongText => 'Long text',
+            self::Number => 'Number',
+            self::Phone => 'Phone number',
+            self::SingleChoice => 'Single choice',
+            self::MultipleChoice => 'Multiple choice',
+            self::YesNo => 'Yes/No',
+            self::Date => 'Date',
         };
     }
 

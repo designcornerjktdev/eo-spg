@@ -6,29 +6,29 @@ import { Link, usePage } from '@inertiajs/react';
 import { Building2, ClipboardList, FileSpreadsheet, LayoutGrid, ListChecks, MapPin, Package, ScrollText, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
-// Urutan grup mengikuti alur kerja EO: siapkan campaign -> jalankan di lapangan -> kelola akses.
+// Group order follows the EO workflow: set up the campaign -> run it in the field -> manage access.
 const eoNav: NavGroup[] = [
-    { title: 'Ringkasan', items: [{ title: 'Dashboard', url: '/dashboard', icon: LayoutGrid }] },
+    { title: 'Overview', items: [{ title: 'Dashboard', url: '/dashboard', icon: LayoutGrid }] },
     {
-        title: 'Persiapan campaign',
+        title: 'Campaign setup',
         items: [
             { title: 'Client', url: '/clients', icon: Building2 },
-            { title: 'Produk', url: '/products', icon: Package },
+            { title: 'Products', url: '/products', icon: Package },
             { title: 'Campaign', url: '/campaigns', icon: MapPin },
             { title: 'Form', url: '/forms', icon: FileSpreadsheet },
         ],
     },
     {
-        title: 'Operasional lapangan',
+        title: 'Field operations',
         items: [
-            { title: 'Penugasan SPG', url: '/assignments', icon: ClipboardList },
-            { title: 'Data masuk', url: '/submissions', icon: ListChecks },
+            { title: 'SPG assignments', url: '/assignments', icon: ClipboardList },
+            { title: 'Entries', url: '/submissions', icon: ListChecks },
         ],
     },
     {
-        title: 'Administrasi',
+        title: 'Administration',
         items: [
-            { title: 'Pengguna', url: '/users', icon: Users },
+            { title: 'Users', url: '/users', icon: Users },
             { title: 'Audit log', url: '/audit', icon: ScrollText },
         ],
     },
@@ -40,12 +40,12 @@ const clientNav: NavGroup[] = [
         items: [
             { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
             { title: 'Campaign', url: '/campaigns', icon: MapPin },
-            { title: 'Data masuk', url: '/submissions', icon: ListChecks },
+            { title: 'Entries', url: '/submissions', icon: ListChecks },
         ],
     },
 ];
 
-const spgNav: NavGroup[] = [{ title: 'Menu', items: [{ title: 'Tugas', url: '/tasks', icon: ClipboardList }] }];
+const spgNav: NavGroup[] = [{ title: 'Menu', items: [{ title: 'Tasks', url: '/tasks', icon: ClipboardList }] }];
 
 export function AppSidebar() {
     const { auth } = usePage<SharedData>().props;

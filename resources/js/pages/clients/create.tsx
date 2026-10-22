@@ -28,38 +28,38 @@ export default function ClientCreate() {
         <AppLayout
             breadcrumbs={[
                 { title: 'Client', href: '/clients' },
-                { title: 'Tambah', href: '/clients/create' },
+                { title: 'New', href: '/clients/create' },
             ]}
         >
-            <Head title="Tambah client" />
+            <Head title="New client" />
             <FormPage>
-                <PageHeader title="Tambah client" description="Buat perusahaan client dan opsional akun login-nya." />
+                <PageHeader title="New client" description="Create a client company and, optionally, its sign-in account." />
                 <form onSubmit={submit} className="grid gap-4 rounded-xl border p-4 sm:p-6">
-                    <Field label="Nama" error={errors.name}>
+                    <Field label="Name" error={errors.name}>
                         <Input value={data.name} onChange={(e) => setData('name', e.target.value)} />
                     </Field>
-                    <Field label="Kode" error={errors.code}>
+                    <Field label="Code" error={errors.code}>
                         <Input value={data.code} onChange={(e) => setData('code', e.target.value)} />
                     </Field>
-                    <Field label="Catatan" error={errors.notes}>
+                    <Field label="Notes" error={errors.notes}>
                         <Textarea value={data.notes} onChange={(e) => setData('notes', e.target.value)} />
                     </Field>
-                    <div className="pt-2 font-medium">Akun client (opsional)</div>
-                    <Field label="Nama akun" error={errors.account_name}>
+                    <div className="pt-2 font-medium">Client account (optional)</div>
+                    <Field label="Account name" error={errors.account_name}>
                         <Input value={data.account_name} onChange={(e) => setData('account_name', e.target.value)} />
                     </Field>
-                    <Field label="Username akun" error={errors.account_username}>
+                    <Field label="Account username" error={errors.account_username}>
                         <Input
                             value={data.account_username}
                             autoCapitalize="none"
-                            placeholder="huruf kecil, angka, titik, - atau _"
+                            placeholder="lowercase letters, numbers, dot, - or _"
                             onChange={(e) => setData('account_username', e.target.value.toLowerCase())}
                         />
                     </Field>
-                    <Field label="Password akun" error={errors.account_password}>
+                    <Field label="Account password" error={errors.account_password}>
                         <Input type="password" value={data.account_password} onChange={(e) => setData('account_password', e.target.value)} />
                     </Field>
-                    <Button disabled={processing}>Simpan</Button>
+                    <Button disabled={processing}>Save</Button>
                 </form>
             </FormPage>
         </AppLayout>

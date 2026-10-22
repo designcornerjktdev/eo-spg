@@ -20,7 +20,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Pengelolaan akun client & SPG oleh superadmin. Akun EO tidak dikelola di sini.
+ * Client & SPG account management by the superadmin. EO accounts are not managed here.
  */
 class UserController extends Controller
 {
@@ -65,7 +65,7 @@ class UserController extends Controller
 
         $audit->record($request->user(), 'user.created', $user, null, $user->only(['name', 'username', 'role', 'client_id']));
 
-        return redirect()->route('users.index')->with('success', 'Akun berhasil dibuat.');
+        return redirect()->route('users.index')->with('success', 'Account created.');
     }
 
     public function edit(User $user): Response
@@ -89,19 +89,19 @@ class UserController extends Controller
             'client_id' => $user->role === UserRole::Client ? $request->integer('client_id') : null,
         ]);
 
-        // Akun yang dinonaktifkan langsung keluar dari semua sesi.
+        // Deactivated accounts are signed out of every session immediately.
         if ($old['is_active'] && ! $user->is_active) {
             $this->logoutEverywhere($user);
         }
 
         $audit->record($request->user(), 'user.updated', $user, $old, $user->only(array_keys($old)));
 
-        return redirect()->route('users.index')->with('success', 'Akun '.$user->name.' diperbarui.');
+        return redirect()->route('users.index')->with('success', 'Account '.$user->name.' updated.');
     }
 
     /**
-     * Hapus permanen hanya untuk akun tanpa riwayat; FK assignment/submission ke users memakai cascade,
-     * jadi menghapus akun yang sudah bekerja akan ikut menghapus datanya.
+     * Hard delete only for accounts without history; the assignment/submission -> users FKs cascade,
+     * so deleting an account that has worked would delete its data too.
      */
     public function destroy(Request $request, User $user, AuditLogger $audit): RedirectResponse
     {
@@ -110,7 +110,7 @@ class UserController extends Controller
 
         if (! $this->isDeletable($user)) {
             throw ValidationException::withMessages([
-                'user' => 'Akun ini sudah punya tugas atau data, jadi tidak bisa dihapus. Nonaktifkan saja akunnya.',
+                'user' => 'This account already has assignments or entries, so it cannot be deleted. Deactivate it instead.',
             ]);
         }
 
@@ -120,11 +120,11 @@ class UserController extends Controller
             $user->delete();
         });
 
-        return redirect()->route('users.index')->with('success', 'Akun '.$user->name.' dihapus.');
+        return redirect()->route('users.index')->with('success', 'Account '.$user->name.' deleted.');
     }
 
     /**
-     * Client & SPG tidak punya lupa password mandiri; EO yang mengatur password baru.
+     * Clients & SPGs have no self-service password reset; the EO admin sets a new password.
      */
     public function resetPassword(Request $request, User $user, AuditLogger $audit): RedirectResponse
     {
@@ -143,7 +143,7 @@ class UserController extends Controller
         $this->logoutEverywhere($user);
         $audit->record($request->user(), 'user.password_reset', $user);
 
-        return back()->with('success', 'Password '.$user->name.' berhasil direset.');
+        return back()->with('success', 'Password for '.$user->name.' has been reset.');
     }
 
     private function isDeletable(User $user): bool

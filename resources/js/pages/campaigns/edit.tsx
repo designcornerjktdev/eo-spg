@@ -19,9 +19,9 @@ export default function CampaignEdit({
             products={products}
             footer={
                 <DangerZone
-                    title="Hapus campaign"
-                    description="Campaign masih draf dan belum punya penugasan atau data."
-                    confirmTitle={`Hapus campaign ${campaign.name}?`}
+                    title="Delete campaign"
+                    description="This campaign is a draft with no assignments or entries yet."
+                    confirmTitle={`Delete campaign ${campaign.name}?`}
                     deleteUrl={route('campaigns.destroy', campaign.id)}
                     blocker={deleteBlocker}
                     errorKey="campaign"

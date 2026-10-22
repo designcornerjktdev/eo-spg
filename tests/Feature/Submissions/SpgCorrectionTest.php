@@ -66,12 +66,12 @@ class SpgCorrectionTest extends TestCase
         $this->actingAs($world['spg'])->post('/submissions/'.$original->id.'/cancellation', ['reason' => ''])
             ->assertSessionHasErrors('reason');
 
-        $this->actingAs($world['spg'])->post('/submissions/'.$original->id.'/cancellation', ['reason' => 'Data dobel'])
+        $this->actingAs($world['spg'])->post('/submissions/'.$original->id.'/cancellation', ['reason' => 'Duplicate entry'])
             ->assertSessionHasNoErrors();
 
         $original->refresh();
         $this->assertSame(SubmissionStatus::Void, $original->status);
-        $this->assertSame('Dibatalkan SPG: Data dobel', $original->void_reason);
+        $this->assertSame('Cancelled by SPG: Duplicate entry', $original->void_reason);
     }
 
     public function test_correction_is_rejected_after_the_day_ends(): void
@@ -80,7 +80,7 @@ class SpgCorrectionTest extends TestCase
         $original = $this->submit($world);
         $original->update(['submitted_at' => now()->subDay()]);
 
-        $this->actingAs($world['spg'])->post('/submissions/'.$original->id.'/cancellation', ['reason' => 'Telat'])
+        $this->actingAs($world['spg'])->post('/submissions/'.$original->id.'/cancellation', ['reason' => 'Too late'])
             ->assertSessionHasErrors('submission');
 
         $this->assertSame(SubmissionStatus::Submitted, $original->refresh()->status);
@@ -91,9 +91,9 @@ class SpgCorrectionTest extends TestCase
         $world = $this->world();
         $original = $this->submit($world);
 
-        $this->actingAs($world['otherSpg'])->post('/submissions/'.$original->id.'/cancellation', ['reason' => 'Iseng'])
+        $this->actingAs($world['otherSpg'])->post('/submissions/'.$original->id.'/cancellation', ['reason' => 'Just trying'])
             ->assertForbidden();
-        $this->actingAs($world['eo'])->post('/submissions/'.$original->id.'/cancellation', ['reason' => 'Iseng'])
+        $this->actingAs($world['eo'])->post('/submissions/'.$original->id.'/cancellation', ['reason' => 'Just trying'])
             ->assertForbidden();
 
         $this->assertSame(SubmissionStatus::Submitted, $original->refresh()->status);
@@ -104,7 +104,7 @@ class SpgCorrectionTest extends TestCase
         $world = $this->world();
         $original = $this->submit($world);
 
-        $this->actingAs($world['spg'])->post('/submissions/'.$original->id.'/cancellation', ['reason' => 'Data dobel']);
+        $this->actingAs($world['spg'])->post('/submissions/'.$original->id.'/cancellation', ['reason' => 'Duplicate entry']);
         $this->actingAs($world['spg'])->post('/submissions/'.$original->id.'/correction', [
             'answers' => $this->validAnswers(),
             'consent_accepted' => true,

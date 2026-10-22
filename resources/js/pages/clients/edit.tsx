@@ -44,38 +44,38 @@ export default function ClientEdit({ client, deleteBlocker }: { client: Client; 
                 <PageHeader title="Edit client" />
                 <form onSubmit={submit} className="grid gap-4 rounded-xl border p-4 sm:p-6">
                     <div className="grid gap-2">
-                        <Label htmlFor="name">Nama</Label>
+                        <Label htmlFor="name">Name</Label>
                         <Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} />
                         <InputError message={errors.name} />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="code">Kode</Label>
+                        <Label htmlFor="code">Code</Label>
                         <Input id="code" value={data.code} onChange={(e) => setData('code', e.target.value)} />
                         <InputError message={errors.code} />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="notes">Catatan</Label>
+                        <Label htmlFor="notes">Notes</Label>
                         <Textarea id="notes" value={data.notes} onChange={(e) => setData('notes', e.target.value)} />
                     </div>
                     <div className="flex gap-2">
-                        <Button disabled={processing}>Simpan</Button>
+                        <Button disabled={processing}>Save</Button>
                         <Button type="button" variant="outline" asChild>
-                            <Link href={route('clients.show', client.id)}>Batal</Link>
+                            <Link href={route('clients.show', client.id)}>Cancel</Link>
                         </Button>
                     </div>
                 </form>
 
                 <div className="space-y-2 rounded-lg border border-red-200 p-4 dark:border-red-900">
-                    <h2 className="font-semibold">Hapus client</h2>
+                    <h2 className="font-semibold">Delete client</h2>
                     {deleteBlocker ? (
                         <p className="text-muted-foreground text-sm">{deleteBlocker}</p>
                     ) : (
                         <>
                             <p className="text-muted-foreground text-sm">
-                                Client belum punya campaign atau produk. Menghapusnya juga menonaktifkan semua akun login client ini.
+                                This client has no campaigns or products. Deleting it also deactivates all of this client's accounts.
                             </p>
                             <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
-                                Hapus client
+                                Delete client
                             </Button>
                         </>
                     )}
@@ -85,18 +85,18 @@ export default function ClientEdit({ client, deleteBlocker }: { client: Client; 
                 <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
                     <DialogContent className="max-w-[calc(100%-1rem)] md:max-w-md">
                         <DialogHeader className="text-left">
-                            <DialogTitle>Hapus client {client.name}?</DialogTitle>
-                            <DialogDescription>Semua akun login client ini akan dinonaktifkan.</DialogDescription>
+                            <DialogTitle>Delete client {client.name}?</DialogTitle>
+                            <DialogDescription>All of this client's accounts will be deactivated.</DialogDescription>
                         </DialogHeader>
                         <div className="flex justify-end gap-2">
                             <Button variant="outline" onClick={() => setConfirmDelete(false)}>
-                                Kembali
+                                Back
                             </Button>
                             <Button
                                 variant="destructive"
                                 onClick={() => router.delete(route('clients.destroy', client.id), { onFinish: () => setConfirmDelete(false) })}
                             >
-                                Hapus client
+                                Delete client
                             </Button>
                         </div>
                     </DialogContent>

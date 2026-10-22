@@ -16,7 +16,7 @@ use Inertia\Response;
 class TaskController extends Controller
 {
     /**
-     * Daftar tugas SPG; yang sedang aktif ditampilkan paling atas.
+     * The SPG's task list; currently active tasks are shown first.
      */
     public function index(Request $request): Response
     {
@@ -47,7 +47,7 @@ class TaskController extends Controller
     }
 
     /**
-     * Tabel data milik SPG untuk satu tugas + form input.
+     * The SPG's own entries for one task + the input form.
      */
     public function show(Request $request, Assignment $assignment): Response
     {
@@ -88,9 +88,9 @@ class TaskController extends Controller
             $request->boolean('consent_accepted'),
         );
 
-        // Flag add_another membuat form tetap terbuka di frontend.
+        // The add_another flag keeps the form open on the frontend.
         return redirect()
             ->route('spg.tasks.show', $assignment)
-            ->with('success', $request->boolean('add_another') ? 'Data tersimpan. Silakan isi baris berikutnya.' : 'Data tersimpan.');
+            ->with('success', $request->boolean('add_another') ? 'Entry saved. You can fill in the next one.' : 'Entry saved.');
     }
 }

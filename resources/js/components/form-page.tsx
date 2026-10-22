@@ -7,7 +7,7 @@ const widths = {
 };
 
 /**
- * Wrapper halaman form: judul, form, dan bagian hapus berada di tengah dengan lebar yang nyaman dibaca.
+ * Form page wrapper: title, form and delete section are centred at a comfortable reading width.
  */
 export default function FormPage({ children, width = 'md' }: { children: React.ReactNode; width?: keyof typeof widths }) {
     return <div className={cn('mx-auto w-full space-y-6 py-2', widths[width])}>{children}</div>;

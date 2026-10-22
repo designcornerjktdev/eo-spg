@@ -24,9 +24,9 @@ export default function ProductEdit({
             clients={clients}
             footer={
                 <DangerZone
-                    title="Hapus produk"
-                    description="Produk belum dipakai di campaign mana pun."
-                    confirmTitle={`Hapus produk ${product.name}?`}
+                    title="Delete product"
+                    description="This product is not used by any campaign."
+                    confirmTitle={`Delete product ${product.name}?`}
                     deleteUrl={route('products.destroy', product.id)}
                     blocker={deleteBlocker}
                     errorKey="product"

@@ -93,7 +93,7 @@ class FormSubmission extends Model
     }
 
     /**
-     * SPG hanya boleh memperbaiki/membatalkan datanya sendiri di hari yang sama (zona waktu aplikasi).
+     * An SPG may only correct/cancel their own entries on the same day (application timezone).
      */
     public function isCorrectableBySubmitter(): bool
     {

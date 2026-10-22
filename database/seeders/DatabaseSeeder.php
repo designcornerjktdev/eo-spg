@@ -20,20 +20,20 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $eo = User::factory()->superadmin()->create([
-            'name' => 'Superadmin EO',
+            'name' => 'EO Admin',
             'email' => 'eo@eo.test',
         ]);
 
         $mayora = Client::query()->create([
             'name' => 'Mayora',
             'code' => 'MAYORA',
-            'notes' => 'Client contoh form sampling Kopi Lepas Haus.',
+            'notes' => 'Sample client for the Kopi Lepas Haus sampling form.',
         ]);
 
         $imoby = Client::query()->create([
             'name' => 'IMOBY',
             'code' => 'IMOBY',
-            'notes' => 'Client kedua untuk tes isolasi data.',
+            'notes' => 'Second client for data isolation testing.',
         ]);
 
         User::factory()->clientUser($mayora)->create([
@@ -91,7 +91,7 @@ class DatabaseSeeder extends Seeder
             'version' => 1,
             'status' => FormStatus::Published,
             'requires_consent' => true,
-            'consent_text' => 'Saya setuju data ini dipakai untuk keperluan campaign sampling.',
+            'consent_text' => 'I agree that my data may be used for this sampling campaign.',
             'qualification_enabled' => true,
             'qualification_rule' => ['type' => 'all_yes_no_true'],
         ]);

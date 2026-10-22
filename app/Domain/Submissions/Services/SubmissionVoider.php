@@ -16,7 +16,7 @@ class SubmissionVoider
     {
         if ($submission->isVoid()) {
             throw ValidationException::withMessages([
-                'status' => 'Submission ini sudah dibatalkan.',
+                'status' => 'This entry has already been voided.',
             ]);
         }
 
@@ -24,7 +24,7 @@ class SubmissionVoider
 
         if ($reason === '') {
             throw ValidationException::withMessages([
-                'void_reason' => 'Alasan pembatalan wajib diisi.',
+                'void_reason' => 'A void reason is required.',
             ]);
         }
 

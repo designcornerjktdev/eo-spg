@@ -61,7 +61,7 @@ class AssignmentScheduler
 
         if ($user->role !== UserRole::Spg) {
             throw ValidationException::withMessages([
-                'user_id' => 'Assignment hanya bisa diberikan kepada akun SPG.',
+                'user_id' => 'Assignments can only be given to SPG accounts.',
             ]);
         }
     }
@@ -70,17 +70,17 @@ class AssignmentScheduler
     {
         if (Carbon::parse($endsAt)->lte(Carbon::parse($startsAt))) {
             throw ValidationException::withMessages([
-                'ends_at' => 'Waktu selesai harus setelah waktu mulai.',
+                'ends_at' => 'End time must be after the start time.',
             ]);
         }
     }
 
     private function assertNoOverlap(int $userId, mixed $startsAt, mixed $endsAt, ?int $ignoreId = null): void
     {
-        // Kunci baris SPG agar dua penyimpanan bersamaan tidak sama-sama lolos cek bentrok.
+        // Lock the SPG row so two concurrent saves cannot both pass the overlap check.
         User::query()->whereKey($userId)->lockForUpdate()->first();
 
-        // Normalisasi ke format DB; input datetime-local ("2026-10-21T15:00") salah dibandingkan sebagai string di SQLite.
+        // Normalize to the DB format; datetime-local input ("2026-10-21T15:00") compares wrongly as a string in SQLite.
         $startsAt = Carbon::parse($startsAt)->format('Y-m-d H:i:s');
         $endsAt = Carbon::parse($endsAt)->format('Y-m-d H:i:s');
 
@@ -94,7 +94,7 @@ class AssignmentScheduler
 
         if ($overlap) {
             throw ValidationException::withMessages([
-                'starts_at' => 'Jadwal SPG bentrok dengan assignment lain.',
+                'starts_at' => 'This SPG already has another assignment at this time.',
             ]);
         }
     }

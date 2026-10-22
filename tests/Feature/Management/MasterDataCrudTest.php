@@ -26,10 +26,10 @@ class MasterDataCrudTest extends TestCase
     public function test_index_pages_filter_by_search(): void
     {
         $world = $this->world();
-        Product::factory()->create(['client_id' => $world['clientA']->id, 'name' => 'Teh Botol', 'sku' => 'TB-1']);
+        Product::factory()->create(['client_id' => $world['clientA']->id, 'name' => 'Bottled Tea', 'sku' => 'TB-1']);
 
-        $this->actingAs($world['eo'])->get('/products?search=teh')
-            ->assertInertia(fn ($page) => $page->has('products.data', 1)->where('products.data.0.name', 'Teh Botol'));
+        $this->actingAs($world['eo'])->get('/products?search=bottled')
+            ->assertInertia(fn ($page) => $page->has('products.data', 1)->where('products.data.0.name', 'Bottled Tea'));
         $this->actingAs($world['eo'])->get('/campaigns?status=closed')
             ->assertInertia(fn ($page) => $page->has('campaigns.data', 0));
         $this->actingAs($world['eo'])->get('/assignments?search='.urlencode($world['spg']->name))
@@ -84,7 +84,7 @@ class MasterDataCrudTest extends TestCase
         $this->actingAs($world['eo'])->post('/assignments/'.$world['assignment']->id.'/cancel')->assertRedirect('/assignments');
         $this->assertSame(AssignmentStatus::Cancelled, $world['assignment']->refresh()->status);
 
-        // SPG tidak bisa input lagi ke penugasan yang dibatalkan.
+        // The SPG can no longer submit to a cancelled assignment.
         $this->actingAs($world['spg'])->post('/tasks/'.$world['assignment']->id.'/submissions', [
             'answers' => $this->validAnswers(),
             'consent_accepted' => true,

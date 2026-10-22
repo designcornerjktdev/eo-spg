@@ -28,33 +28,33 @@ class UserManagementTest extends TestCase
     public function test_superadmin_can_update_user_and_deactivate_logs_them_out(): void
     {
         $eo = User::factory()->superadmin()->create();
-        $spg = User::factory()->spg()->create(['username' => 'lama']);
+        $spg = User::factory()->spg()->create(['username' => 'oldname']);
 
         $this->actingAs($eo)->get('/users/'.$spg->id.'/edit')->assertOk();
         $this->actingAs($eo)->put('/users/'.$spg->id, [
-            'name' => 'Nama Baru',
-            'username' => 'baru',
+            'name' => 'New Name',
+            'username' => 'newname',
             'is_active' => false,
         ])->assertSessionHasNoErrors()->assertRedirect('/users');
 
         $spg->refresh();
-        $this->assertSame('baru', $spg->username);
+        $this->assertSame('newname', $spg->username);
         $this->assertFalse($spg->is_active);
         $this->assertTrue(AuditLog::query()->where('action', 'user.updated')->exists());
 
         $this->post('/logout');
-        $this->post('/login', ['login' => 'baru', 'password' => 'password'])->assertSessionHasErrors('login');
+        $this->post('/login', ['login' => 'newname', 'password' => 'password'])->assertSessionHasErrors('login');
     }
 
     public function test_username_must_stay_unique_and_role_cannot_change(): void
     {
         $eo = User::factory()->superadmin()->create();
-        User::factory()->spg()->create(['username' => 'dipakai']);
+        User::factory()->spg()->create(['username' => 'taken']);
         $spg = User::factory()->spg()->create();
 
         $this->actingAs($eo)->put('/users/'.$spg->id, [
             'name' => 'X',
-            'username' => 'dipakai',
+            'username' => 'taken',
             'is_active' => true,
             'role' => 'client',
         ])->assertSessionHasErrors('username');

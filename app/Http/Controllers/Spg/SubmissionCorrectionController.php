@@ -23,7 +23,7 @@ class SubmissionCorrectionController extends Controller
 
         return redirect()
             ->route('spg.tasks.show', $submission->assignment_id)
-            ->with('success', 'Data diperbaiki. Baris lama ditandai batal.');
+            ->with('success', 'Entry corrected. The old row is marked as voided.');
     }
 
     public function cancel(Request $request, FormSubmission $submission, SubmissionCorrector $corrector): RedirectResponse
@@ -38,6 +38,6 @@ class SubmissionCorrectionController extends Controller
 
         return redirect()
             ->route('spg.tasks.show', $submission->assignment_id)
-            ->with('success', 'Data dibatalkan.');
+            ->with('success', 'Entry cancelled.');
     }
 }

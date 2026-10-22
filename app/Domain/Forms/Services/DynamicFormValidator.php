@@ -57,7 +57,7 @@ class DynamicFormValidator
             ],
             $rules,
             [
-                'accepted' => 'Persetujuan wajib dicentang sebelum data disimpan.',
+                'accepted' => 'Consent must be checked before saving.',
             ],
             $attributes,
         );

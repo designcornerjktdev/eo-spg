@@ -33,7 +33,7 @@ class SubmissionRecorder
 
         if ($actor->isSpg() && ! $assignment->isFillableNow()) {
             throw ValidationException::withMessages([
-                'assignment' => 'Assignment ini belum bisa diisi. Pastikan campaign aktif dan jadwal masih berjalan.',
+                'assignment' => 'This assignment cannot be filled in yet. Make sure the campaign is active and the schedule is running.',
             ]);
         }
 

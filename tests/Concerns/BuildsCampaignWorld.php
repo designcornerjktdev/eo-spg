@@ -69,7 +69,7 @@ trait BuildsCampaignWorld
             'name' => 'Form Sampling Kopi Lepas Haus',
             'status' => FormStatus::Published,
             'requires_consent' => true,
-            'consent_text' => 'Saya setuju data dipakai untuk campaign.',
+            'consent_text' => 'I agree my data may be used for this campaign.',
             'qualification_enabled' => true,
             'qualification_rule' => ['type' => 'all_yes_no_true'],
         ]);

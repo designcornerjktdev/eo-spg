@@ -58,7 +58,7 @@ class SubmissionController extends Controller
     {
         $voider->void($submission, $request->user(), $request->string('void_reason')->toString());
 
-        return back()->with('success', 'Submission dibatalkan.');
+        return back()->with('success', 'Entry voided.');
     }
 
     public function export(Request $request, SubmissionExporter $exporter): StreamedResponse

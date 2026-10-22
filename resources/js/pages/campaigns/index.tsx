@@ -36,29 +36,29 @@ export default function CampaignsIndex({
             <Head title="Campaign" />
             <PageHeader
                 title="Campaign"
-                description="Campaign tetap draf sampai diaktifkan."
-                action={canEdit ? { href: route('campaigns.create'), label: 'Tambah campaign' } : undefined}
+                description="Campaigns stay in draft until activated."
+                action={canEdit ? { href: route('campaigns.create'), label: 'New campaign' } : undefined}
             />
             <FilterBar
                 url={route('campaigns.index')}
                 filters={filters}
-                searchPlaceholder="Cari nama campaign"
+                searchPlaceholder="Search campaign name"
                 selects={[
-                    { name: 'status', label: 'Semua status', options: labelOptions('campaignStatus') },
-                    ...(canEdit ? [{ name: 'client_id', label: 'Semua client', options: clients.map((c) => ({ value: c.id, label: c.name })) }] : []),
+                    { name: 'status', label: 'All statuses', options: labelOptions('campaignStatus') },
+                    ...(canEdit ? [{ name: 'client_id', label: 'All clients', options: clients.map((c) => ({ value: c.id, label: c.name })) }] : []),
                 ]}
             />
             <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full text-sm">
                     <thead className="bg-muted/50">
                         <tr>
-                            <th className="px-3 py-2 text-left">Nama</th>
+                            <th className="px-3 py-2 text-left">Name</th>
                             <th className="px-3 py-2 text-left">Client</th>
-                            <th className="px-3 py-2 text-left">Periode</th>
+                            <th className="px-3 py-2 text-left">Period</th>
                             <th className="px-3 py-2 text-left">Status</th>
-                            <th className="px-3 py-2 text-left">Lokasi</th>
-                            <th className="px-3 py-2 text-left">Data</th>
-                            <th className="px-3 py-2 text-left">Aksi</th>
+                            <th className="px-3 py-2 text-left">Location</th>
+                            <th className="px-3 py-2 text-left">Entries</th>
+                            <th className="px-3 py-2 text-left">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -76,7 +76,7 @@ export default function CampaignsIndex({
                                 <td className="px-3 py-2">{campaign.submissions_count}</td>
                                 <td className="px-3 py-1">
                                     <div className="flex gap-1">
-                                        <IconAction icon={Eye} label="Lihat detail" href={route('campaigns.show', campaign.id)} />
+                                        <IconAction icon={Eye} label="View details" href={route('campaigns.show', campaign.id)} />
                                         {canEdit && <IconAction icon={Pencil} label="Edit campaign" href={route('campaigns.edit', campaign.id)} />}
                                     </div>
                                 </td>
@@ -85,7 +85,7 @@ export default function CampaignsIndex({
                         {campaigns.data.length === 0 && (
                             <tr>
                                 <td colSpan={7} className="text-muted-foreground px-3 py-8 text-center">
-                                    Tidak ada campaign yang cocok.
+                                    No matching campaigns.
                                 </td>
                             </tr>
                         )}

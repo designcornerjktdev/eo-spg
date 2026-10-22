@@ -11,7 +11,7 @@ class CreatePagesTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * Regresi: route detail seperti clients/{client} pernah menangkap "create" sehingga halaman tambah 404.
+     * Regression: detail routes like clients/{client} used to capture "create", making create pages 404.
      */
     public function test_superadmin_can_open_every_create_page(): void
     {

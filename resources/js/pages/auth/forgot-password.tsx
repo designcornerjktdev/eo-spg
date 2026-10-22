@@ -22,11 +22,11 @@ export default function ForgotPassword({ status }: { status?: string }) {
     };
 
     return (
-        <AuthLayout title="Lupa password" description="Reset mandiri hanya untuk akun EO (admin).">
-            <Head title="Lupa password" />
+        <AuthLayout title="Forgot password" description="Self-service reset is only for EO admin accounts.">
+            <Head title="Forgot password" />
 
             <div className="bg-muted rounded-md p-3 text-sm">
-                <span className="font-medium">Akun client atau SPG?</span> Hubungi admin EO untuk mereset password Anda.
+                <span className="font-medium">Client or SPG account?</span> Contact the EO admin to reset your password.
             </div>
 
             {status && <div className="text-center text-sm font-medium text-green-600">{status}</div>}
@@ -34,7 +34,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
             <div className="space-y-6">
                 <form onSubmit={submit}>
                     <div className="grid gap-2">
-                        <Label htmlFor="email">Email akun EO</Label>
+                        <Label htmlFor="email">EO admin email</Label>
                         <Input
                             id="email"
                             type="email"
@@ -43,7 +43,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
                             value={data.email}
                             autoFocus
                             onChange={(e) => setData('email', e.target.value)}
-                            placeholder="email@perusahaan.com"
+                            placeholder="email@company.com"
                         />
 
                         <InputError message={errors.email} />
@@ -52,14 +52,14 @@ export default function ForgotPassword({ status }: { status?: string }) {
                     <div className="my-6 flex items-center justify-start">
                         <Button className="w-full" disabled={processing}>
                             {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
-                            Kirim link reset password
+                            Send password reset link
                         </Button>
                     </div>
                 </form>
 
                 <div className="text-muted-foreground space-x-1 text-center text-sm">
-                    <span>Kembali ke</span>
-                    <TextLink href={route('login')}>halaman masuk</TextLink>
+                    <span>Back to</span>
+                    <TextLink href={route('login')}>sign in</TextLink>
                 </div>
             </div>
         </AuthLayout>

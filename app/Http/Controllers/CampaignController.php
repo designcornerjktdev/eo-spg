@@ -71,7 +71,7 @@ class CampaignController extends Controller
             return $campaign;
         });
 
-        return redirect()->route('campaigns.show', $campaign)->with('success', 'Campaign berhasil dibuat.');
+        return redirect()->route('campaigns.show', $campaign)->with('success', 'Campaign created.');
     }
 
     public function show(Campaign $campaign): Response
@@ -114,7 +114,7 @@ class CampaignController extends Controller
 
         $audit->record($request->user(), 'campaign.updated', $campaign, $old, $campaign->fresh()->only(['name', 'starts_on', 'ends_on', 'status']));
 
-        return redirect()->route('campaigns.show', $campaign)->with('success', 'Campaign diperbarui.');
+        return redirect()->route('campaigns.show', $campaign)->with('success', 'Campaign updated.');
     }
 
     public function activate(Request $request, Campaign $campaign, AuditLogger $audit): RedirectResponse
@@ -125,7 +125,7 @@ class CampaignController extends Controller
         $campaign->update(['status' => CampaignStatus::Active]);
         $audit->record($request->user(), 'campaign.activated', $campaign, $old, ['status' => CampaignStatus::Active->value]);
 
-        return back()->with('success', 'Campaign diaktifkan.');
+        return back()->with('success', 'Campaign activated.');
     }
 
     public function close(Request $request, Campaign $campaign, AuditLogger $audit): RedirectResponse
@@ -136,7 +136,7 @@ class CampaignController extends Controller
         $campaign->update(['status' => CampaignStatus::Closed]);
         $audit->record($request->user(), 'campaign.closed', $campaign, $old, ['status' => CampaignStatus::Closed->value]);
 
-        return back()->with('success', 'Campaign ditutup.');
+        return back()->with('success', 'Campaign closed.');
     }
 
     public function destroy(Request $request, Campaign $campaign, AuditLogger $audit): RedirectResponse
@@ -150,20 +150,20 @@ class CampaignController extends Controller
         $audit->record($request->user(), 'campaign.deleted', $campaign, $campaign->only(['name', 'client_id', 'status']));
         $campaign->delete();
 
-        return redirect()->route('campaigns.index')->with('success', 'Campaign '.$campaign->name.' dihapus.');
+        return redirect()->route('campaigns.index')->with('success', 'Campaign '.$campaign->name.' deleted.');
     }
 
     /**
-     * Hanya campaign draf yang belum berjalan boleh dihapus; selebihnya cukup ditutup agar laporan tetap utuh.
+     * Only unused draft campaigns may be deleted; others are closed so reports stay intact.
      */
     private function deleteBlocker(Campaign $campaign): ?string
     {
         if ($campaign->status !== CampaignStatus::Draft) {
-            return 'Hanya campaign berstatus draf yang bisa dihapus. Campaign yang sudah aktif cukup ditutup.';
+            return 'Only draft campaigns can be deleted. Close an active campaign instead.';
         }
 
         if ($campaign->assignments()->exists() || $campaign->submissions()->exists()) {
-            return 'Campaign ini sudah punya penugasan SPG atau data, jadi tidak bisa dihapus.';
+            return 'This campaign already has SPG assignments or entries, so it cannot be deleted.';
         }
 
         return null;
@@ -198,14 +198,14 @@ class CampaignController extends Controller
             $kept[] = $model->id;
         }
 
-        // Lokasi yang sudah dipakai penugasan tidak boleh dihapus: FK assignment -> lokasi memakai cascade
-        // sehingga penugasan beserta data SPG-nya ikut terhapus.
+        // Locations used by assignments must not be removed: the assignment -> location FK cascades,
+        // which would also delete the assignments and their SPG entries.
         $removed = $campaign->locations()->whereNotIn('id', $kept);
         $used = (clone $removed)->whereHas('assignments')->pluck('name');
 
         if ($used->isNotEmpty()) {
             throw ValidationException::withMessages([
-                'locations' => 'Lokasi '.$used->join(', ').' sudah dipakai di penugasan SPG, jadi tidak bisa dihapus.',
+                'locations' => 'Location '.$used->join(', ').' is used by SPG assignments, so it cannot be removed.',
             ]);
         }
 

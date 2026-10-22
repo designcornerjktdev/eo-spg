@@ -11,9 +11,9 @@ enum CampaignStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::Draft => 'Draf',
-            self::Active => 'Aktif',
-            self::Closed => 'Ditutup',
+            self::Draft => 'Draft',
+            self::Active => 'Active',
+            self::Closed => 'Closed',
         };
     }
 }

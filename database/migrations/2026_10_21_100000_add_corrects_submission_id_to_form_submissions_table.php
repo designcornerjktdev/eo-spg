@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('form_submissions', function (Blueprint $table) {
-            // Baris pengganti menunjuk ke baris lama yang di-void karena koreksi SPG.
+            // The replacement row points to the old row that was voided by an SPG correction.
             $table->foreignId('corrects_submission_id')->nullable()->after('void_reason')->constrained('form_submissions')->nullOnDelete();
         });
     }

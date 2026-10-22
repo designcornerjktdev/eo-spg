@@ -27,28 +27,28 @@ export default function ProductsIndex({
     const canEdit = usePage<SharedData>().props.auth.user?.role === 'superadmin';
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Produk', href: '/products' }]}>
-            <Head title="Produk" />
+        <AppLayout breadcrumbs={[{ title: 'Products', href: '/products' }]}>
+            <Head title="Products" />
             <PageHeader
-                title="Produk"
-                description="Produk milik masing-masing client."
-                action={canEdit ? { href: route('products.create'), label: 'Tambah produk' } : undefined}
+                title="Products"
+                description="Each client's products."
+                action={canEdit ? { href: route('products.create'), label: 'New product' } : undefined}
             />
             <FilterBar
                 url={route('products.index')}
                 filters={filters}
-                searchPlaceholder="Cari nama atau SKU"
-                selects={canEdit ? [{ name: 'client_id', label: 'Semua client', options: clients.map((c) => ({ value: c.id, label: c.name })) }] : []}
+                searchPlaceholder="Search name or SKU"
+                selects={canEdit ? [{ name: 'client_id', label: 'All clients', options: clients.map((c) => ({ value: c.id, label: c.name })) }] : []}
             />
             <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full text-sm">
                     <thead className="bg-muted/50">
                         <tr>
-                            <th className="px-3 py-2 text-left">Nama</th>
+                            <th className="px-3 py-2 text-left">Name</th>
                             <th className="px-3 py-2 text-left">SKU</th>
                             <th className="px-3 py-2 text-left">Client</th>
-                            <th className="px-3 py-2 text-left">Dipakai di campaign</th>
-                            {canEdit && <th className="px-3 py-2 text-left">Aksi</th>}
+                            <th className="px-3 py-2 text-left">Used in campaigns</th>
+                            {canEdit && <th className="px-3 py-2 text-left">Actions</th>}
                         </tr>
                     </thead>
                     <tbody>
@@ -60,7 +60,7 @@ export default function ProductsIndex({
                                 <td className="px-3 py-2">{product.campaigns_count}</td>
                                 {canEdit && (
                                     <td className="px-3 py-1">
-                                        <IconAction icon={Pencil} label="Edit produk" href={route('products.edit', product.id)} />
+                                        <IconAction icon={Pencil} label="Edit product" href={route('products.edit', product.id)} />
                                     </td>
                                 )}
                             </tr>
@@ -68,7 +68,7 @@ export default function ProductsIndex({
                         {products.data.length === 0 && (
                             <tr>
                                 <td colSpan={5} className="text-muted-foreground px-3 py-8 text-center">
-                                    Tidak ada produk yang cocok.
+                                    No matching products.
                                 </td>
                             </tr>
                         )}

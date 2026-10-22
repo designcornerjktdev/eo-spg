@@ -12,10 +12,10 @@ enum AssignmentStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::Scheduled => 'Terjadwal',
-            self::Active => 'Aktif',
-            self::Done => 'Selesai',
-            self::Cancelled => 'Batal',
+            self::Scheduled => 'Scheduled',
+            self::Active => 'Active',
+            self::Done => 'Done',
+            self::Cancelled => 'Cancelled',
         };
     }
 }

@@ -38,9 +38,9 @@ class LoginIdentifierTest extends TestCase
 
     public function test_inactive_account_cannot_log_in(): void
     {
-        User::factory()->spg()->create(['username' => 'nonaktif', 'is_active' => false]);
+        User::factory()->spg()->create(['username' => 'inactive', 'is_active' => false]);
 
-        $this->post('/login', ['login' => 'nonaktif', 'password' => 'password'])->assertSessionHasErrors('login');
+        $this->post('/login', ['login' => 'inactive', 'password' => 'password'])->assertSessionHasErrors('login');
         $this->assertGuest();
     }
 
@@ -64,11 +64,11 @@ class LoginIdentifierTest extends TestCase
         $spg = User::factory()->spg()->create();
 
         $this->actingAs($eo)->put('/users/'.$spg->id.'/password', [
-            'password' => 'PasswordBaru123',
-            'password_confirmation' => 'PasswordBaru123',
+            'password' => 'NewPassword123',
+            'password_confirmation' => 'NewPassword123',
         ])->assertSessionHasNoErrors();
 
-        $this->assertTrue(Hash::check('PasswordBaru123', $spg->refresh()->password));
+        $this->assertTrue(Hash::check('NewPassword123', $spg->refresh()->password));
         $this->assertTrue(AuditLog::query()->where('action', 'user.password_reset')->exists());
     }
 
@@ -77,7 +77,7 @@ class LoginIdentifierTest extends TestCase
         $eo = User::factory()->superadmin()->create();
         $otherEo = User::factory()->superadmin()->create();
         $spg = User::factory()->spg()->create();
-        $payload = ['password' => 'PasswordBaru123', 'password_confirmation' => 'PasswordBaru123'];
+        $payload = ['password' => 'NewPassword123', 'password_confirmation' => 'NewPassword123'];
 
         $this->actingAs($spg)->put('/users/'.$spg->id.'/password', $payload)->assertForbidden();
         $this->actingAs($eo)->put('/users/'.$otherEo->id.'/password', $payload)->assertForbidden();
@@ -88,13 +88,13 @@ class LoginIdentifierTest extends TestCase
         $eo = User::factory()->superadmin()->create();
 
         $this->actingAs($eo)->post('/users', [
-            'name' => 'SPG Baru',
-            'username' => 'spg.baru',
+            'name' => 'New SPG',
+            'username' => 'spg.new',
             'password' => 'password',
             'role' => 'spg',
         ])->assertSessionHasNoErrors();
 
         $this->post('/logout');
-        $this->post('/login', ['login' => 'spg.baru', 'password' => 'password'])->assertRedirect('/tasks');
+        $this->post('/login', ['login' => 'spg.new', 'password' => 'password'])->assertRedirect('/tasks');
     }
 }

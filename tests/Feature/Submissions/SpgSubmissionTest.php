@@ -25,7 +25,7 @@ class SpgSubmissionTest extends TestCase
         $this->assertSame($world['spg']->id, $submission->submitted_by);
         $this->assertNotNull($submission->submitted_at);
         $this->assertTrue($submission->qualified);
-        $this->assertSame('Saya setuju data dipakai untuk campaign.', $submission->consent_text_version);
+        $this->assertSame('I agree my data may be used for this campaign.', $submission->consent_text_version);
     }
 
     public function test_assignment_page_lists_own_submissions_and_store_returns_there(): void

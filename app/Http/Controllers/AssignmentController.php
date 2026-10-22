@@ -69,7 +69,7 @@ class AssignmentController extends Controller
         ]);
         $audit->record($request->user(), 'assignment.created', $assignment);
 
-        return redirect()->route('assignments.index')->with('success', 'Assignment berhasil dibuat.');
+        return redirect()->route('assignments.index')->with('success', 'Assignment created.');
     }
 
     public function edit(Assignment $assignment): Response
@@ -90,25 +90,25 @@ class AssignmentController extends Controller
         $assignment = $this->scheduler->update($assignment, $request->validated());
         $audit->record($request->user(), 'assignment.updated', $assignment, $old, $assignment->only(['user_id', 'starts_at', 'ends_at', 'status']));
 
-        return redirect()->route('assignments.index')->with('success', 'Assignment diperbarui.');
+        return redirect()->route('assignments.index')->with('success', 'Assignment updated.');
     }
 
     /**
-     * Penugasan yang sudah punya data dibatalkan (status cancelled), bukan dihapus; jadwal SPG jadi bebas lagi.
+     * Assignments with entries are cancelled (status cancelled), not deleted; this frees the SPG schedule again.
      */
     public function cancel(Request $request, Assignment $assignment, AuditLogger $audit): RedirectResponse
     {
         $this->authorize('update', $assignment);
 
         if ($assignment->status === AssignmentStatus::Cancelled) {
-            throw ValidationException::withMessages(['assignment' => 'Penugasan ini sudah dibatalkan.']);
+            throw ValidationException::withMessages(['assignment' => 'This assignment is already cancelled.']);
         }
 
         $old = ['status' => $assignment->status->value];
         $assignment->update(['status' => AssignmentStatus::Cancelled]);
         $audit->record($request->user(), 'assignment.cancelled', $assignment, $old, ['status' => AssignmentStatus::Cancelled->value]);
 
-        return redirect()->route('assignments.index')->with('success', 'Penugasan dibatalkan.');
+        return redirect()->route('assignments.index')->with('success', 'Assignment cancelled.');
     }
 
     public function destroy(Request $request, Assignment $assignment, AuditLogger $audit): RedirectResponse
@@ -122,16 +122,16 @@ class AssignmentController extends Controller
         $audit->record($request->user(), 'assignment.deleted', $assignment, $assignment->only(['campaign_id', 'location_id', 'user_id', 'starts_at', 'ends_at']));
         $assignment->delete();
 
-        return redirect()->route('assignments.index')->with('success', 'Penugasan dihapus.');
+        return redirect()->route('assignments.index')->with('success', 'Assignment deleted.');
     }
 
     /**
-     * FK submission ke assignment memakai cascade, jadi penugasan yang sudah punya data tidak boleh dihapus.
+     * The submission -> assignment FK cascades, so assignments that already have entries must not be deleted.
      */
     private function deleteBlocker(Assignment $assignment): ?string
     {
         return $assignment->submissions()->exists()
-            ? 'Penugasan ini sudah punya data dari SPG, jadi tidak bisa dihapus. Batalkan saja penugasannya.'
+            ? 'This assignment already has SPG entries, so it cannot be deleted. Cancel it instead.'
             : null;
     }
 }

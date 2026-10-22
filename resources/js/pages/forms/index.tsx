@@ -25,18 +25,18 @@ export default function FormsIndex({
             <Head title="Form" />
             <PageHeader
                 title="Form builder"
-                description="Form terkunci setelah submission pertama. Untuk mengubahnya, buat versi baru."
-                action={{ href: route('forms.create'), label: 'Buat form' }}
+                description="Forms lock after the first entry. Create a new version to change one."
+                action={{ href: route('forms.create'), label: 'Create form' }}
             />
             <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full text-sm">
                     <thead className="bg-muted/50">
                         <tr>
-                            <th className="px-3 py-2 text-left">Nama</th>
+                            <th className="px-3 py-2 text-left">Name</th>
                             <th className="px-3 py-2 text-left">Campaign</th>
-                            <th className="px-3 py-2 text-left">Versi</th>
+                            <th className="px-3 py-2 text-left">Version</th>
                             <th className="px-3 py-2 text-left">Status</th>
-                            <th className="px-3 py-2 text-left">Aksi</th>
+                            <th className="px-3 py-2 text-left">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -53,7 +53,7 @@ export default function FormsIndex({
                                 <td className="px-3 py-1">
                                     <div className="flex gap-1">
                                         <IconAction icon={Eye} label="Preview form" href={route('forms.preview', template.id)} />
-                                        <IconAction icon={Pencil} label="Kelola form" href={route('forms.edit', template.id)} />
+                                        <IconAction icon={Pencil} label="Manage form" href={route('forms.edit', template.id)} />
                                     </div>
                                 </td>
                             </tr>
@@ -61,7 +61,7 @@ export default function FormsIndex({
                         {templates.data.length === 0 && (
                             <tr>
                                 <td colSpan={5} className="text-muted-foreground px-3 py-8 text-center">
-                                    Belum ada form.
+                                    No forms yet.
                                 </td>
                             </tr>
                         )}

@@ -29,20 +29,20 @@ export default function AssignmentsIndex({
     campaigns: { id: number; name: string }[];
 }) {
     return (
-        <AppLayout breadcrumbs={[{ title: 'Penugasan SPG', href: '/assignments' }]}>
-            <Head title="Penugasan SPG" />
+        <AppLayout breadcrumbs={[{ title: 'SPG assignments', href: '/assignments' }]}>
+            <Head title="SPG assignments" />
             <PageHeader
-                title="Penugasan SPG"
-                description="Jadwal SPG per lokasi campaign. Satu SPG tidak bisa punya dua jadwal yang bertabrakan."
-                action={{ href: route('assignments.create'), label: 'Tambah penugasan' }}
+                title="SPG assignments"
+                description="SPG schedules per campaign location. An SPG cannot have two overlapping schedules."
+                action={{ href: route('assignments.create'), label: 'New assignment' }}
             />
             <FilterBar
                 url={route('assignments.index')}
                 filters={filters}
-                searchPlaceholder="Cari nama SPG atau lokasi"
+                searchPlaceholder="Search SPG name or location"
                 selects={[
-                    { name: 'campaign_id', label: 'Semua campaign', options: campaigns.map((c) => ({ value: c.id, label: c.name })) },
-                    { name: 'status', label: 'Semua status', options: labelOptions('assignmentStatus') },
+                    { name: 'campaign_id', label: 'All campaigns', options: campaigns.map((c) => ({ value: c.id, label: c.name })) },
+                    { name: 'status', label: 'All statuses', options: labelOptions('assignmentStatus') },
                 ]}
             />
             <div className="overflow-x-auto rounded-lg border">
@@ -51,10 +51,10 @@ export default function AssignmentsIndex({
                         <tr>
                             <th className="px-3 py-2 text-left">SPG</th>
                             <th className="px-3 py-2 text-left">Campaign</th>
-                            <th className="px-3 py-2 text-left">Lokasi</th>
-                            <th className="px-3 py-2 text-left">Jadwal</th>
+                            <th className="px-3 py-2 text-left">Location</th>
+                            <th className="px-3 py-2 text-left">Schedule</th>
                             <th className="px-3 py-2 text-left">Status</th>
-                            <th className="px-3 py-2 text-left">Aksi</th>
+                            <th className="px-3 py-2 text-left">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -70,14 +70,14 @@ export default function AssignmentsIndex({
                                     </Badge>
                                 </td>
                                 <td className="px-3 py-1">
-                                    <IconAction icon={Pencil} label="Edit penugasan" href={route('assignments.edit', assignment.id)} />
+                                    <IconAction icon={Pencil} label="Edit assignment" href={route('assignments.edit', assignment.id)} />
                                 </td>
                             </tr>
                         ))}
                         {assignments.data.length === 0 && (
                             <tr>
                                 <td colSpan={6} className="text-muted-foreground px-3 py-8 text-center">
-                                    Tidak ada penugasan yang cocok.
+                                    No matching assignments.
                                 </td>
                             </tr>
                         )}

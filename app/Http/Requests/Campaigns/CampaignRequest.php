@@ -45,7 +45,7 @@ class CampaignRequest extends FormRequest
                 ->count();
 
             if ($owned !== count($productIds)) {
-                $validator->errors()->add('product_ids', 'Semua produk harus milik client campaign.');
+                $validator->errors()->add('product_ids', 'All products must belong to the campaign client.');
             }
         });
     }

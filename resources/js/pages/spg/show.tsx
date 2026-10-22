@@ -59,7 +59,7 @@ export default function SpgShow({
     submissions: { data: Submission[]; total: number; from: number | null; links: { url: string | null; label: string; active: boolean }[] };
     todayCount: number;
 }) {
-    // open + correcting=null berarti tambah data baru; correcting terisi berarti perbaiki baris itu.
+    // open + correcting=null means adding a new entry; a set correcting means correcting that row.
     const [open, setOpen] = useState(false);
     const [correcting, setCorrecting] = useState<Submission | null>(null);
     const [cancelling, setCancelling] = useState<Submission | null>(null);
@@ -70,7 +70,7 @@ export default function SpgShow({
     return (
         <AppLayout
             breadcrumbs={[
-                { title: 'Tugas', href: route('spg.tasks.index') },
+                { title: 'Tasks', href: route('spg.tasks.index') },
                 { title: assignment.campaign.name, href: route('spg.tasks.show', assignment.id) },
             ]}
         >
@@ -80,8 +80,7 @@ export default function SpgShow({
                 <div className="min-w-0 space-y-1">
                     <h1 className="text-lg font-semibold">{assignment.campaign.name}</h1>
                     <p className="text-muted-foreground text-sm">
-                        {[context.location, context.area, context.date].filter(Boolean).join(' · ')} · {submissions.total} baris, hari ini{' '}
-                        {todayCount}
+                        {[context.location, context.area, context.date].filter(Boolean).join(' · ')} · {submissions.total} rows, today {todayCount}
                     </p>
                 </div>
                 <Button
@@ -93,10 +92,10 @@ export default function SpgShow({
                     }}
                 >
                     <Plus className="size-4" />
-                    Tambah data
+                    Add entry
                 </Button>
             </div>
-            {!fillable && <p className="text-destructive text-sm">Tugas ini sedang tidak bisa diisi.</p>}
+            {!fillable && <p className="text-destructive text-sm">This task cannot be filled in right now.</p>}
 
             {/* Tabel ala spreadsheet; scroll ke samping kalau kolomnya banyak. */}
             <div className="overflow-x-auto rounded-md border">
@@ -104,13 +103,13 @@ export default function SpgShow({
                     <thead className="bg-muted">
                         <tr>
                             <th className="text-muted-foreground w-10 border-r border-b px-2 py-2 text-center font-medium">#</th>
-                            <th className="border-r border-b px-3 py-2 text-left font-medium whitespace-nowrap">Waktu</th>
+                            <th className="border-r border-b px-3 py-2 text-left font-medium whitespace-nowrap">Time</th>
                             {fields.map((field) => (
                                 <th key={field.key} className="border-r border-b px-3 py-2 text-left font-medium whitespace-nowrap last:border-r-0">
                                     {field.label}
                                 </th>
                             ))}
-                            <th className="border-b px-3 py-2 text-left font-medium">Aksi</th>
+                            <th className="border-b px-3 py-2 text-left font-medium">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -129,19 +128,19 @@ export default function SpgShow({
                                 <td className="border-b px-2 py-1 whitespace-nowrap">
                                     {submission.status === 'void' ? (
                                         <span className="text-xs" title={submission.void_reason ?? undefined}>
-                                            Batal{submission.void_reason ? `: ${submission.void_reason}` : ''}
+                                            Voided{submission.void_reason ? `: ${submission.void_reason}` : ''}
                                         </span>
                                     ) : submission.can_correct ? (
                                         <div className="flex gap-1">
                                             <IconAction
                                                 icon={Pencil}
-                                                label="Perbaiki data"
+                                                label="Correct entry"
                                                 onClick={() => {
                                                     setCorrecting(submission);
                                                     setOpen(true);
                                                 }}
                                             />
-                                            <IconAction icon={Ban} label="Batalkan data" destructive onClick={() => setCancelling(submission)} />
+                                            <IconAction icon={Ban} label="Cancel entry" destructive onClick={() => setCancelling(submission)} />
                                         </div>
                                     ) : (
                                         <span className="text-muted-foreground text-xs">-</span>
@@ -152,7 +151,7 @@ export default function SpgShow({
                         {submissions.data.length === 0 && (
                             <tr>
                                 <td colSpan={fields.length + 3} className="text-muted-foreground px-3 py-8 text-center">
-                                    Belum ada data. Tekan <span className="font-medium">Tambah data</span> untuk mulai input.
+                                    No entries yet. Press <span className="font-medium">Add entry</span> to get started.
                                 </td>
                             </tr>
                         )}
@@ -164,10 +163,10 @@ export default function SpgShow({
             <Dialog open={open} onOpenChange={setOpen}>
                 <DialogContent className="flex max-h-[95svh] max-w-[calc(100%-1rem)] flex-col gap-0 p-0 md:max-w-2xl">
                     <DialogHeader className="border-b p-4 text-left md:p-6">
-                        <DialogTitle>{correcting ? 'Perbaiki data' : 'Tambah data'}</DialogTitle>
+                        <DialogTitle>{correcting ? 'Correct entry' : 'Add entry'}</DialogTitle>
                         <DialogDescription>
                             {correcting
-                                ? 'Data lama tetap tersimpan dan ditandai batal, lalu diganti baris baru ini.'
+                                ? 'The old entry is kept and marked as voided, then replaced by this new row.'
                                 : `${context.location ?? '-'} · ${context.date}`}
                         </DialogDescription>
                     </DialogHeader>
@@ -218,7 +217,7 @@ function EntryForm({
             preserveScroll: true,
             onSuccess: () => {
                 reset();
-                // "Simpan & tambah berikutnya" membiarkan pop-up tetap terbuka.
+                // "Save & add another" keeps the dialog open.
                 if (!another) {
                     onDone();
                 }
@@ -257,7 +256,7 @@ function EntryForm({
             </div>
             <div className="grid gap-2 border-t p-4 md:flex md:flex-row-reverse md:justify-start md:px-6">
                 <Button type="submit" className="h-12 md:h-10 md:px-6" disabled={processing || !fillable}>
-                    {processing && !addAnother ? 'Menyimpan…' : correcting ? 'Simpan perbaikan' : 'Simpan'}
+                    {processing && !addAnother ? 'Saving…' : correcting ? 'Save correction' : 'Save'}
                 </Button>
                 {!correcting && (
                     <Button
@@ -267,7 +266,7 @@ function EntryForm({
                         disabled={processing || !fillable}
                         onClick={(event) => submit(event, true)}
                     >
-                        {processing && addAnother ? 'Menyimpan…' : 'Simpan & tambah berikutnya'}
+                        {processing && addAnother ? 'Saving…' : 'Save & add another'}
                     </Button>
                 )}
             </div>
@@ -295,26 +294,26 @@ function CancelDialog({ submission, onClose }: { submission: Submission | null; 
         <Dialog open={!!submission} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="max-w-[calc(100%-1rem)] md:max-w-md">
                 <DialogHeader className="text-left">
-                    <DialogTitle>Batalkan data?</DialogTitle>
-                    <DialogDescription>Data tidak dihapus, hanya ditandai batal dan tidak dihitung di laporan.</DialogDescription>
+                    <DialogTitle>Cancel this entry?</DialogTitle>
+                    <DialogDescription>The entry is not deleted; it is marked as voided and excluded from reports.</DialogDescription>
                 </DialogHeader>
                 <form className="space-y-4" onSubmit={submit}>
                     <div className="grid gap-2">
-                        <Label htmlFor="cancel-reason">Alasan *</Label>
+                        <Label htmlFor="cancel-reason">Reason *</Label>
                         <Textarea
                             id="cancel-reason"
                             value={data.reason}
-                            placeholder="Misal: data dobel"
+                            placeholder="e.g. duplicate entry"
                             onChange={(e) => setData('reason', e.target.value)}
                         />
                         <InputError message={formErrors.reason ?? formErrors.submission} />
                     </div>
                     <div className="flex justify-end gap-2">
                         <Button type="button" variant="outline" onClick={onClose}>
-                            Kembali
+                            Back
                         </Button>
                         <Button type="submit" variant="destructive" disabled={processing}>
-                            Batalkan data
+                            Cancel entry
                         </Button>
                     </div>
                 </form>
@@ -323,7 +322,7 @@ function CancelDialog({ submission, onClose }: { submission: Submission | null; 
     );
 }
 
-// Ubah jawaban tersimpan (angka, boolean, array) ke bentuk yang dipakai input form.
+// Convert stored answers (number, boolean, array) into the shape the form inputs use.
 function toAnswer(value: unknown, fallback: Answer): Answer {
     if (value === null || value === undefined) return fallback;
     if (typeof value === 'boolean' || Array.isArray(value)) return value as Answer;
@@ -332,12 +331,12 @@ function toAnswer(value: unknown, fallback: Answer): Answer {
 
 function formatAnswer(value: unknown): string {
     if (value === null || value === undefined || value === '') return '-';
-    if (typeof value === 'boolean') return value ? 'Ya' : 'Tidak';
+    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
     if (Array.isArray(value)) return value.length ? value.join(', ') : '-';
     return String(value);
 }
 
-// Field yang butuh ruang lebar mengambil dua kolom di tablet/laptop.
+// Fields that need more room span two columns on tablet/laptop.
 function isWideField(field: Field) {
     return field.type === 'long_text' || field.type === 'multiple_choice' || field.type === 'yes_no';
 }
@@ -354,7 +353,7 @@ function FieldInput({ field, value, onChange }: { field: Field; value: Answer; o
                     variant={value === true || value === '1' ? 'default' : 'outline'}
                     onClick={() => onChange(true)}
                 >
-                    Ya
+                    Yes
                 </Button>
                 <Button
                     type="button"
@@ -362,7 +361,7 @@ function FieldInput({ field, value, onChange }: { field: Field; value: Answer; o
                     variant={value === false || value === '0' ? 'default' : 'outline'}
                     onClick={() => onChange(false)}
                 >
-                    Tidak
+                    No
                 </Button>
             </div>
         );
@@ -380,7 +379,7 @@ function FieldInput({ field, value, onChange }: { field: Field; value: Answer; o
                 value={String(value ?? '')}
                 onChange={(e) => onChange(e.target.value)}
             >
-                <option value="">Pilih</option>
+                <option value="">Select</option>
                 {(field.options ?? []).map((option) => (
                     <option key={option} value={option}>
                         {option}

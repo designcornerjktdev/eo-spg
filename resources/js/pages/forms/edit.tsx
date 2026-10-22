@@ -93,28 +93,30 @@ export default function FormEdit({
         <AppLayout
             breadcrumbs={[
                 { title: 'Form', href: '/forms' },
-                { title: template ? template.name : 'Buat form', href: '#' },
+                { title: template ? template.name : 'Create form', href: '#' },
             ]}
         >
-            <Head title={template ? `Form ${template.name}` : 'Buat form'} />
+            <Head title={template ? `Form ${template.name}` : 'Create form'} />
             <FormPage width="xl">
                 <PageHeader
-                    title={template ? `${template.name} v${template.version}` : 'Buat form'}
-                    description={locked ? 'Form terkunci. Buat versi baru untuk mengubah field.' : 'Delapan tipe field tanpa logika kondisional.'}
+                    title={template ? `${template.name} v${template.version}` : 'Create form'}
+                    description={
+                        locked ? 'This form is locked. Create a new version to change its fields.' : 'Eight field types, no conditional logic.'
+                    }
                 />
                 {template && (
                     <div className="flex flex-wrap gap-2">
                         <Button asChild variant="outline">
-                            <Link href={route('forms.preview', template.id)}>Pratinjau</Link>
+                            <Link href={route('forms.preview', template.id)}>Preview</Link>
                         </Button>
                         {template.status === 'draft' && (
                             <Button type="button" onClick={() => router.post(route('forms.publish', template.id))}>
-                                Terbitkan
+                                Publish
                             </Button>
                         )}
                         {locked && (
                             <Button type="button" variant="outline" onClick={() => router.post(route('forms.version', template.id))}>
-                                Buat versi baru
+                                Create new version
                             </Button>
                         )}
                     </div>
@@ -129,7 +131,7 @@ export default function FormEdit({
                                 onChange={(e) => setData('campaign_id', e.target.value)}
                                 disabled={locked}
                             >
-                                <option value="">Pilih campaign</option>
+                                <option value="">Select a campaign</option>
                                 {campaigns.map((campaign) => (
                                     <option key={campaign.id} value={campaign.id}>
                                         {campaign.name}
@@ -139,7 +141,7 @@ export default function FormEdit({
                             <InputError message={errors.campaign_id} />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Nama form</Label>
+                            <Label>Form name</Label>
                             <Input value={data.name} onChange={(e) => setData('name', e.target.value)} disabled={locked} />
                         </div>
                     </div>
@@ -149,14 +151,14 @@ export default function FormEdit({
                             onCheckedChange={(checked) => setData('requires_consent', checked === true)}
                             disabled={locked}
                         />
-                        Wajibkan consent
+                        Require consent
                     </label>
                     {data.requires_consent && (
                         <Textarea
                             value={data.consent_text}
                             onChange={(e) => setData('consent_text', e.target.value)}
                             disabled={locked}
-                            placeholder="Teks consent"
+                            placeholder="Consent text"
                         />
                     )}
                     <label className="flex items-center gap-2 text-sm">
@@ -165,7 +167,7 @@ export default function FormEdit({
                             onCheckedChange={(checked) => setData('qualification_enabled', checked === true)}
                             disabled={locked}
                         />
-                        Kualifikasi: semua jawaban Ya/Tidak harus Ya
+                        Qualification: every Yes/No answer must be Yes
                     </label>
 
                     <div className="space-y-4">
@@ -184,7 +186,7 @@ export default function FormEdit({
                                         }
                                     />
                                     <Input
-                                        placeholder="Kunci unik"
+                                        placeholder="Unique key"
                                         value={field.key}
                                         disabled={locked}
                                         onChange={(e) => updateField(index, { key: e.target.value })}
@@ -205,7 +207,7 @@ export default function FormEdit({
                                 {['single_choice', 'multiple_choice'].includes(field.type) && (
                                     <Input
                                         disabled={locked}
-                                        placeholder="Opsi, pisahkan dengan koma"
+                                        placeholder="Options, comma separated"
                                         value={(field.options ?? []).join(', ')}
                                         onChange={(e) =>
                                             updateField(index, {
@@ -224,7 +226,7 @@ export default function FormEdit({
                                             disabled={locked}
                                             onCheckedChange={(checked) => updateField(index, { required: checked === true })}
                                         />
-                                        Wajib
+                                        Required
                                     </label>
                                     <label className="flex items-center gap-2">
                                         <Checkbox
@@ -232,7 +234,7 @@ export default function FormEdit({
                                             disabled={locked}
                                             onCheckedChange={(checked) => updateField(index, { visible_to_client: checked === true })}
                                         />
-                                        Terlihat client
+                                        Visible to client
                                     </label>
                                     <label className="flex items-center gap-2">
                                         <Checkbox
@@ -240,7 +242,7 @@ export default function FormEdit({
                                             disabled={locked}
                                             onCheckedChange={(checked) => updateField(index, { is_identity: checked === true })}
                                         />
-                                        Identitas
+                                        Identity
                                     </label>
                                     <label className="flex items-center gap-2">
                                         <Checkbox
@@ -263,26 +265,26 @@ export default function FormEdit({
                                             )
                                         }
                                     >
-                                        Hapus field
+                                        Remove field
                                     </Button>
                                 )}
                             </div>
                         ))}
                         {!locked && (
                             <Button type="button" variant="outline" onClick={() => setData('fields', [...data.fields, emptyField()])}>
-                                Tambah field
+                                Add field
                             </Button>
                         )}
                         <InputError message={errors.fields} />
                         <InputError message={(errors as Record<string, string>).form} />
                     </div>
-                    {!locked && <Button disabled={processing}>Simpan form</Button>}
+                    {!locked && <Button disabled={processing}>Save form</Button>}
                 </form>
                 {template && (
                     <DangerZone
-                        title="Hapus form"
-                        description="Form masih draf dan belum dipakai di penugasan SPG."
-                        confirmTitle={`Hapus form ${template.name} v${template.version}?`}
+                        title="Delete form"
+                        description="This form is a draft and not used by any SPG assignment."
+                        confirmTitle={`Delete form ${template.name} v${template.version}?`}
                         deleteUrl={route('forms.destroy', template.id)}
                         blocker={deleteBlocker}
                         errorKey="form"

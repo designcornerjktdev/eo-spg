@@ -62,12 +62,12 @@ export default function AssignmentForm({
         <AppLayout
             breadcrumbs={[
                 { title: 'Assignment', href: '/assignments' },
-                { title: assignment ? 'Ubah' : 'Tambah', href: '#' },
+                { title: assignment ? 'Edit' : 'New', href: '#' },
             ]}
         >
-            <Head title={assignment ? 'Ubah assignment' : 'Tambah assignment'} />
+            <Head title={assignment ? 'Edit assignment' : 'New assignment'} />
             <FormPage>
-                <PageHeader title={assignment ? 'Ubah assignment' : 'Tugaskan SPG'} description="Sistem menolak jadwal yang bentrok." />
+                <PageHeader title={assignment ? 'Edit assignment' : 'Assign SPG'} description="Overlapping schedules are rejected." />
                 <form onSubmit={submit} className="grid gap-4 rounded-xl border p-4 sm:p-6">
                     <SelectField
                         label="Campaign"
@@ -77,7 +77,7 @@ export default function AssignmentForm({
                         options={campaigns.map((item) => ({ id: item.id, name: item.name }))}
                     />
                     <SelectField
-                        label="Lokasi"
+                        label="Location"
                         value={data.location_id}
                         error={errors.location_id}
                         onChange={(value) => setData('location_id', value)}
@@ -98,16 +98,16 @@ export default function AssignmentForm({
                         options={spgs}
                     />
                     <div className="grid gap-2">
-                        <Label>Mulai</Label>
+                        <Label>Start</Label>
                         <Input type="datetime-local" value={data.starts_at} onChange={(e) => setData('starts_at', e.target.value)} />
                         <InputError message={errors.starts_at} />
                     </div>
                     <div className="grid gap-2">
-                        <Label>Selesai</Label>
+                        <Label>End</Label>
                         <Input type="datetime-local" value={data.ends_at} onChange={(e) => setData('ends_at', e.target.value)} />
                         <InputError message={errors.ends_at} />
                     </div>
-                    <Button disabled={processing}>Simpan</Button>
+                    <Button disabled={processing}>Save</Button>
                 </form>
                 {footer}
             </FormPage>
@@ -132,7 +132,7 @@ function SelectField({
         <div className="grid gap-2">
             <Label>{label}</Label>
             <select className="border-input h-9 rounded-md border px-2" value={value} onChange={(e) => onChange(e.target.value)}>
-                <option value="">Pilih</option>
+                <option value="">Select</option>
                 {options.map((option) => (
                     <option key={option.id} value={option.id}>
                         {option.name}

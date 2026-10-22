@@ -17,15 +17,15 @@ export default function AuditIndex({ logs }: { logs: { data: LogRow[]; links: { 
     return (
         <AppLayout breadcrumbs={[{ title: 'Audit log', href: '/audit' }]}>
             <Head title="Audit log" />
-            <PageHeader title="Audit log" description="Riwayat perubahan penting oleh admin dan SPG." />
+            <PageHeader title="Audit log" description="History of important changes by admins and SPGs." />
             <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full text-sm">
                     <thead className="bg-muted/50">
                         <tr>
-                            <th className="px-3 py-2 text-left">Waktu</th>
-                            <th className="px-3 py-2 text-left">Pengguna</th>
-                            <th className="px-3 py-2 text-left">Aksi</th>
-                            <th className="px-3 py-2 text-left">Objek</th>
+                            <th className="px-3 py-2 text-left">Time</th>
+                            <th className="px-3 py-2 text-left">Users</th>
+                            <th className="px-3 py-2 text-left">Actions</th>
+                            <th className="px-3 py-2 text-left">Object</th>
                         </tr>
                     </thead>
                     <tbody>

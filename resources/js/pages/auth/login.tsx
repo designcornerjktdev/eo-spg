@@ -37,13 +37,13 @@ export default function Login({ status, canResetPassword }: LoginProps) {
     };
 
     return (
-        <AuthLayout title="Masuk ke EO Campaign" description="Gunakan akun yang diberikan tim EO">
-            <Head title="Masuk" />
+        <AuthLayout title="Sign in to EO Campaign" description="Use the account provided by the EO team">
+            <Head title="Sign in" />
 
             <form className="flex flex-col gap-6" onSubmit={submit}>
                 <div className="grid gap-6">
                     <div className="grid gap-2">
-                        <Label htmlFor="login">Email atau username</Label>
+                        <Label htmlFor="login">Email or username</Label>
                         <Input
                             id="login"
                             type="text"
@@ -65,7 +65,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             <Label htmlFor="password">Password</Label>
                             {canResetPassword && (
                                 <TextLink href={route('password.request')} className="ml-auto text-sm" tabIndex={5}>
-                                    Lupa password?
+                                    Forgot password?
                                 </TextLink>
                             )}
                         </div>
@@ -90,12 +90,12 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             checked={data.remember}
                             onCheckedChange={(checked) => setData('remember', checked === true)}
                         />
-                        <Label htmlFor="remember">Ingat saya</Label>
+                        <Label htmlFor="remember">Remember me</Label>
                     </div>
 
                     <Button type="submit" className="mt-4 w-full" tabIndex={4} disabled={processing}>
                         {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
-                        Masuk
+                        Sign in
                     </Button>
                 </div>
             </form>

@@ -28,7 +28,7 @@ export default function ClientShow({ client }: { client: ClientShow }) {
         >
             <Head title={client.name} />
             <div className="flex items-start justify-between">
-                <PageHeader title={client.name} description={`Kode ${client.code}`} />
+                <PageHeader title={client.name} description={`Code ${client.code}`} />
                 {canEdit && (
                     <Button asChild variant="outline">
                         <Link href={route('clients.edit', client.id)}>Edit</Link>
@@ -39,7 +39,7 @@ export default function ClientShow({ client }: { client: ClientShow }) {
             <div className="grid gap-4 md:grid-cols-3">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Akun</CardTitle>
+                        <CardTitle>Accounts</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-1 text-sm">
                         {client.users.map((user) => (
@@ -47,12 +47,12 @@ export default function ClientShow({ client }: { client: ClientShow }) {
                                 {user.name} · {user.username ?? user.email}
                             </div>
                         ))}
-                        {client.users.length === 0 && <div>Belum ada akun.</div>}
+                        {client.users.length === 0 && <div>No accounts yet.</div>}
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader>
-                        <CardTitle>Produk</CardTitle>
+                        <CardTitle>Products</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-1 text-sm">
                         {client.products.map((product) => (

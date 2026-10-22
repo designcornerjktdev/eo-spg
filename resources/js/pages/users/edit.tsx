@@ -37,17 +37,17 @@ export default function UserEdit({ user, clients, deletable }: { user: EditableU
     return (
         <AppLayout
             breadcrumbs={[
-                { title: 'Pengguna', href: '/users' },
+                { title: 'Users', href: '/users' },
                 { title: user.name, href: route('users.edit', user.id) },
             ]}
         >
             <Head title={`Edit ${user.name}`} />
             <FormPage>
-                <PageHeader title="Edit akun" description={`Role: ${user.role === 'client' ? 'Client' : 'SPG'} (tidak bisa diubah)`} />
+                <PageHeader title="Edit account" description={`Role: ${user.role === 'client' ? 'Client' : 'SPG'} (cannot be changed)`} />
 
                 <form onSubmit={submit} className="grid gap-4 rounded-xl border p-4 sm:p-6">
                     <div className="grid gap-2">
-                        <Label htmlFor="name">Nama</Label>
+                        <Label htmlFor="name">Name</Label>
                         <Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} />
                         <InputError message={errors.name} />
                     </div>
@@ -59,7 +59,7 @@ export default function UserEdit({ user, clients, deletable }: { user: EditableU
                             value={data.username}
                             onChange={(e) => setData('username', e.target.value.toLowerCase())}
                         />
-                        <p className="text-muted-foreground text-xs">Mengubah username berarti akun ini harus login dengan username baru.</p>
+                        <p className="text-muted-foreground text-xs">Changing the username means this account must sign in with the new one.</p>
                         <InputError message={errors.username} />
                     </div>
                     {user.role === 'client' && (
@@ -71,7 +71,7 @@ export default function UserEdit({ user, clients, deletable }: { user: EditableU
                                 value={data.client_id}
                                 onChange={(e) => setData('client_id', e.target.value)}
                             >
-                                <option value="">Pilih client</option>
+                                <option value="">Select a client</option>
                                 {clients.map((client) => (
                                     <option key={client.id} value={client.id}>
                                         {client.name}
@@ -84,33 +84,35 @@ export default function UserEdit({ user, clients, deletable }: { user: EditableU
                     <label className="flex items-start gap-2 text-sm">
                         <Checkbox checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked === true)} />
                         <span>
-                            Akun aktif
+                            Account active
                             <span className="text-muted-foreground block text-xs">
-                                Akun nonaktif tidak bisa login dan langsung keluar dari semua perangkat.
+                                Inactive accounts cannot sign in and are signed out of every device immediately.
                             </span>
                         </span>
                     </label>
                     <div className="flex gap-2">
-                        <Button disabled={processing}>Simpan</Button>
+                        <Button disabled={processing}>Save</Button>
                         <Button type="button" variant="outline" asChild>
-                            <Link href={route('users.index')}>Batal</Link>
+                            <Link href={route('users.index')}>Cancel</Link>
                         </Button>
                     </div>
                 </form>
 
                 <div className="space-y-2 rounded-lg border border-red-200 p-4 dark:border-red-900">
-                    <h2 className="font-semibold">Hapus akun</h2>
+                    <h2 className="font-semibold">Delete account</h2>
                     {deletable ? (
                         <>
-                            <p className="text-muted-foreground text-sm">Akun ini belum punya tugas atau data, jadi bisa dihapus permanen.</p>
+                            <p className="text-muted-foreground text-sm">
+                                This account has no assignments or entries, so it can be permanently deleted.
+                            </p>
                             <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
-                                Hapus akun
+                                Delete account
                             </Button>
                         </>
                     ) : (
                         <p className="text-muted-foreground text-sm">
-                            Akun ini sudah punya tugas atau data, jadi tidak bisa dihapus agar riwayatnya tetap utuh. Hilangkan centang{' '}
-                            <b>Akun aktif</b> untuk menonaktifkannya.
+                            This account already has assignments or entries, so it cannot be deleted to keep its history intact. Uncheck{' '}
+                            <b>Account active</b> to deactivate it.
                         </p>
                     )}
                     <InputError message={pageErrors.user} />
@@ -119,18 +121,18 @@ export default function UserEdit({ user, clients, deletable }: { user: EditableU
                 <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
                     <DialogContent className="max-w-[calc(100%-1rem)] md:max-w-md">
                         <DialogHeader className="text-left">
-                            <DialogTitle>Hapus akun {user.name}?</DialogTitle>
-                            <DialogDescription>Tindakan ini permanen dan tidak bisa dibatalkan.</DialogDescription>
+                            <DialogTitle>Delete account {user.name}?</DialogTitle>
+                            <DialogDescription>This is permanent and cannot be undone.</DialogDescription>
                         </DialogHeader>
                         <div className="flex justify-end gap-2">
                             <Button variant="outline" onClick={() => setConfirmDelete(false)}>
-                                Kembali
+                                Back
                             </Button>
                             <Button
                                 variant="destructive"
                                 onClick={() => router.delete(route('users.destroy', user.id), { onFinish: () => setConfirmDelete(false) })}
                             >
-                                Hapus permanen
+                                Delete permanently
                             </Button>
                         </div>
                     </DialogContent>

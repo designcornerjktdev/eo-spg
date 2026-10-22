@@ -22,16 +22,14 @@ export default function SpgIndex({ assignments }: { assignments: Task[] }) {
     const others = assignments.filter((task) => !task.fillable);
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Tugas', href: route('spg.tasks.index') }]}>
-            <Head title="Tugas" />
-            <PageHeader title="Tugas" description="Pilih tugas untuk melihat dan menginput data." />
+        <AppLayout breadcrumbs={[{ title: 'Tasks', href: route('spg.tasks.index') }]}>
+            <Head title="Tasks" />
+            <PageHeader title="Tasks" description="Pick a task to view and submit entries." />
 
             <section className="space-y-3">
-                <h2 className="text-sm font-semibold">Aktif sekarang</h2>
+                <h2 className="text-sm font-semibold">Active now</h2>
                 {active.length === 0 ? (
-                    <p className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm">
-                        Tidak ada tugas yang aktif saat ini.
-                    </p>
+                    <p className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm">No active tasks right now.</p>
                 ) : (
                     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                         {active.map((task) => (
@@ -43,7 +41,7 @@ export default function SpgIndex({ assignments }: { assignments: Task[] }) {
 
             {others.length > 0 && (
                 <section className="space-y-3">
-                    <h2 className="text-muted-foreground text-sm font-semibold">Tugas lainnya</h2>
+                    <h2 className="text-muted-foreground text-sm font-semibold">Other tasks</h2>
                     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                         {others.map((task) => (
                             <TaskCard key={task.id} task={task} />
@@ -63,15 +61,15 @@ function TaskCard({ task }: { task: Task }) {
                     <div className="truncate font-semibold">{task.campaign}</div>
                     <div className="text-muted-foreground text-sm">{[task.location, task.area].filter(Boolean).join(' · ')}</div>
                 </div>
-                {task.fillable ? <Badge>Aktif</Badge> : <Badge variant="secondary">Tutup</Badge>}
+                {task.fillable ? <Badge>Active</Badge> : <Badge variant="secondary">Closed</Badge>}
             </div>
             <div className="text-muted-foreground text-sm">
                 {formatDateTimeRange(task.starts_at, task.ends_at)}
                 <br />
-                {task.my_count} data terinput
+                {task.my_count} entries submitted
             </div>
             <Button asChild variant={task.fillable ? 'default' : 'outline'} className="mt-auto">
-                <Link href={route('spg.tasks.show', task.id)}>{task.fillable ? 'Buka & input data' : 'Lihat data'}</Link>
+                <Link href={route('spg.tasks.show', task.id)}>{task.fillable ? 'Open & add entries' : 'View entries'}</Link>
             </Button>
         </div>
     );

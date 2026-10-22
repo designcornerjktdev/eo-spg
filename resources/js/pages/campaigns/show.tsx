@@ -44,18 +44,18 @@ export default function CampaignShow({ campaign }: { campaign: CampaignShow }) {
                 {canEdit && (
                     <div className="flex flex-wrap gap-2">
                         {campaign.status === 'draft' && (
-                            <Button onClick={() => router.post(route('campaigns.activate', campaign.id))}>Aktifkan</Button>
+                            <Button onClick={() => router.post(route('campaigns.activate', campaign.id))}>Activate</Button>
                         )}
                         {campaign.status === 'active' && (
                             <Button variant="outline" onClick={() => router.post(route('campaigns.close', campaign.id))}>
-                                Tutup
+                                Close
                             </Button>
                         )}
                         <Button asChild variant="outline">
                             <Link href={route('campaigns.edit', campaign.id)}>Edit</Link>
                         </Button>
                         <Button asChild>
-                            <Link href={`${route('forms.create')}?campaign_id=${campaign.id}`}>Buat form</Link>
+                            <Link href={`${route('forms.create')}?campaign_id=${campaign.id}`}>Create form</Link>
                         </Button>
                     </div>
                 )}
@@ -63,17 +63,17 @@ export default function CampaignShow({ campaign }: { campaign: CampaignShow }) {
             <div className="grid gap-4 md:grid-cols-2">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Produk & lokasi</CardTitle>
+                        <CardTitle>Products & locations</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-                            <dt className="text-muted-foreground">Periode</dt>
+                            <dt className="text-muted-foreground">Period</dt>
                             <dd>{formatDateRange(campaign.starts_on, campaign.ends_on)}</dd>
-                            <dt className="text-muted-foreground">Masking identitas</dt>
-                            <dd>{campaign.mask_identity_for_client ? 'Ya, identitas konsumen disamarkan untuk client' : 'Tidak'}</dd>
-                            <dt className="text-muted-foreground">Produk</dt>
+                            <dt className="text-muted-foreground">Identity masking</dt>
+                            <dd>{campaign.mask_identity_for_client ? 'Yes, consumer identity is masked for the client' : 'No'}</dd>
+                            <dt className="text-muted-foreground">Products</dt>
                             <dd>{campaign.products.map((product) => product.name).join(', ') || '-'}</dd>
-                            <dt className="text-muted-foreground">Lokasi</dt>
+                            <dt className="text-muted-foreground">Location</dt>
                             <dd className="space-y-1">
                                 {campaign.locations.length === 0 && '-'}
                                 {campaign.locations.map((location) => (
@@ -87,7 +87,7 @@ export default function CampaignShow({ campaign }: { campaign: CampaignShow }) {
                                                 rel="noreferrer"
                                                 className="ml-2 underline"
                                             >
-                                                Lihat peta
+                                                View map
                                             </a>
                                         )}
                                     </div>
@@ -110,35 +110,35 @@ export default function CampaignShow({ campaign }: { campaign: CampaignShow }) {
                                     <Badge variant={form.status === 'draft' ? 'outline' : 'secondary'}>{label('formStatus', form.status)}</Badge>
                                     {canEdit && (
                                         <Link href={route('forms.edit', form.id)} className="underline">
-                                            Kelola
+                                            Manage
                                         </Link>
                                     )}
                                 </span>
                             </div>
                         ))}
-                        {campaign.form_templates.length === 0 && <div className="text-muted-foreground">Belum ada form.</div>}
+                        {campaign.form_templates.length === 0 && <div className="text-muted-foreground">No forms yet.</div>}
                     </CardContent>
                 </Card>
                 <Card className="md:col-span-2">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                        <CardTitle>Penugasan SPG</CardTitle>
+                        <CardTitle>SPG assignments</CardTitle>
                         {canEdit && (
                             <Button asChild variant="outline" size="sm">
-                                <Link href={`${route('assignments.create')}?campaign_id=${campaign.id}`}>Tambah penugasan</Link>
+                                <Link href={`${route('assignments.create')}?campaign_id=${campaign.id}`}>New assignment</Link>
                             </Button>
                         )}
                     </CardHeader>
                     <CardContent>
                         {campaign.assignments.length === 0 ? (
-                            <p className="text-muted-foreground text-sm">Belum ada penugasan.</p>
+                            <p className="text-muted-foreground text-sm">No assignments yet.</p>
                         ) : (
                             <div className="overflow-x-auto rounded-lg border">
                                 <table className="w-full text-sm">
                                     <thead className="bg-muted/50">
                                         <tr>
                                             <th className="px-3 py-2 text-left">SPG</th>
-                                            <th className="px-3 py-2 text-left">Lokasi</th>
-                                            <th className="px-3 py-2 text-left">Waktu</th>
+                                            <th className="px-3 py-2 text-left">Location</th>
+                                            <th className="px-3 py-2 text-left">Time</th>
                                             <th className="px-3 py-2 text-left">Status</th>
                                         </tr>
                                     </thead>

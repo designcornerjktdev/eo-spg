@@ -2,7 +2,7 @@ import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, Sideba
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 
-// Menu tetap aktif di sub-halaman, mis. /clients/create menandai "Client".
+// Keep the menu item active on sub-pages, e.g. /clients/create highlights "Client".
 function isActive(currentUrl: string, itemUrl: string) {
     const path = currentUrl.split('?')[0];
     return path === itemUrl || path.startsWith(itemUrl + '/');
