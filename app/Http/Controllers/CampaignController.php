@@ -11,6 +11,7 @@ use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,16 +21,27 @@ class CampaignController extends Controller
     {
         $this->authorize('viewAny', Campaign::class);
 
+        $filters = [
+            'search' => $request->string('search')->trim()->value(),
+            'status' => in_array($request->query('status'), array_column(CampaignStatus::cases(), 'value'), true) ? $request->query('status') : null,
+            'client_id' => $request->integer('client_id') ?: null,
+        ];
+
         $campaigns = Campaign::query()
             ->visibleTo($request->user())
             ->with('client')
             ->withCount(['locations', 'assignments', 'submissions'])
+            ->when($filters['search'] !== '', fn ($query) => $query->where('name', 'like', '%'.$filters['search'].'%'))
+            ->when($filters['status'], fn ($query, $status) => $query->where('status', $status))
+            ->when($filters['client_id'] && $request->user()->isSuperadmin(), fn ($query) => $query->where('client_id', $filters['client_id']))
             ->latest()
             ->paginate(15)
             ->withQueryString();
 
         return Inertia::render('campaigns/index', [
             'campaigns' => $campaigns,
+            'filters' => $filters,
+            'clients' => $request->user()->isSuperadmin() ? Client::query()->orderBy('name')->get(['id', 'name']) : [],
         ]);
     }
 
@@ -43,9 +55,9 @@ class CampaignController extends Controller
         ]);
     }
 
-    public function store(CampaignRequest $request): RedirectResponse
+    public function store(CampaignRequest $request, AuditLogger $audit): RedirectResponse
     {
-        $campaign = DB::transaction(function () use ($request) {
+        $campaign = DB::transaction(function () use ($request, $audit) {
             $campaign = Campaign::query()->create([
                 ...$request->safe()->only(['client_id', 'name', 'starts_on', 'ends_on', 'notes']),
                 'mask_identity_for_client' => $request->boolean('mask_identity_for_client', true),
@@ -54,6 +66,7 @@ class CampaignController extends Controller
 
             $campaign->products()->sync($request->input('product_ids', []));
             $this->syncLocations($campaign, $request->input('locations', []));
+            $audit->record($request->user(), 'campaign.created', $campaign, null, $campaign->only(['name', 'client_id', 'starts_on', 'ends_on']));
 
             return $campaign;
         });
@@ -82,6 +95,7 @@ class CampaignController extends Controller
             'campaign' => $campaign,
             'clients' => Client::query()->orderBy('name')->get(['id', 'name']),
             'products' => Product::query()->orderBy('name')->get(['id', 'name', 'client_id']),
+            'deleteBlocker' => $this->deleteBlocker($campaign),
         ]);
     }
 
@@ -125,12 +139,34 @@ class CampaignController extends Controller
         return back()->with('success', 'Campaign ditutup.');
     }
 
-    public function destroy(Campaign $campaign): RedirectResponse
+    public function destroy(Request $request, Campaign $campaign, AuditLogger $audit): RedirectResponse
     {
         $this->authorize('delete', $campaign);
+
+        if ($blocker = $this->deleteBlocker($campaign)) {
+            throw ValidationException::withMessages(['campaign' => $blocker]);
+        }
+
+        $audit->record($request->user(), 'campaign.deleted', $campaign, $campaign->only(['name', 'client_id', 'status']));
         $campaign->delete();
 
-        return redirect()->route('campaigns.index')->with('success', 'Campaign dihapus.');
+        return redirect()->route('campaigns.index')->with('success', 'Campaign '.$campaign->name.' dihapus.');
+    }
+
+    /**
+     * Hanya campaign draf yang belum berjalan boleh dihapus; selebihnya cukup ditutup agar laporan tetap utuh.
+     */
+    private function deleteBlocker(Campaign $campaign): ?string
+    {
+        if ($campaign->status !== CampaignStatus::Draft) {
+            return 'Hanya campaign berstatus draf yang bisa dihapus. Campaign yang sudah aktif cukup ditutup.';
+        }
+
+        if ($campaign->assignments()->exists() || $campaign->submissions()->exists()) {
+            return 'Campaign ini sudah punya penugasan SPG atau data, jadi tidak bisa dihapus.';
+        }
+
+        return null;
     }
 
     /**

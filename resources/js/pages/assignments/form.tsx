@@ -29,7 +29,9 @@ export default function AssignmentForm({
     campaigns,
     spgs,
     selectedCampaignId,
+    footer,
 }: {
+    footer?: React.ReactNode;
     assignment?: Assignment;
     campaigns: CampaignOption[];
     spgs: { id: number; name: string }[];
@@ -56,12 +58,29 @@ export default function AssignmentForm({
     };
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Assignment', href: '/assignments' }, { title: assignment ? 'Ubah' : 'Tambah', href: '#' }]}>
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Assignment', href: '/assignments' },
+                { title: assignment ? 'Ubah' : 'Tambah', href: '#' },
+            ]}
+        >
             <Head title={assignment ? 'Ubah assignment' : 'Tambah assignment'} />
             <PageHeader title={assignment ? 'Ubah assignment' : 'Tugaskan SPG'} description="Sistem menolak jadwal yang bentrok." />
             <form onSubmit={submit} className="grid max-w-xl gap-4">
-                <SelectField label="Campaign" value={data.campaign_id} error={errors.campaign_id} onChange={(value) => setData('campaign_id', value)} options={campaigns.map((item) => ({ id: item.id, name: item.name }))} />
-                <SelectField label="Lokasi" value={data.location_id} error={errors.location_id} onChange={(value) => setData('location_id', value)} options={campaign?.locations ?? []} />
+                <SelectField
+                    label="Campaign"
+                    value={data.campaign_id}
+                    error={errors.campaign_id}
+                    onChange={(value) => setData('campaign_id', value)}
+                    options={campaigns.map((item) => ({ id: item.id, name: item.name }))}
+                />
+                <SelectField
+                    label="Lokasi"
+                    value={data.location_id}
+                    error={errors.location_id}
+                    onChange={(value) => setData('location_id', value)}
+                    options={campaign?.locations ?? []}
+                />
                 <SelectField
                     label="Form"
                     value={data.form_template_id}
@@ -82,6 +101,7 @@ export default function AssignmentForm({
                 </div>
                 <Button disabled={processing}>Simpan</Button>
             </form>
+            {footer}
         </AppLayout>
     );
 }

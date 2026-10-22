@@ -47,7 +47,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('forms/{form}/publish', [FormTemplateController::class, 'publish'])->name('forms.publish');
         Route::post('forms/{form}/version', [FormTemplateController::class, 'version'])->name('forms.version');
 
-        Route::resource('assignments', AssignmentController::class)->except(['show', 'destroy']);
+        Route::resource('assignments', AssignmentController::class)->except(['show']);
+        Route::post('assignments/{assignment}/cancel', [AssignmentController::class, 'cancel'])->name('assignments.cancel');
         Route::post('submissions/{submission}/void', [SubmissionController::class, 'void'])->name('submissions.void');
         Route::get('audit', [AuditLogController::class, 'index'])->name('audit.index');
         Route::resource('users', UserController::class)->except(['show']);

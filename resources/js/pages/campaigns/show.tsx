@@ -2,8 +2,8 @@ import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, router, usePage } from '@inertiajs/react';
 import { SharedData } from '@/types';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 
 interface CampaignShow {
     id: number;
@@ -23,7 +23,12 @@ export default function CampaignShow({ campaign }: { campaign: CampaignShow }) {
     const canEdit = usePage<SharedData>().props.auth.user?.role === 'superadmin';
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Campaign', href: '/campaigns' }, { title: campaign.name, href: route('campaigns.show', campaign.id) }]}>
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Campaign', href: '/campaigns' },
+                { title: campaign.name, href: route('campaigns.show', campaign.id) },
+            ]}
+        >
             <Head title={campaign.name} />
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <PageHeader title={campaign.name} description={`${campaign.client.name} · ${campaign.status}`} />
@@ -52,7 +57,9 @@ export default function CampaignShow({ campaign }: { campaign: CampaignShow }) {
                         <CardTitle>Produk & lokasi</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2 text-sm">
-                        <div>Periode: {campaign.starts_on} — {campaign.ends_on}</div>
+                        <div>
+                            Periode: {campaign.starts_on} — {campaign.ends_on}
+                        </div>
                         <div>Masking identitas client: {campaign.mask_identity_for_client ? 'Ya' : 'Tidak'}</div>
                         <div>Produk: {campaign.products.map((product) => product.name).join(', ') || '-'}</div>
                         <div>
@@ -88,7 +95,8 @@ export default function CampaignShow({ campaign }: { campaign: CampaignShow }) {
                     <CardContent className="space-y-2 text-sm">
                         {campaign.assignments.map((assignment) => (
                             <div key={assignment.id}>
-                                {assignment.user.name} · {assignment.location.name} · {assignment.starts_at} — {assignment.ends_at} · {assignment.status}
+                                {assignment.user.name} · {assignment.location.name} · {assignment.starts_at} — {assignment.ends_at} ·{' '}
+                                {assignment.status}
                             </div>
                         ))}
                         {canEdit && (

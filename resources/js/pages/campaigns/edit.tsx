@@ -1,13 +1,32 @@
+import DangerZone from '@/components/danger-zone';
 import CampaignForm from './form';
 
 export default function CampaignEdit({
     campaign,
     clients,
     products,
+    deleteBlocker,
 }: {
-    campaign: Parameters<typeof CampaignForm>[0]['campaign'];
+    campaign: NonNullable<Parameters<typeof CampaignForm>[0]['campaign']>;
     clients: { id: number; name: string }[];
     products: { id: number; name: string; client_id: number }[];
+    deleteBlocker: string | null;
 }) {
-    return <CampaignForm campaign={campaign} clients={clients} products={products} />;
+    return (
+        <CampaignForm
+            campaign={campaign}
+            clients={clients}
+            products={products}
+            footer={
+                <DangerZone
+                    title="Hapus campaign"
+                    description="Campaign masih draf dan belum punya penugasan atau data."
+                    confirmTitle={`Hapus campaign ${campaign.name}?`}
+                    deleteUrl={route('campaigns.destroy', campaign.id)}
+                    blocker={deleteBlocker}
+                    errorKey="campaign"
+                />
+            }
+        />
+    );
 }

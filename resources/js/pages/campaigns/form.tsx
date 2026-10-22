@@ -31,7 +31,9 @@ export default function CampaignForm({
     campaign,
     clients,
     products,
+    footer,
 }: {
+    footer?: React.ReactNode;
     campaign?: Campaign;
     clients: { id: number; name: string }[];
     products: { id: number; name: string; client_id: number }[];
@@ -66,13 +68,22 @@ export default function CampaignForm({
     };
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Campaign', href: '/campaigns' }, { title: campaign ? 'Ubah' : 'Tambah', href: '#' }]}>
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Campaign', href: '/campaigns' },
+                { title: campaign ? 'Ubah' : 'Tambah', href: '#' },
+            ]}
+        >
             <Head title={campaign ? 'Ubah campaign' : 'Tambah campaign'} />
             <PageHeader title={campaign ? 'Ubah campaign' : 'Tambah campaign'} />
             <form onSubmit={submit} className="grid max-w-3xl gap-4">
                 <div className="grid gap-2">
                     <Label>Client</Label>
-                    <select className="border-input h-9 rounded-md border px-2" value={data.client_id} onChange={(e) => setData('client_id', e.target.value)}>
+                    <select
+                        className="border-input h-9 rounded-md border px-2"
+                        value={data.client_id}
+                        onChange={(e) => setData('client_id', e.target.value)}
+                    >
                         <option value="">Pilih client</option>
                         {clients.map((client) => (
                             <option key={client.id} value={client.id}>
@@ -173,6 +184,7 @@ export default function CampaignForm({
                 </div>
                 <Button disabled={processing}>Simpan</Button>
             </form>
+            {footer}
         </AppLayout>
     );
 }

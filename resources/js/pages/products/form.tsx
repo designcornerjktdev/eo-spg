@@ -16,7 +16,15 @@ interface Product {
     description: string | null;
 }
 
-export default function ProductForm({ product, clients }: { product?: Product; clients: { id: number; name: string }[] }) {
+export default function ProductForm({
+    product,
+    clients,
+    footer,
+}: {
+    product?: Product;
+    clients: { id: number; name: string }[];
+    footer?: React.ReactNode;
+}) {
     const { data, setData, post, put, processing, errors } = useForm({
         client_id: product?.client_id?.toString() ?? '',
         name: product?.name ?? '',
@@ -34,13 +42,22 @@ export default function ProductForm({ product, clients }: { product?: Product; c
     };
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Produk', href: '/products' }, { title: product ? 'Ubah' : 'Tambah', href: '#' }]}>
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Produk', href: '/products' },
+                { title: product ? 'Ubah' : 'Tambah', href: '#' },
+            ]}
+        >
             <Head title={product ? 'Ubah produk' : 'Tambah produk'} />
             <PageHeader title={product ? 'Ubah produk' : 'Tambah produk'} />
             <form onSubmit={submit} className="grid max-w-xl gap-4">
                 <div className="grid gap-2">
                     <Label>Client</Label>
-                    <select className="border-input h-9 rounded-md border px-2" value={data.client_id} onChange={(e) => setData('client_id', e.target.value)}>
+                    <select
+                        className="border-input h-9 rounded-md border px-2"
+                        value={data.client_id}
+                        onChange={(e) => setData('client_id', e.target.value)}
+                    >
                         <option value="">Pilih client</option>
                         {clients.map((client) => (
                             <option key={client.id} value={client.id}>
@@ -65,6 +82,7 @@ export default function ProductForm({ product, clients }: { product?: Product; c
                 </div>
                 <Button disabled={processing}>Simpan</Button>
             </form>
+            {footer}
         </AppLayout>
     );
 }
