@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { label } from '@/lib/format';
 import { Head, router } from '@inertiajs/react';
 import { FormEvent } from 'react';
 
@@ -13,7 +14,16 @@ interface Summary {
     per_day: { day: string; total: number }[];
     per_location: { label: string; total: number }[];
     per_spg: { label: string; total: number }[];
-    custom_fields: { key: string; type: string; sum?: number; avg?: number; options?: { label: string; total: number }[] }[];
+    custom_fields: {
+        key: string;
+        label: string;
+        type: string;
+        responses: number;
+        avg?: number | null;
+        min?: number | null;
+        max?: number | null;
+        options?: { label: string; total: number }[];
+    }[];
 }
 
 interface Option {
@@ -103,25 +113,29 @@ export default function Dashboard({
             </form>
 
             <div className="grid gap-4 md:grid-cols-4">
-                <Metric title="Submission" value={summary.totals.submissions} />
-                <Metric title="Qualified" value={summary.totals.qualified} />
+                <Metric title="Entries" value={summary.totals.submissions} />
+                <Metric title="Qualified" value={summary.totals.qualified} hint={percent(summary.totals.qualified, summary.totals.submissions)} />
                 <Metric title="Voided" value={summary.totals.voided} />
-                <Metric title="Campaign" value={summary.totals.campaigns} />
+                <Metric title="Campaigns" value={summary.totals.campaigns} />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-                <BarCard title="Per day" rows={summary.per_day.map((row) => ({ label: row.day, total: row.total }))} />
+                <BarCard title="Per day" rows={summary.per_day.map((row) => ({ label: formatDayLabel(row.day), total: row.total }))} />
                 <BarCard title="Per location" rows={summary.per_location} />
                 {summary.per_spg.length > 0 && <BarCard title="Per SPG" rows={summary.per_spg} />}
                 <Card>
                     <CardHeader>
                         <CardTitle>Assignment status</CardTitle>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-2 gap-2 text-sm">
-                        <div>Scheduled: {summary.assignments.scheduled}</div>
-                        <div>Active: {summary.assignments.active}</div>
-                        <div>Done: {summary.assignments.done}</div>
-                        <div>Cancelled: {summary.assignments.cancelled}</div>
+                    <CardContent>
+                        <dl className="grid grid-cols-2 gap-3 text-sm">
+                            {(['scheduled', 'active', 'done', 'cancelled'] as const).map((status) => (
+                                <div key={status} className="rounded-md border p-3">
+                                    <dt className="text-muted-foreground">{label('assignmentStatus', status)}</dt>
+                                    <dd className="text-2xl font-semibold">{summary.assignments[status]}</dd>
+                                </div>
+                            ))}
+                        </dl>
                     </CardContent>
                 </Card>
             </div>
@@ -131,15 +145,27 @@ export default function Dashboard({
                     {summary.custom_fields.map((field) => (
                         <Card key={field.key}>
                             <CardHeader>
-                                <CardTitle>{field.key}</CardTitle>
+                                <CardTitle>{field.label}</CardTitle>
+                                <p className="text-muted-foreground text-sm">{field.responses} responses</p>
                             </CardHeader>
                             <CardContent>
                                 {field.type === 'number' ? (
-                                    <div className="text-sm">
-                                        Count {field.sum} · Average {field.avg}
-                                    </div>
+                                    <dl className="grid grid-cols-3 gap-3 text-sm">
+                                        {(
+                                            [
+                                                ['Average', field.avg],
+                                                ['Lowest', field.min],
+                                                ['Highest', field.max],
+                                            ] as const
+                                        ).map(([name, value]) => (
+                                            <div key={name} className="rounded-md border p-3">
+                                                <dt className="text-muted-foreground">{name}</dt>
+                                                <dd className="text-2xl font-semibold">{value ?? '-'}</dd>
+                                            </div>
+                                        ))}
+                                    </dl>
                                 ) : (
-                                    <BarList rows={field.options ?? []} />
+                                    <BarList rows={field.options ?? []} showShare />
                                 )}
                             </CardContent>
                         </Card>
@@ -150,15 +176,30 @@ export default function Dashboard({
     );
 }
 
-function Metric({ title, value }: { title: string; value: number }) {
+function Metric({ title, value, hint }: { title: string; value: number; hint?: string }) {
     return (
         <Card>
             <CardHeader>
                 <CardTitle className="text-muted-foreground text-sm font-medium">{title}</CardTitle>
             </CardHeader>
-            <CardContent className="text-3xl font-semibold">{value}</CardContent>
+            <CardContent>
+                <span className="text-3xl font-semibold">{value.toLocaleString('en-GB')}</span>
+                {hint && <span className="text-muted-foreground ml-2 text-sm">{hint}</span>}
+            </CardContent>
         </Card>
     );
+}
+
+function percent(part: number, whole: number): string | undefined {
+    return whole > 0 ? `${Math.round((part / whole) * 100)}%` : undefined;
+}
+
+// "Thu, 9 Oct" — short enough for the chart rows, with the weekday to spot weekend peaks.
+function formatDayLabel(day: string): string {
+    const date = new Date(`${day}T00:00:00+07:00`);
+    return Number.isNaN(date.getTime())
+        ? day
+        : date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Asia/Jakarta' });
 }
 
 function BarCard({ title, rows }: { title: string; rows: { label: string; total: number }[] }) {
@@ -174,8 +215,9 @@ function BarCard({ title, rows }: { title: string; rows: { label: string; total:
     );
 }
 
-function BarList({ rows }: { rows: { label: string; total: number }[] }) {
+function BarList({ rows, showShare = false }: { rows: { label: string; total: number }[]; showShare?: boolean }) {
     const max = Math.max(...rows.map((row) => row.total), 1);
+    const sum = rows.reduce((total, row) => total + row.total, 0);
 
     if (rows.length === 0) {
         return <p className="text-muted-foreground text-sm">No entries yet.</p>;
@@ -187,7 +229,10 @@ function BarList({ rows }: { rows: { label: string; total: number }[] }) {
                 <div key={row.label}>
                     <div className="mb-1 flex justify-between text-sm">
                         <span>{row.label}</span>
-                        <span>{row.total}</span>
+                        <span>
+                            {row.total}
+                            {showShare && <span className="text-muted-foreground ml-1">({percent(row.total, sum)})</span>}
+                        </span>
                     </div>
                     <div className="bg-muted h-2 rounded">
                         <div className="bg-primary h-2 rounded" style={{ width: `${(row.total / max) * 100}%` }} />

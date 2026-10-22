@@ -100,7 +100,13 @@ class SubmissionRecorder
             }
 
             $raw = $answers[$field->key] ?? null;
-            $text = is_array($raw) ? implode('|', $raw) : ($raw === null ? null : (string) $raw);
+            $text = match (true) {
+                is_array($raw) => implode('|', $raw),
+                // Store booleans as 1/0: (string) false is "", which reads like "no answer".
+                is_bool($raw) => $raw ? '1' : '0',
+                $raw === null => null,
+                default => (string) $raw,
+            };
             $number = $field->type === FieldType::Number && is_numeric($raw) ? $raw : null;
 
             $submission->fieldValues()->create([

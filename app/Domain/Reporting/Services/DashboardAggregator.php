@@ -7,6 +7,7 @@ use App\Enums\FieldType;
 use App\Enums\SubmissionStatus;
 use App\Models\Assignment;
 use App\Models\Campaign;
+use App\Models\FormField;
 use App\Models\FormSubmission;
 use App\Models\SubmissionFieldValue;
 use App\Models\User;
@@ -54,7 +55,7 @@ class DashboardAggregator
         $assignmentQuery = Assignment::query()->visibleTo($viewer)
             ->when($filters['campaign_id'] ?? null, fn (Builder $query, $id) => $query->where('campaign_id', $id));
 
-        $custom = $this->customFieldMetrics($viewer, $filters);
+        $custom = $this->customFieldMetrics($active);
 
         return [
             'totals' => [
@@ -77,39 +78,58 @@ class DashboardAggregator
     }
 
     /**
-     * @param  array<string, mixed>  $filters
+     * Per-field stats for fields marked "show on dashboard", over the same filtered entries as the totals.
+     *
+     * @param  Builder<FormSubmission>  $active
      * @return array<int, array<string, mixed>>
      */
-    private function customFieldMetrics(User $viewer, array $filters): array
+    private function customFieldMetrics(Builder $active): array
     {
         $values = SubmissionFieldValue::query()
-            ->whereHas('submission', function (Builder $query) use ($viewer, $filters) {
-                $query->visibleTo($viewer)
-                    ->where('status', SubmissionStatus::Submitted)
-                    ->when($filters['campaign_id'] ?? null, fn (Builder $inner, $id) => $inner->where('campaign_id', $id));
-            })
+            ->whereIn('form_submission_id', (clone $active)->select('form_submissions.id'))
             ->get()
             ->groupBy('field_key');
 
-        return $values->map(function ($rows, $key) {
+        if ($values->isEmpty()) {
+            return [];
+        }
+
+        // Human labels come from the form definitions; the newest form wins when versions differ.
+        $labels = FormField::query()
+            ->whereIn('key', $values->keys())
+            ->orderByDesc('id')
+            ->get(['key', 'label'])
+            ->unique('key')
+            ->pluck('label', 'key');
+
+        return $values->map(function ($rows, $key) use ($labels) {
             $type = $rows->first()->field_type;
             $metric = [
                 'key' => $key,
+                'label' => $labels[$key] ?? $key,
                 'type' => $type->value,
+                'responses' => $rows->count(),
             ];
 
             if ($type === FieldType::Number) {
-                $metric['sum'] = round((float) $rows->sum('value_number'), 2);
-                $metric['avg'] = round((float) $rows->avg('value_number'), 2);
+                $numbers = $rows->pluck('value_number')->filter(fn ($value) => $value !== null);
+                $metric['responses'] = $numbers->count();
+                $metric['avg'] = $numbers->isEmpty() ? null : round((float) $numbers->avg(), 1);
+                $metric['min'] = $numbers->isEmpty() ? null : (float) $numbers->min();
+                $metric['max'] = $numbers->isEmpty() ? null : (float) $numbers->max();
 
                 return $metric;
             }
 
-            $metric['options'] = $rows
-                ->flatMap(fn ($row) => explode('|', (string) $row->value_text))
-                ->filter()
+            $options = $type === FieldType::YesNo
+                // "No" used to be stored as an empty string, so anything not truthy counts as No.
+                ? $rows->map(fn ($row) => in_array((string) $row->value_text, ['1', 'true'], true) ? 'Yes' : 'No')
+                : $rows->flatMap(fn ($row) => explode('|', (string) $row->value_text))->filter(fn ($value) => $value !== '');
+
+            $metric['options'] = $options
                 ->countBy()
-                ->map(fn ($total, $label) => ['label' => $label, 'total' => $total])
+                ->sortDesc()
+                ->map(fn ($total, $label) => ['label' => (string) $label, 'total' => $total])
                 ->values()
                 ->all();
 
