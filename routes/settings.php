@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Settings\CompanyController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -18,4 +19,12 @@ Route::middleware('auth')->group(function () {
     Route::get('settings/appearance', function () {
         return Inertia::render('settings/appearance');
     })->name('appearance');
+
+    Route::middleware('role:superadmin')->group(function () {
+        Route::get('settings/company', [CompanyController::class, 'edit'])->name('company.edit');
+        Route::post('settings/company', [CompanyController::class, 'update'])->name('company.update');
+    });
 });
+
+// Public: the logo is also shown on the sign-in page.
+Route::get('branding/logo', [CompanyController::class, 'logo'])->name('branding.logo');

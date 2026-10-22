@@ -21,9 +21,15 @@ export interface NavItem {
     isActive?: boolean;
 }
 
+export interface Branding {
+    name: string;
+    logo_url: string | null;
+}
+
 export interface SharedData {
     name: string;
     quote: { message: string; author: string };
+    branding: Branding;
     auth: Auth;
     flash?: { success?: string | null };
     [key: string]: unknown;

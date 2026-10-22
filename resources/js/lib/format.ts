@@ -82,6 +82,7 @@ const labels = {
         'user.updated': 'Account updated',
         'user.deleted': 'Account deleted',
         'user.password_reset': 'Password reset',
+        'settings.company_updated': 'Company settings updated',
     },
     auditableType: {
         'App\\Models\\Assignment': 'Assignment',

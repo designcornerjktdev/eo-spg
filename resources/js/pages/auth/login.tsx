@@ -1,4 +1,5 @@
-import { Head, useForm } from '@inertiajs/react';
+import { type SharedData } from '@/types';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
@@ -23,6 +24,7 @@ interface LoginProps {
 }
 
 export default function Login({ status, canResetPassword }: LoginProps) {
+    const { branding } = usePage<SharedData>().props;
     const { data, setData, post, processing, errors, reset } = useForm<LoginForm>({
         login: '',
         password: '',
@@ -37,7 +39,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
     };
 
     return (
-        <AuthLayout title="Sign in to EO Campaign" description="Use the account provided by the EO team">
+        <AuthLayout title={`Sign in to ${branding.name}`} description="Use the account provided by the EO team">
             <Head title="Sign in" />
 
             <form className="flex flex-col gap-6" onSubmit={submit}>
