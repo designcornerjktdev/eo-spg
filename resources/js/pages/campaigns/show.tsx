@@ -17,7 +17,7 @@ interface CampaignShow {
     mask_identity_for_client: boolean;
     client: { name: string };
     products: { id: number; name: string }[];
-    locations: { id: number; name: string; area: string | null }[];
+    locations: { id: number; name: string; area: string | null; address: string | null; latitude: number | null; longitude: number | null }[];
     form_templates: { id: number; name: string; version: number; status: string }[];
     assignments: { id: number; user: { name: string }; location: { name: string }; starts_at: string; ends_at: string; status: string }[];
 }
@@ -74,9 +74,24 @@ export default function CampaignShow({ campaign }: { campaign: CampaignShow }) {
                             <dt className="text-muted-foreground">Produk</dt>
                             <dd>{campaign.products.map((product) => product.name).join(', ') || '-'}</dd>
                             <dt className="text-muted-foreground">Lokasi</dt>
-                            <dd>
-                                {campaign.locations.map((location) => `${location.name}${location.area ? ` (${location.area})` : ''}`).join(', ') ||
-                                    '-'}
+                            <dd className="space-y-1">
+                                {campaign.locations.length === 0 && '-'}
+                                {campaign.locations.map((location) => (
+                                    <div key={location.id}>
+                                        {location.name}
+                                        {location.area ? ` (${location.area})` : ''}
+                                        {location.latitude !== null && location.longitude !== null && (
+                                            <a
+                                                href={`https://www.openstreetmap.org/?mlat=${location.latitude}&mlon=${location.longitude}#map=17/${location.latitude}/${location.longitude}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="ml-2 underline"
+                                            >
+                                                Lihat peta
+                                            </a>
+                                        )}
+                                    </div>
+                                ))}
                             </dd>
                         </dl>
                     </CardContent>

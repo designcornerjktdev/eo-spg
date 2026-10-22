@@ -30,6 +30,8 @@ class CampaignRequest extends FormRequest
             'locations.*.name' => ['required', 'string', 'max:255'],
             'locations.*.area' => ['nullable', 'string', 'max:255'],
             'locations.*.address' => ['nullable', 'string', 'max:255'],
+            'locations.*.latitude' => ['nullable', 'numeric', 'between:-90,90', 'required_with:locations.*.longitude'],
+            'locations.*.longitude' => ['nullable', 'numeric', 'between:-180,180', 'required_with:locations.*.latitude'],
         ];
     }
 

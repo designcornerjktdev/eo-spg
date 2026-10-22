@@ -181,6 +181,8 @@ class CampaignController extends Controller
                 'name' => $location['name'],
                 'area' => $location['area'] ?? null,
                 'address' => $location['address'] ?? null,
+                'latitude' => $location['latitude'] ?? null,
+                'longitude' => $location['longitude'] ?? null,
             ];
 
             $model = ! empty($location['id'])
@@ -196,6 +198,17 @@ class CampaignController extends Controller
             $kept[] = $model->id;
         }
 
-        $campaign->locations()->whereNotIn('id', $kept)->delete();
+        // Lokasi yang sudah dipakai penugasan tidak boleh dihapus: FK assignment -> lokasi memakai cascade
+        // sehingga penugasan beserta data SPG-nya ikut terhapus.
+        $removed = $campaign->locations()->whereNotIn('id', $kept);
+        $used = (clone $removed)->whereHas('assignments')->pluck('name');
+
+        if ($used->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'locations' => 'Lokasi '.$used->join(', ').' sudah dipakai di penugasan SPG, jadi tidak bisa dihapus.',
+            ]);
+        }
+
+        $removed->delete();
     }
 }

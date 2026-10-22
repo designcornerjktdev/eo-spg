@@ -18,7 +18,17 @@ class CampaignLocation extends Model
         'name',
         'area',
         'address',
+        'latitude',
+        'longitude',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'latitude' => 'float',
+            'longitude' => 'float',
+        ];
+    }
 
     public function campaign(): BelongsTo
     {

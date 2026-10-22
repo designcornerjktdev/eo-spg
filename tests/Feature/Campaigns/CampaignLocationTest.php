@@ -1,0 +1,79 @@
+<?php
+
+namespace Tests\Feature\Campaigns;
+
+use App\Models\Assignment;
+use App\Models\CampaignLocation;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\BuildsCampaignWorld;
+use Tests\TestCase;
+
+class CampaignLocationTest extends TestCase
+{
+    use BuildsCampaignWorld, RefreshDatabase;
+
+    private function payload(array $world, array $locations): array
+    {
+        return [
+            'client_id' => $world['clientA']->id,
+            'name' => $world['campaign']->name,
+            'starts_on' => $world['campaign']->starts_on->toDateString(),
+            'ends_on' => $world['campaign']->ends_on->toDateString(),
+            'product_ids' => [$world['product']->id],
+            'locations' => $locations,
+        ];
+    }
+
+    public function test_location_coordinates_from_map_are_saved(): void
+    {
+        $world = $this->world();
+
+        $this->actingAs($world['eo'])->put('/campaigns/'.$world['campaign']->id, $this->payload($world, [
+            ['id' => $world['location']->id, 'name' => 'PIK Avenue', 'area' => 'Jakarta Utara', 'address' => 'Jl. Pantai Indah Kapuk', 'latitude' => -6.1087, 'longitude' => 106.7398],
+        ]))->assertSessionHasNoErrors();
+
+        $location = $world['location']->refresh();
+        $this->assertEqualsWithDelta(-6.1087, $location->latitude, 0.00001);
+        $this->assertEqualsWithDelta(106.7398, $location->longitude, 0.00001);
+    }
+
+    public function test_coordinates_must_be_valid_and_paired(): void
+    {
+        $world = $this->world();
+
+        $this->actingAs($world['eo'])->put('/campaigns/'.$world['campaign']->id, $this->payload($world, [
+            ['id' => $world['location']->id, 'name' => 'X', 'latitude' => 120, 'longitude' => 106.7],
+        ]))->assertSessionHasErrors('locations.0.latitude');
+
+        $this->actingAs($world['eo'])->put('/campaigns/'.$world['campaign']->id, $this->payload($world, [
+            ['id' => $world['location']->id, 'name' => 'X', 'latitude' => -6.1],
+        ]))->assertSessionHasErrors('locations.0.longitude');
+    }
+
+    public function test_location_used_by_assignment_cannot_be_removed(): void
+    {
+        $world = $this->world();
+
+        // Mengganti daftar lokasi tanpa lokasi lama yang sudah dipakai penugasan harus ditolak.
+        $this->actingAs($world['eo'])->put('/campaigns/'.$world['campaign']->id, $this->payload($world, [
+            ['name' => 'Lokasi Baru', 'area' => 'Bandung'],
+        ]))->assertSessionHasErrors('locations');
+
+        $this->assertModelExists($world['location']);
+        $this->assertModelExists($world['assignment']);
+        $this->assertSame(1, Assignment::query()->count());
+    }
+
+    public function test_unused_location_can_be_removed(): void
+    {
+        $world = $this->world();
+        $unused = CampaignLocation::factory()->create(['campaign_id' => $world['campaign']->id, 'name' => 'Tidak dipakai']);
+
+        $this->actingAs($world['eo'])->put('/campaigns/'.$world['campaign']->id, $this->payload($world, [
+            ['id' => $world['location']->id, 'name' => $world['location']->name],
+        ]))->assertSessionHasNoErrors();
+
+        $this->assertModelMissing($unused);
+        $this->assertModelExists($world['location']);
+    }
+}

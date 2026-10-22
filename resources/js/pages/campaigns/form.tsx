@@ -7,13 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { Head, useForm } from '@inertiajs/react';
-import { FormEvent } from 'react';
+import { FormEvent, Suspense, lazy } from 'react';
 
 interface Location {
     id?: number;
     name: string;
-    area: string;
-    address: string;
+    area: string | null;
+    address: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
 }
 
 interface Campaign {
@@ -27,6 +29,19 @@ interface Campaign {
     products: { id: number }[];
     locations: Location[];
 }
+
+const LocationPicker = lazy(() => import('@/components/location-picker'));
+
+type FormLocation = {
+    id?: number;
+    name: string;
+    area: string;
+    address: string;
+    latitude: number | null;
+    longitude: number | null;
+};
+
+const EMPTY_LOCATION: FormLocation = { name: '', area: '', address: '', latitude: null, longitude: null };
 
 export default function CampaignForm({
     campaign,
@@ -48,13 +63,15 @@ export default function CampaignForm({
         mask_identity_for_client: campaign?.mask_identity_for_client ?? true,
         product_ids: (campaign?.products ?? []).map((product) => product.id.toString()),
         locations: campaign?.locations?.length
-            ? campaign.locations.map((location) => ({
+            ? campaign.locations.map((location): FormLocation => ({
                   id: location.id,
                   name: location.name,
                   area: location.area ?? '',
                   address: location.address ?? '',
+                  latitude: location.latitude ?? null,
+                  longitude: location.longitude ?? null,
               }))
-            : [{ name: '', area: '', address: '' }],
+            : [{ ...EMPTY_LOCATION }],
     });
 
     const clientProducts = products.filter((product) => product.client_id.toString() === data.client_id);
@@ -146,42 +163,72 @@ export default function CampaignForm({
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                onClick={() => setData('locations', [...data.locations, { name: '', area: '', address: '' }])}
+                                onClick={() => setData('locations', [...data.locations, { ...EMPTY_LOCATION }])}
                             >
                                 Tambah lokasi
                             </Button>
                         </div>
-                        {data.locations.map((location, index) => (
-                            <div key={index} className="grid gap-2 rounded-md border p-3 md:grid-cols-3">
-                                <Input
-                                    placeholder="Nama lokasi"
-                                    value={location.name}
-                                    onChange={(e) => {
-                                        const next = [...data.locations];
-                                        next[index] = { ...next[index], name: e.target.value };
-                                        setData('locations', next);
-                                    }}
-                                />
-                                <Input
-                                    placeholder="Area"
-                                    value={location.area}
-                                    onChange={(e) => {
-                                        const next = [...data.locations];
-                                        next[index] = { ...next[index], area: e.target.value };
-                                        setData('locations', next);
-                                    }}
-                                />
-                                <Input
-                                    placeholder="Alamat"
-                                    value={location.address}
-                                    onChange={(e) => {
-                                        const next = [...data.locations];
-                                        next[index] = { ...next[index], address: e.target.value };
-                                        setData('locations', next);
-                                    }}
-                                />
-                            </div>
-                        ))}
+                        {data.locations.map((location, index) => {
+                            const update = (patch: Partial<FormLocation>) => {
+                                const next = [...data.locations];
+                                next[index] = { ...next[index], ...patch };
+                                setData('locations', next);
+                            };
+                            const fieldError = (key: string) => (errors as Record<string, string>)[`locations.${index}.${key}`];
+
+                            return (
+                                <div key={location.id ?? `new-${index}`} className="space-y-3 rounded-md border p-3">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium">Lokasi {index + 1}</span>
+                                        {data.locations.length > 1 && (
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-destructive"
+                                                onClick={() =>
+                                                    setData(
+                                                        'locations',
+                                                        data.locations.filter((_, i) => i !== index),
+                                                    )
+                                                }
+                                            >
+                                                Hapus lokasi
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <div className="grid gap-2 md:grid-cols-2">
+                                        <div className="grid gap-1">
+                                            <Input
+                                                placeholder="Nama lokasi, mis. PIK Avenue"
+                                                value={location.name}
+                                                onChange={(e) => update({ name: e.target.value })}
+                                            />
+                                            <InputError message={fieldError('name')} />
+                                        </div>
+                                        <Input placeholder="Area / kota" value={location.area} onChange={(e) => update({ area: e.target.value })} />
+                                    </div>
+                                    <Input placeholder="Alamat" value={location.address} onChange={(e) => update({ address: e.target.value })} />
+                                    <Suspense fallback={<div className="bg-muted h-64 animate-pulse rounded-md" />}>
+                                        <LocationPicker
+                                            latitude={location.latitude}
+                                            longitude={location.longitude}
+                                            onPick={(picked) =>
+                                                update({
+                                                    latitude: picked.latitude,
+                                                    longitude: picked.longitude,
+                                                    ...(picked.address ? { address: picked.address } : {}),
+                                                    ...(picked.area ? { area: picked.area } : {}),
+                                                    // Nama hanya diisi otomatis bila EO belum mengetik nama sendiri.
+                                                    ...(picked.name && !location.name ? { name: picked.name } : {}),
+                                                })
+                                            }
+                                        />
+                                    </Suspense>
+                                    <InputError message={fieldError('latitude')} />
+                                </div>
+                            );
+                        })}
                         <InputError message={errors.locations} />
                     </div>
                     <Button disabled={processing}>Simpan</Button>
