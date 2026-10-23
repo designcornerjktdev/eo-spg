@@ -27,7 +27,7 @@ class PublicFormController extends Controller
             'open' => $campaign->isAcceptingEntries(),
             // Only locations with a map point can check that the visitor is on site.
             'geofence' => $location->latitude !== null && $location->longitude !== null
-                ? ['radius' => $location->radius_meters]
+                ? ['latitude' => $location->latitude, 'longitude' => $location->longitude, 'radius' => $location->radius_meters]
                 : null,
             'form' => $form ? [
                 'name' => $form->name,

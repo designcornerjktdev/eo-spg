@@ -5,11 +5,18 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { type DevicePosition, type PositionStatus, useDevicePosition } from '@/hooks/use-device-position';
+import { distanceInMeters, formatDistance, MAX_ACCURACY_CREDIT_METERS } from '@/lib/geo';
 import { cn } from '@/lib/utils';
 import { type SharedData } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { CheckCircle2, LoaderCircle, MapPin, MapPinOff } from 'lucide-react';
 import { FormEvent, useState } from 'react';
+
+interface Geofence {
+    latitude: number;
+    longitude: number;
+    radius: number;
+}
 
 interface PublicForm {
     name: string;
@@ -33,11 +40,16 @@ export default function PublicFormPage({
     campaign: string;
     location: string;
     open: boolean;
-    geofence: { radius: number } | null;
+    geofence: Geofence | null;
     form: PublicForm | null;
 }) {
     const { branding, flash } = usePage<SharedData & { flash: { submitted?: boolean } }>().props;
     const [showForm, setShowForm] = useState(!flash.submitted);
+    const accepting = open && form !== null;
+    // Locate the visitor as soon as the page opens so an off-site visitor is told before filling anything in.
+    const device = useDevicePosition(accepting && geofence !== null);
+    const distance = geofence && device.position ? distanceFrom(geofence, device.position) : null;
+    const onSite = !geofence || (device.status === 'ready' && distance !== null && distance.outside === 0);
 
     return (
         <div className="bg-muted/40 flex min-h-svh flex-col items-center px-4 py-8 sm:py-12">
@@ -62,10 +74,29 @@ export default function PublicFormPage({
                 </header>
 
                 <main className="bg-background rounded-xl border p-4 shadow-sm sm:p-6">
-                    {!open || !form ? (
+                    {!accepting || !form ? (
                         <p className="text-muted-foreground py-6 text-center">This form is not accepting responses right now.</p>
                     ) : showForm ? (
-                        <EntryForm token={token} form={form} location={location} geofence={geofence} onDone={() => setShowForm(false)} />
+                        <>
+                            {geofence && !onSite && (
+                                <LocationGate
+                                    status={device.status}
+                                    distance={distance?.meters ?? null}
+                                    location={location}
+                                    onRetry={device.refresh}
+                                />
+                            )}
+                            {/* Kept mounted while hidden so answers survive a failed re-check at submit time. */}
+                            <div className={cn(!onSite && 'hidden')}>
+                                <EntryForm
+                                    token={token}
+                                    form={form}
+                                    location={location}
+                                    device={geofence ? device : null}
+                                    onDone={() => setShowForm(false)}
+                                />
+                            </div>
+                        </>
                     ) : (
                         <div className="flex flex-col items-center gap-4 py-6 text-center">
                             <CheckCircle2 className="size-12 text-green-600" />
@@ -90,16 +121,15 @@ function EntryForm({
     token,
     form,
     location,
-    geofence,
+    device,
     onDone,
 }: {
     token: string;
     form: PublicForm;
     location: string;
-    geofence: { radius: number } | null;
+    device: ReturnType<typeof useDevicePosition> | null;
     onDone: () => void;
 }) {
-    const device = useDevicePosition(geofence !== null);
     const [locating, setLocating] = useState(false);
     const { data, setData, post, transform, processing, errors, reset } = useForm<{
         answers: Record<string, Answer>;
@@ -117,7 +147,7 @@ function EntryForm({
 
         // Re-read the position right before sending so a stale fix cannot be reused.
         let position = null;
-        if (geofence) {
+        if (device) {
             setLocating(true);
             position = await device.refresh();
             setLocating(false);
@@ -181,10 +211,15 @@ function EntryForm({
             )}
             <InputError message={fieldErrors.consent_accepted ?? fieldErrors.form} />
 
-            {geofence && <LocationStatus status={device.status} position={device.position} location={location} onRetry={device.refresh} />}
+            {device?.position && (
+                <p className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
+                    <MapPin className="size-4 shrink-0" />
+                    You're at {location} (±{Math.round(device.position.accuracy)} m). We'll check again when you submit.
+                </p>
+            )}
             <InputError message={fieldErrors.position} />
 
-            <Button type="submit" className="h-12 w-full" disabled={processing || locating || (geofence !== null && device.status !== 'ready')}>
+            <Button type="submit" className="h-12 w-full" disabled={processing || locating || (device !== null && device.status !== 'ready')}>
                 {(processing || locating) && <LoaderCircle className="size-4 animate-spin" />}
                 {locating ? 'Checking your location…' : 'Submit'}
             </Button>
@@ -192,46 +227,51 @@ function EntryForm({
     );
 }
 
-function LocationStatus({
+/** Same rule as the server's Geofence: GPS accuracy is credited up to a cap. */
+function distanceFrom(geofence: Geofence, position: DevicePosition) {
+    const meters = Math.round(distanceInMeters(geofence.latitude, geofence.longitude, position.latitude, position.longitude));
+    const credit = Math.min(position.accuracy, MAX_ACCURACY_CREDIT_METERS);
+
+    return { meters, outside: Math.max(0, meters - credit - geofence.radius) };
+}
+
+function LocationGate({
     status,
-    position,
+    distance,
     location,
     onRetry,
 }: {
     status: PositionStatus;
-    position: DevicePosition | null;
+    distance: number | null;
     location: string;
     onRetry: () => void;
 }) {
-    if (status === 'ready' && position) {
+    if (status === 'idle' || status === 'locating') {
         return (
-            <p className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800 dark:border-green-900 dark:bg-green-950 dark:text-green-200">
-                <MapPin className="size-4 shrink-0" />
-                Location found (±{Math.round(position.accuracy)} m). We'll confirm you're at {location} when you submit.
-            </p>
-        );
-    }
-
-    if (status === 'denied' || status === 'unavailable') {
-        return (
-            <div className="space-y-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100">
-                <p className="flex items-start gap-2">
-                    <MapPinOff className="mt-0.5 size-4 shrink-0" />
-                    {status === 'denied'
-                        ? `This form can only be submitted at ${location}. Allow location access in your browser settings, then try again.`
-                        : "We couldn't get your location. Turn on location services and try again."}
-                </p>
-                <Button type="button" size="sm" variant="outline" onClick={onRetry}>
-                    Try again
-                </Button>
+            <div className="flex flex-col items-center gap-3 py-8 text-center">
+                <LoaderCircle className="text-muted-foreground size-8 animate-spin" />
+                <p className="text-muted-foreground text-sm">Checking that you're at {location}…</p>
             </div>
         );
     }
 
+    const message =
+        status === 'ready'
+            ? `Sorry, this form can only be filled in at ${location}. You appear to be ${formatDistance(distance ?? 0)} away.`
+            : status === 'denied'
+              ? `This form can only be filled in at ${location}. Allow location access in your browser settings, then try again.`
+              : "We couldn't get your location. Turn on location services and try again.";
+
     return (
-        <p className="text-muted-foreground flex items-center gap-2 text-sm">
-            <LoaderCircle className="size-4 animate-spin" />
-            Getting your location…
-        </p>
+        <div className="flex flex-col items-center gap-4 py-6 text-center">
+            <MapPinOff className="size-12 text-amber-600" />
+            <div className="space-y-1">
+                <h2 className="text-lg font-semibold">{status === 'ready' ? 'Outside the event area' : 'Location needed'}</h2>
+                <p className="text-muted-foreground text-sm">{message}</p>
+            </div>
+            <Button variant="outline" onClick={onRetry}>
+                Try again
+            </Button>
+        </div>
     );
 }
