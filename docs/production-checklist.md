@@ -7,6 +7,7 @@ Gunakan sebelum go-live. Perubahan skema production hanya lewat migrasi.
 - [ ] Versi PHP production dikonfirmasi (>= 8.2)
 - [ ] Database production dikonfirmasi (PostgreSQL diutamakan, MySQL jika shared hosting mensyaratkan)
 - [ ] `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL` memakai HTTPS
+- [ ] `TRUSTED_PROXIES` diisi IP/CIDR proxy atau load balancer yang benar-benar dipakai (kosong jika tanpa proxy). Jangan `*` kecuali server hanya bisa diakses lewat proxy itu: IP pengunjung (rate limit form publik) dan host (link reset password) bisa dipalsukan.
 - [ ] `APP_KEY` unik, jangan copy dari development
 - [ ] Session `secure` / HTTPS, CSRF aktif
 - [ ] Rate limit login tetap aktif

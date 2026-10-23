@@ -56,6 +56,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Trusted Proxies
+    |--------------------------------------------------------------------------
+    |
+    | Proxies whose X-Forwarded-* headers (client IP, https scheme, host) are
+    | believed. Empty trusts none. Use a comma-separated list of proxy IPs or
+    | CIDRs in production; "*" only when the app is reachable solely through
+    | the proxy (e.g. a local Cloudflare tunnel). Trusting a proxy the app does
+    | not actually sit behind lets visitors spoof their IP (bypassing rate
+    | limits) and host (poisoning password reset links).
+    |
+    */
+
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

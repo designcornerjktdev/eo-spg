@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
@@ -17,6 +18,12 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Read from config (not env) so it still works after `php artisan config:cache`.
+        $proxies = config('app.trusted_proxies');
+        $proxies
+            ? TrustProxies::at($proxies === '*' ? '*' : array_map('trim', explode(',', $proxies)))
+            : TrustProxies::flushState();
+
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }
