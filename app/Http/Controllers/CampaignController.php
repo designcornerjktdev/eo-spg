@@ -30,7 +30,7 @@ class CampaignController extends Controller
         $campaigns = Campaign::query()
             ->visibleTo($request->user())
             ->with('client')
-            ->withCount(['locations', 'assignments', 'submissions'])
+            ->withCount(['locations', 'submissions'])
             ->when($filters['search'] !== '', fn ($query) => $query->where('name', 'like', '%'.$filters['search'].'%'))
             ->when($filters['status'], fn ($query, $status) => $query->where('status', $status))
             ->when($filters['client_id'] && $request->user()->isSuperadmin(), fn ($query) => $query->where('client_id', $filters['client_id']))
@@ -78,10 +78,11 @@ class CampaignController extends Controller
     {
         $this->authorize('view', $campaign);
 
-        $campaign->load(['client', 'products', 'locations', 'formTemplates.fields', 'assignments.user', 'assignments.location']);
+        $campaign->load(['client', 'products', 'formTemplates.fields'])->load(['locations' => fn ($query) => $query->withCount(['submissions' => fn ($submissions) => $submissions->where('status', 'submitted')])]);
 
         return Inertia::render('campaigns/show', [
             'campaign' => $campaign,
+            'accepting' => $campaign->isAcceptingEntries(),
         ]);
     }
 
@@ -162,8 +163,8 @@ class CampaignController extends Controller
             return 'Only draft campaigns can be deleted. Close an active campaign instead.';
         }
 
-        if ($campaign->assignments()->exists() || $campaign->submissions()->exists()) {
-            return 'This campaign already has SPG assignments or entries, so it cannot be deleted.';
+        if ($campaign->submissions()->exists()) {
+            return 'This campaign already has entries, so it cannot be deleted.';
         }
 
         return null;
@@ -198,14 +199,13 @@ class CampaignController extends Controller
             $kept[] = $model->id;
         }
 
-        // Locations used by assignments must not be removed: the assignment -> location FK cascades,
-        // which would also delete the assignments and their SPG entries.
+        // Locations with entries must not be removed: per-location reports and public links depend on them.
         $removed = $campaign->locations()->whereNotIn('id', $kept);
-        $used = (clone $removed)->whereHas('assignments')->pluck('name');
+        $used = (clone $removed)->whereHas('submissions')->pluck('name');
 
         if ($used->isNotEmpty()) {
             throw ValidationException::withMessages([
-                'locations' => 'Location '.$used->join(', ').' is used by SPG assignments, so it cannot be removed.',
+                'locations' => 'Location '.$used->join(', ').' already has entries, so it cannot be removed.',
             ]);
         }
 

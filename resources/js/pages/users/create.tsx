@@ -14,7 +14,7 @@ export default function UserCreate({ clients }: { clients: { id: number; name: s
         name: '',
         username: '',
         password: '',
-        role: 'spg',
+        role: 'client',
         client_id: '',
     });
 
@@ -56,34 +56,21 @@ export default function UserCreate({ clients }: { clients: { id: number; name: s
                         <InputError message={errors.password} />
                     </div>
                     <div className="grid gap-2">
-                        <Label>Role</Label>
+                        <Label>Client</Label>
                         <select
                             className="border-input h-9 rounded-md border px-2"
-                            value={data.role}
-                            onChange={(e) => setData('role', e.target.value)}
+                            value={data.client_id}
+                            onChange={(e) => setData('client_id', e.target.value)}
                         >
-                            <option value="spg">SPG</option>
-                            <option value="client">Client</option>
+                            <option value="">Select a client</option>
+                            {clients.map((client) => (
+                                <option key={client.id} value={client.id}>
+                                    {client.name}
+                                </option>
+                            ))}
                         </select>
+                        <InputError message={errors.client_id} />
                     </div>
-                    {data.role === 'client' && (
-                        <div className="grid gap-2">
-                            <Label>Client</Label>
-                            <select
-                                className="border-input h-9 rounded-md border px-2"
-                                value={data.client_id}
-                                onChange={(e) => setData('client_id', e.target.value)}
-                            >
-                                <option value="">Select a client</option>
-                                {clients.map((client) => (
-                                    <option key={client.id} value={client.id}>
-                                        {client.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <InputError message={errors.client_id} />
-                        </div>
-                    )}
                     <Button disabled={processing}>Save</Button>
                 </form>
             </FormPage>

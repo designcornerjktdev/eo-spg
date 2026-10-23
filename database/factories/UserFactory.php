@@ -54,14 +54,4 @@ class UserFactory extends Factory
             'email' => null,
         ]);
     }
-
-    public function spg(): static
-    {
-        return $this->state(fn () => [
-            'role' => UserRole::Spg,
-            'client_id' => null,
-            'username' => fake()->unique()->userName(),
-            'email' => null,
-        ]);
-    }
 }

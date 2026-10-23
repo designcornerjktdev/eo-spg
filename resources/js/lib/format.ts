@@ -42,9 +42,8 @@ export function formatDateTimeRange(start: string | null | undefined, end: strin
 const labels = {
     campaignStatus: { draft: 'Draft', active: 'Active', closed: 'Closed' },
     formStatus: { draft: 'Draft', published: 'Published', locked: 'Locked' },
-    assignmentStatus: { scheduled: 'Scheduled', active: 'In progress', done: 'Done', cancelled: 'Cancelled' },
     submissionStatus: { submitted: 'Submitted', void: 'Voided' },
-    role: { superadmin: 'EO Admin', client: 'Client', spg: 'SPG' },
+    role: { superadmin: 'EO Admin', client: 'Client' },
     fieldType: {
         short_text: 'Short text',
         long_text: 'Long text',
@@ -55,6 +54,7 @@ const labels = {
         yes_no: 'Yes/No',
         date: 'Date',
     },
+    // Assignment and SPG-correction actions stay labelled so older audit entries remain readable.
     auditAction: {
         'campaign.created': 'Campaign created',
         'campaign.updated': 'Campaign updated',

@@ -2,6 +2,8 @@
 
 Oct 20, 2026 · @Rahmat Tomy
 
+> **Update 2026-10-23:** alur bisnis berubah. Role SPG dan penugasan dihapus; konsumen mengisi form sendiri lewat link/QR publik per lokasi campaign. Bagian dokumen ini yang menyebut SPG sudah tidak berlaku — lihat ADR 004 (`docs/adr/004-public-location-forms.md`).
+
 ## Ringkasan
 
 MVP ini adalah aplikasi web tempat EO membuat form sendiri untuk setiap campaign, SPG mengisinya dari ponsel dengan timestamp otomatis dari server, dan client melihat data campaign serta produknya sendiri. Penjualan, stok, dan merchandise sengaja ditunda ke versi berikutnya.

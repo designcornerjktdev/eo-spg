@@ -3,16 +3,15 @@
 namespace Tests\Concerns;
 
 use App\Domain\Forms\MayoraFormDefinition;
-use App\Enums\AssignmentStatus;
 use App\Enums\CampaignStatus;
 use App\Enums\FormStatus;
-use App\Models\Assignment;
 use App\Models\Campaign;
 use App\Models\CampaignLocation;
 use App\Models\Client;
 use App\Models\FormTemplate;
 use App\Models\Product;
 use App\Models\User;
+use Illuminate\Testing\TestResponse;
 
 trait BuildsCampaignWorld
 {
@@ -23,14 +22,12 @@ trait BuildsCampaignWorld
      *     clientB: Client,
      *     userA: User,
      *     userB: User,
-     *     spg: User,
-     *     otherSpg: User,
      *     product: Product,
      *     campaign: Campaign,
      *     otherCampaign: Campaign,
      *     location: CampaignLocation,
      *     form: FormTemplate,
-     *     assignment: Assignment
+     *     otherLocation: CampaignLocation
      * }
      */
     protected function world(): array
@@ -40,8 +37,6 @@ trait BuildsCampaignWorld
         $clientB = Client::factory()->create(['name' => 'IMOBY']);
         $userA = User::factory()->clientUser($clientA)->create();
         $userB = User::factory()->clientUser($clientB)->create();
-        $spg = User::factory()->spg()->create();
-        $otherSpg = User::factory()->spg()->create();
 
         $product = Product::factory()->create(['client_id' => $clientA->id, 'name' => 'Kopi Lepas Haus']);
         $campaign = Campaign::factory()->create([
@@ -78,14 +73,11 @@ trait BuildsCampaignWorld
             $form->fields()->create($field);
         }
 
-        $assignment = Assignment::factory()->create([
-            'campaign_id' => $campaign->id,
-            'location_id' => $location->id,
-            'form_template_id' => $form->id,
-            'user_id' => $spg->id,
-            'starts_at' => now()->subHour(),
-            'ends_at' => now()->addHours(6),
-            'status' => AssignmentStatus::Active,
+        // A location of the other client's campaign, to check that entries never cross clients.
+        $otherLocation = CampaignLocation::factory()->create([
+            'campaign_id' => $otherCampaign->id,
+            'name' => 'Pakuwon Mall',
+            'area' => 'Surabaya',
         ]);
 
         return compact(
@@ -94,15 +86,26 @@ trait BuildsCampaignWorld
             'clientB',
             'userA',
             'userB',
-            'spg',
-            'otherSpg',
             'product',
             'campaign',
             'otherCampaign',
             'location',
             'form',
-            'assignment',
+            'otherLocation',
         );
+    }
+
+    /**
+     * Submits one valid public entry to a location's link, as a consumer (no login).
+     *
+     * @param  array<string, mixed>  $overrides
+     */
+    protected function submitPublicEntry(CampaignLocation $location, array $overrides = []): TestResponse
+    {
+        return $this->post('/f/'.$location->public_token, [
+            'answers' => [...$this->validAnswers(), ...$overrides],
+            'consent_accepted' => true,
+        ]);
     }
 
     /**

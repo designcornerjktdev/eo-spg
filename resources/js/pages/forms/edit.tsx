@@ -283,7 +283,7 @@ export default function FormEdit({
                 {template && (
                     <DangerZone
                         title="Delete form"
-                        description="This form is a draft and not used by any SPG assignment."
+                        description="This form is a draft and has no entries yet."
                         confirmTitle={`Delete form ${template.name} v${template.version}?`}
                         deleteUrl={route('forms.destroy', template.id)}
                         blocker={deleteBlocker}

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\CampaignStatus;
+use App\Enums\FormStatus;
 use Database\Factories\CampaignFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -57,11 +58,6 @@ class Campaign extends Model
         return $this->hasMany(FormTemplate::class);
     }
 
-    public function assignments(): HasMany
-    {
-        return $this->hasMany(Assignment::class);
-    }
-
     public function submissions(): HasMany
     {
         return $this->hasMany(FormSubmission::class);
@@ -77,6 +73,22 @@ class Campaign extends Model
             return $query->where('client_id', $user->client_id);
         }
 
-        return $query->whereHas('assignments', fn (Builder $assignments) => $assignments->where('user_id', $user->id));
+        return $query->whereRaw('1 = 0');
+    }
+
+    /**
+     * The form the public links serve: the newest published (or locked) version.
+     */
+    public function currentForm(): ?FormTemplate
+    {
+        return $this->formTemplates()
+            ->whereIn('status', [FormStatus::Published, FormStatus::Locked])
+            ->latest('id')
+            ->first();
+    }
+
+    public function isAcceptingEntries(): bool
+    {
+        return $this->status === CampaignStatus::Active && $this->currentForm() !== null;
     }
 }

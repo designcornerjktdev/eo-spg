@@ -17,7 +17,7 @@ export default function AuditIndex({ logs }: { logs: { data: LogRow[]; links: { 
     return (
         <AppLayout breadcrumbs={[{ title: 'Audit log', href: '/audit' }]}>
             <Head title="Audit log" />
-            <PageHeader title="Audit log" description="History of important changes by admins and SPGs." />
+            <PageHeader title="Audit log" description="History of important changes by admins." />
             <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full text-sm">
                     <thead className="bg-muted/50">

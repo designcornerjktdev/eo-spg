@@ -20,7 +20,7 @@ export default function CampaignEdit({
             footer={
                 <DangerZone
                     title="Delete campaign"
-                    description="This campaign is a draft with no assignments or entries yet."
+                    description="This campaign is a draft with no entries yet."
                     confirmTitle={`Delete campaign ${campaign.name}?`}
                     deleteUrl={route('campaigns.destroy', campaign.id)}
                     blocker={deleteBlocker}

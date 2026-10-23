@@ -1,14 +1,12 @@
 <?php
 
-use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FormTemplateController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\Spg\SubmissionCorrectionController;
-use App\Http\Controllers\Spg\TaskController;
+use App\Http\Controllers\PublicFormController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -20,6 +18,10 @@ Route::get('/', function () {
 
     return redirect()->route('login');
 })->name('home');
+
+// Public campaign forms: no login, one link per campaign location.
+Route::get('f/{token}', [PublicFormController::class, 'show'])->name('public-form.show');
+Route::post('f/{token}', [PublicFormController::class, 'store'])->middleware('throttle:public-form')->name('public-form.store');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
@@ -47,24 +49,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('forms/{form}/publish', [FormTemplateController::class, 'publish'])->name('forms.publish');
         Route::post('forms/{form}/version', [FormTemplateController::class, 'version'])->name('forms.version');
 
-        Route::resource('assignments', AssignmentController::class)->except(['show']);
-        Route::post('assignments/{assignment}/cancel', [AssignmentController::class, 'cancel'])->name('assignments.cancel');
         Route::post('submissions/{submission}/void', [SubmissionController::class, 'void'])->name('submissions.void');
         Route::get('audit', [AuditLogController::class, 'index'])->name('audit.index');
         Route::resource('users', UserController::class)->except(['show']);
         Route::put('users/{user}/password', [UserController::class, 'resetPassword'])->name('users.password');
     });
 
-    Route::middleware('role:spg,superadmin')->prefix('tasks')->name('spg.tasks.')->group(function () {
-        Route::get('/', [TaskController::class, 'index'])->name('index');
-        Route::get('{assignment}', [TaskController::class, 'show'])->name('show');
-        Route::post('{assignment}/submissions', [TaskController::class, 'store'])->name('store');
-    });
-
-    Route::middleware('role:spg')->prefix('submissions/{submission}')->name('spg.submissions.')->group(function () {
-        Route::post('correction', [SubmissionCorrectionController::class, 'correct'])->name('correct');
-        Route::post('cancellation', [SubmissionCorrectionController::class, 'cancel'])->name('cancel');
-    });
 });
 
 require __DIR__.'/settings.php';

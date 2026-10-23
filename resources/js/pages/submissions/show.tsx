@@ -20,7 +20,6 @@ interface Submission {
     can_void: boolean;
     campaign: { name: string } | null;
     location: { name: string; area: string | null } | null;
-    spg: { name: string } | null;
     answers: Record<string, string | string[] | boolean | number>;
     fields: Field[];
 }
@@ -50,7 +49,6 @@ export default function SubmissionShow({ submission }: { submission: Submission 
                 <div>
                     Location: {submission.location?.name} {submission.location?.area ? `(${submission.location.area})` : ''}
                 </div>
-                <div>SPG: {submission.spg?.name}</div>
                 <div>Qualification: {submission.qualified === null ? '-' : submission.qualified ? 'Qualified' : 'Not qualified'}</div>
             </div>
             <div className="overflow-x-auto rounded-lg border">

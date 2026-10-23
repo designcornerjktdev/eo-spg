@@ -9,7 +9,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
-import { label } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { Head, router, useForm } from '@inertiajs/react';
 import { KeyRound, Pencil } from 'lucide-react';
@@ -48,8 +47,8 @@ export default function UsersIndex({
         <AppLayout breadcrumbs={[{ title: 'Users', href: '/users' }]}>
             <Head title="Users" />
             <PageHeader
-                title="Client & SPG accounts"
-                description="Clients and SPGs sign in with a username. Reset forgotten passwords here."
+                title="Client accounts"
+                description="Clients sign in with a username to see their own campaign results. Reset forgotten passwords here."
                 action={{ href: route('users.create'), label: 'New account' }}
             />
 
@@ -61,16 +60,6 @@ export default function UsersIndex({
                 }}
             >
                 <Input className="w-full sm:w-64" placeholder="Search name or username" value={search} onChange={(e) => setSearch(e.target.value)} />
-                <select
-                    aria-label="Filter role"
-                    className="border-input bg-background h-9 rounded-md border px-2 text-sm"
-                    value={filters.role ?? ''}
-                    onChange={(e) => applyFilters({ role: e.target.value })}
-                >
-                    <option value="">All roles</option>
-                    <option value="client">Client</option>
-                    <option value="spg">SPG</option>
-                </select>
                 <select
                     aria-label="Filter status"
                     className="border-input bg-background h-9 rounded-md border px-2 text-sm"
@@ -92,7 +81,6 @@ export default function UsersIndex({
                         <tr>
                             <th className="px-3 py-2 text-left">Name</th>
                             <th className="px-3 py-2 text-left">Username</th>
-                            <th className="px-3 py-2 text-left">Role</th>
                             <th className="px-3 py-2 text-left">Client</th>
                             <th className="px-3 py-2 text-left">Status</th>
                             <th className="px-3 py-2 text-left">Actions</th>
@@ -103,7 +91,6 @@ export default function UsersIndex({
                             <tr key={user.id} className={cn('border-t', !user.is_active && 'text-muted-foreground')}>
                                 <td className="px-3 py-2">{user.name}</td>
                                 <td className="px-3 py-2 font-mono">{user.username ?? '-'}</td>
-                                <td className="px-3 py-2">{label('role', user.role)}</td>
                                 <td className="px-3 py-2">{user.client?.name ?? '-'}</td>
                                 <td className="px-3 py-2">
                                     {user.is_active ? <Badge variant="secondary">Active</Badge> : <Badge variant="outline">Inactive</Badge>}

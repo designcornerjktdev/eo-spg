@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Reporting;
 
-use App\Models\Assignment;
 use App\Models\CampaignLocation;
 use App\Models\SubmissionFieldValue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -13,12 +12,9 @@ class DashboardFieldMetricsTest extends TestCase
 {
     use BuildsCampaignWorld, RefreshDatabase;
 
-    private function submit(array $world, Assignment $assignment, array $overrides): void
+    private function submit(CampaignLocation $location, array $overrides): void
     {
-        $this->actingAs($assignment->user)->post('/tasks/'.$assignment->id.'/submissions', [
-            'answers' => [...$this->validAnswers(), ...$overrides],
-            'consent_accepted' => true,
-        ])->assertSessionHasNoErrors();
+        $this->submitPublicEntry($location, $overrides)->assertSessionHasNoErrors();
     }
 
     private function field(array $page, string $key): array
@@ -29,9 +25,9 @@ class DashboardFieldMetricsTest extends TestCase
     public function test_yes_no_metrics_count_no_answers_and_use_field_labels(): void
     {
         $world = $this->world();
-        $this->submit($world, $world['assignment'], ['kunjungi_poi' => true, 'usia' => 20]);
-        $this->submit($world, $world['assignment'], ['kunjungi_poi' => false, 'usia' => 30]);
-        $this->submit($world, $world['assignment'], ['kunjungi_poi' => false, 'usia' => 40]);
+        $this->submit($world['location'], ['kunjungi_poi' => true, 'usia' => 20]);
+        $this->submit($world['location'], ['kunjungi_poi' => false, 'usia' => 30]);
+        $this->submit($world['location'], ['kunjungi_poi' => false, 'usia' => 40]);
 
         $this->assertSame('0', SubmissionFieldValue::query()->where('field_key', 'kunjungi_poi')->where('value_text', '0')->first()?->value_text);
 
@@ -51,7 +47,7 @@ class DashboardFieldMetricsTest extends TestCase
     public function test_legacy_empty_no_answers_still_count_as_no(): void
     {
         $world = $this->world();
-        $this->submit($world, $world['assignment'], ['kunjungi_poi' => false]);
+        $this->submit($world['location'], ['kunjungi_poi' => false]);
         // Rows written before the fix stored "No" as an empty string.
         SubmissionFieldValue::query()->where('field_key', 'kunjungi_poi')->update(['value_text' => '']);
 
@@ -64,17 +60,9 @@ class DashboardFieldMetricsTest extends TestCase
     {
         $world = $this->world();
         $other = CampaignLocation::factory()->create(['campaign_id' => $world['campaign']->id]);
-        $otherAssignment = Assignment::factory()->create([
-            'campaign_id' => $world['campaign']->id,
-            'location_id' => $other->id,
-            'form_template_id' => $world['form']->id,
-            'user_id' => $world['otherSpg']->id,
-            'starts_at' => now()->subHour(),
-            'ends_at' => now()->addHours(4),
-        ]);
 
-        $this->submit($world, $world['assignment'], ['usia' => 20]);
-        $this->submit($world, $otherAssignment, ['usia' => 50]);
+        $this->submit($world['location'], ['usia' => 20]);
+        $this->submit($other, ['usia' => 50]);
 
         $page = $this->actingAs($world['eo'])->get('/dashboard?location_id='.$world['location']->id)->viewData('page');
 

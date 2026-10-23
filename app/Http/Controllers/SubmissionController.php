@@ -31,15 +31,12 @@ class SubmissionController extends Controller
 
         return Inertia::render('submissions/index', [
             'submissions' => $submissions,
-            'filters' => $request->only(['campaign_id', 'location_id', 'spg_id', 'from', 'to', 'q']),
+            'filters' => $request->only(['campaign_id', 'location_id', 'from', 'to', 'q']),
             'campaigns' => Campaign::query()->visibleTo($request->user())->orderBy('name')->get(['id', 'name']),
             'locations' => CampaignLocation::query()
                 ->whereHas('campaign', fn ($query) => $query->visibleTo($request->user()))
                 ->orderBy('name')
                 ->get(['id', 'name', 'campaign_id']),
-            'spgs' => $request->user()->isSuperadmin()
-                ? User::query()->where('role', 'spg')->orderBy('name')->get(['id', 'name'])
-                : [],
         ]);
     }
 
@@ -47,7 +44,7 @@ class SubmissionController extends Controller
     {
         $this->authorize('view', $submission);
 
-        $submission->load(['formTemplate.fields', 'assignment.location', 'submitter', 'campaign']);
+        $submission->load(['formTemplate.fields', 'location', 'campaign']);
 
         return Inertia::render('submissions/show', [
             'submission' => $this->present($request->user(), $submission, $masker),
@@ -76,15 +73,14 @@ class SubmissionController extends Controller
 
         return FormSubmission::query()
             ->visibleTo($user)
-            ->with(['formTemplate.fields', 'assignment.location', 'submitter', 'campaign'])
+            ->with(['formTemplate.fields', 'location', 'campaign'])
             ->when($request->campaign_id, fn ($query, $id) => $query->where('campaign_id', $id))
-            ->when($request->location_id, fn ($query, $id) => $query->whereHas('assignment', fn ($assignment) => $assignment->where('location_id', $id)))
-            ->when($request->spg_id && $user->isSuperadmin(), fn ($query) => $query->where('submitted_by', $request->spg_id))
+            ->when($request->location_id, fn ($query, $id) => $query->where('location_id', $id))
             ->when($request->from, fn ($query, $from) => $query->whereDate('submitted_at', '>=', $from))
             ->when($request->to, fn ($query, $to) => $query->whereDate('submitted_at', '<=', $to))
             ->when($request->q, function ($query, $q) {
                 $query->where(function ($inner) use ($q) {
-                    $inner->whereHas('submitter', fn ($user) => $user->where('name', 'like', '%'.$q.'%'))
+                    $inner->whereHas('location', fn ($location) => $location->where('name', 'like', '%'.$q.'%'))
                         ->orWhereHas('campaign', fn ($campaign) => $campaign->where('name', 'like', '%'.$q.'%'));
                 });
             })
@@ -104,8 +100,7 @@ class SubmissionController extends Controller
         return [
             'id' => $submission->id,
             'campaign' => $submission->campaign?->only(['id', 'name', 'mask_identity_for_client']),
-            'location' => $submission->assignment?->location?->only(['id', 'name', 'area']),
-            'spg' => $submission->submitter?->only(['id', 'name']),
+            'location' => $submission->location?->only(['id', 'name', 'area']),
             'submitted_at' => $submission->submitted_at,
             'status' => $submission->status,
             'qualified' => $submission->qualified,

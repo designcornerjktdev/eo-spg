@@ -42,6 +42,6 @@ class Product extends Model
             return $query->where('client_id', $user->client_id);
         }
 
-        return $query->whereHas('campaigns.assignments', fn (Builder $assignments) => $assignments->where('user_id', $user->id));
+        return $query->whereRaw('1 = 0');
     }
 }

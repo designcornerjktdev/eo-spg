@@ -16,10 +16,7 @@ class DashboardAndExportTest extends TestCase
     {
         $world = $this->world();
 
-        $this->actingAs($world['spg'])->post('/tasks/'.$world['assignment']->id.'/submissions', [
-            'answers' => $this->validAnswers(),
-            'consent_accepted' => true,
-        ]);
+        $this->submitPublicEntry($world['location'])->assertSessionHasNoErrors();
 
         $submission = FormSubmission::query()->first();
 
@@ -41,10 +38,7 @@ class DashboardAndExportTest extends TestCase
         $world = $this->world();
         $world['form']->fields()->where('key', 'pekerjaan')->update(['visible_to_client' => false]);
 
-        $this->actingAs($world['spg'])->post('/tasks/'.$world['assignment']->id.'/submissions', [
-            'answers' => $this->validAnswers(),
-            'consent_accepted' => true,
-        ]);
+        $this->submitPublicEntry($world['location'])->assertSessionHasNoErrors();
 
         $submission = FormSubmission::query()->first();
         $response = $this->actingAs($world['userA'])->get('/submissions/'.$submission->id);
@@ -58,10 +52,7 @@ class DashboardAndExportTest extends TestCase
     {
         $world = $this->world();
 
-        $this->actingAs($world['spg'])->post('/tasks/'.$world['assignment']->id.'/submissions', [
-            'answers' => $this->validAnswers(),
-            'consent_accepted' => true,
-        ]);
+        $this->submitPublicEntry($world['location'])->assertSessionHasNoErrors();
 
         $submission = FormSubmission::query()->first();
 
@@ -74,10 +65,7 @@ class DashboardAndExportTest extends TestCase
         $world = $this->world();
         $world['form']->fields()->where('key', 'pekerjaan')->update(['visible_to_client' => false]);
 
-        $this->actingAs($world['spg'])->post('/tasks/'.$world['assignment']->id.'/submissions', [
-            'answers' => $this->validAnswers(),
-            'consent_accepted' => true,
-        ]);
+        $this->submitPublicEntry($world['location'])->assertSessionHasNoErrors();
 
         $csv = $this->actingAs($world['userA'])->get('/submissions/export')->assertOk()->streamedContent();
         $this->assertStringNotContainsString('Karyawan', $csv);
@@ -88,10 +76,7 @@ class DashboardAndExportTest extends TestCase
     {
         $world = $this->world();
 
-        $this->actingAs($world['spg'])->post('/tasks/'.$world['assignment']->id.'/submissions', [
-            'answers' => $this->validAnswers(),
-            'consent_accepted' => true,
-        ]);
+        $this->submitPublicEntry($world['location'])->assertSessionHasNoErrors();
 
         $this->actingAs($world['userA'])->get('/dashboard')->assertOk()->assertInertia(fn ($page) => $page
             ->component('dashboard')

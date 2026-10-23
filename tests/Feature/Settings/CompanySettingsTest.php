@@ -94,7 +94,7 @@ class CompanySettingsTest extends TestCase
 
     public function test_only_superadmin_can_manage_company_settings(): void
     {
-        foreach ([User::factory()->spg()->create(), User::factory()->clientUser()->create()] as $user) {
+        foreach ([User::factory()->clientUser()->create()] as $user) {
             $this->actingAs($user)->get('/settings/company')->assertForbidden();
             $this->actingAs($user)->post('/settings/company', ['company_name' => 'Hacked'])->assertForbidden();
         }

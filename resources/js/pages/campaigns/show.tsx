@@ -1,10 +1,10 @@
 import PageHeader from '@/components/page-header';
+import PublicLinks, { type LinkLocation } from '@/components/public-links';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import { formatDateRange, formatDateTimeRange, label } from '@/lib/format';
-import { cn } from '@/lib/utils';
+import { formatDateRange, label } from '@/lib/format';
 import { SharedData } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 
@@ -17,12 +17,11 @@ interface CampaignShow {
     mask_identity_for_client: boolean;
     client: { name: string };
     products: { id: number; name: string }[];
-    locations: { id: number; name: string; area: string | null; address: string | null; latitude: number | null; longitude: number | null }[];
+    locations: (LinkLocation & { address: string | null; latitude: number | null; longitude: number | null })[];
     form_templates: { id: number; name: string; version: number; status: string }[];
-    assignments: { id: number; user: { name: string }; location: { name: string }; starts_at: string; ends_at: string; status: string }[];
 }
 
-export default function CampaignShow({ campaign }: { campaign: CampaignShow }) {
+export default function CampaignShow({ campaign, accepting }: { campaign: CampaignShow; accepting: boolean }) {
     const canEdit = usePage<SharedData>().props.auth.user?.role === 'superadmin';
 
     return (
@@ -120,50 +119,12 @@ export default function CampaignShow({ campaign }: { campaign: CampaignShow }) {
                     </CardContent>
                 </Card>
                 <Card className="md:col-span-2">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                        <CardTitle>SPG assignments</CardTitle>
-                        {canEdit && (
-                            <Button asChild variant="outline" size="sm">
-                                <Link href={`${route('assignments.create')}?campaign_id=${campaign.id}`}>New assignment</Link>
-                            </Button>
-                        )}
+                    <CardHeader>
+                        <CardTitle>Public form links</CardTitle>
+                        <p className="text-muted-foreground text-sm">Share a location's link or QR code with consumers. No login is needed.</p>
                     </CardHeader>
                     <CardContent>
-                        {campaign.assignments.length === 0 ? (
-                            <p className="text-muted-foreground text-sm">No assignments yet.</p>
-                        ) : (
-                            <div className="overflow-x-auto rounded-lg border">
-                                <table className="w-full text-sm">
-                                    <thead className="bg-muted/50">
-                                        <tr>
-                                            <th className="px-3 py-2 text-left">SPG</th>
-                                            <th className="px-3 py-2 text-left">Location</th>
-                                            <th className="px-3 py-2 text-left">Time</th>
-                                            <th className="px-3 py-2 text-left">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {campaign.assignments.map((assignment) => (
-                                            <tr
-                                                key={assignment.id}
-                                                className={cn('border-t', assignment.status === 'cancelled' && 'text-muted-foreground')}
-                                            >
-                                                <td className="px-3 py-2">{assignment.user.name}</td>
-                                                <td className="px-3 py-2">{assignment.location.name}</td>
-                                                <td className="px-3 py-2 whitespace-nowrap">
-                                                    {formatDateTimeRange(assignment.starts_at, assignment.ends_at)}
-                                                </td>
-                                                <td className="px-3 py-2">
-                                                    <Badge variant={assignment.status === 'cancelled' ? 'outline' : 'secondary'}>
-                                                        {label('assignmentStatus', assignment.status)}
-                                                    </Badge>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                        <PublicLinks locations={campaign.locations} accepting={accepting} campaignName={campaign.name} />
                     </CardContent>
                 </Card>
             </div>

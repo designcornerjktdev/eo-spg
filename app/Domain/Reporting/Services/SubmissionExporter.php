@@ -16,7 +16,7 @@ class SubmissionExporter
      */
     public function download(User $viewer, Collection $submissions, string $filename = 'submissions.csv'): StreamedResponse
     {
-        $submissions->loadMissing(['formTemplate.fields', 'assignment.location', 'submitter', 'campaign']);
+        $submissions->loadMissing(['formTemplate.fields', 'location', 'campaign']);
 
         $headers = $this->headers($viewer, $submissions);
 
@@ -40,7 +40,7 @@ class SubmissionExporter
      */
     private function headers(User $viewer, Collection $submissions): array
     {
-        $fixed = ['id', 'campaign', 'location', 'area', 'spg', 'submitted_at', 'status', 'qualified'];
+        $fixed = ['id', 'campaign', 'location', 'area', 'submitted_at', 'status', 'qualified'];
         $fieldKeys = [];
 
         foreach ($submissions as $submission) {
@@ -69,9 +69,8 @@ class SubmissionExporter
         $base = [
             'id' => (string) $submission->id,
             'campaign' => $submission->campaign?->name,
-            'location' => $submission->assignment?->location?->name,
-            'area' => $submission->assignment?->location?->area,
-            'spg' => $submission->submitter?->name,
+            'location' => $submission->location?->name,
+            'area' => $submission->location?->area,
             'submitted_at' => $submission->submitted_at?->toDateTimeString(),
             'status' => $submission->status->value,
             'qualified' => $submission->qualified === null ? '' : ($submission->qualified ? 'yes' : 'no'),

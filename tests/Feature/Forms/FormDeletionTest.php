@@ -3,7 +3,6 @@
 namespace Tests\Feature\Forms;
 
 use App\Enums\FormStatus;
-use App\Models\Assignment;
 use App\Models\AuditLog;
 use App\Models\FormTemplate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -35,19 +34,18 @@ class FormDeletionTest extends TestCase
         $this->actingAs($world['eo'])->delete('/forms/'.$world['form']->id)->assertSessionHasErrors('form');
 
         $this->assertModelExists($world['form']);
-        $this->assertModelExists($world['assignment']);
     }
 
-    public function test_draft_form_used_by_assignment_cannot_be_deleted(): void
+    public function test_form_with_entries_cannot_be_deleted(): void
     {
         $world = $this->world();
-        $draft = FormTemplate::factory()->create(['campaign_id' => $world['campaign']->id, 'status' => FormStatus::Draft]);
-        $world['assignment']->update(['form_template_id' => $draft->id]);
+        $this->submitPublicEntry($world['location'])->assertSessionHasNoErrors();
+        // Force the form back to draft to prove that entries alone block deletion.
+        $world['form']->update(['status' => FormStatus::Draft]);
 
-        $this->actingAs($world['eo'])->delete('/forms/'.$draft->id)->assertSessionHasErrors('form');
+        $this->actingAs($world['eo'])->delete('/forms/'.$world['form']->id)->assertSessionHasErrors('form');
 
-        $this->assertModelExists($draft);
-        $this->assertSame(1, Assignment::query()->count());
+        $this->assertModelExists($world['form']);
     }
 
     public function test_non_superadmin_cannot_delete_form(): void
@@ -56,7 +54,6 @@ class FormDeletionTest extends TestCase
         $draft = FormTemplate::factory()->create(['campaign_id' => $world['campaign']->id, 'status' => FormStatus::Draft]);
 
         $this->actingAs($world['userA'])->delete('/forms/'.$draft->id)->assertForbidden();
-        $this->actingAs($world['spg'])->delete('/forms/'.$draft->id)->assertForbidden();
         $this->assertModelExists($draft);
     }
 }

@@ -16,7 +16,7 @@ class UpdateUserRequest extends FormRequest
     }
 
     /**
-     * The role cannot change after creation so assignment/submission data stays consistent.
+     * The role cannot change after creation; only client accounts are managed here.
      *
      * @return array<string, mixed>
      */

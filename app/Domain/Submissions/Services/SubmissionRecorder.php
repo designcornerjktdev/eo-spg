@@ -6,10 +6,9 @@ use App\Domain\Forms\Services\DynamicFormValidator;
 use App\Domain\Forms\Services\FormDefinitionService;
 use App\Enums\FieldType;
 use App\Enums\SubmissionStatus;
-use App\Models\Assignment;
+use App\Models\CampaignLocation;
 use App\Models\FormSubmission;
 use App\Models\FormTemplate;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -21,31 +20,29 @@ class SubmissionRecorder
     ) {}
 
     /**
+     * Records one public entry for a campaign location, using the campaign's current form.
+     *
      * @param  array<string, mixed>  $answers
      */
-    public function record(Assignment $assignment, User $actor, array $answers, bool $consentAccepted = false): FormSubmission
+    public function record(CampaignLocation $location, array $answers, bool $consentAccepted = false): FormSubmission
     {
-        $assignment->loadMissing(['campaign', 'formTemplate.fields', 'user']);
+        $campaign = $location->campaign;
+        $template = $campaign?->currentForm();
 
-        if ($actor->isSpg() && $assignment->user_id !== $actor->id) {
-            abort(403);
-        }
-
-        if ($actor->isSpg() && ! $assignment->isFillableNow()) {
+        if (! $campaign || ! $template || ! $campaign->isAcceptingEntries()) {
             throw ValidationException::withMessages([
-                'assignment' => 'This assignment cannot be filled in yet. Make sure the campaign is active and the schedule is running.',
+                'form' => 'This form is not accepting entries right now.',
             ]);
         }
 
-        $template = $assignment->formTemplate;
+        $template->loadMissing('fields');
         $validated = $this->validator->validate($template, $answers, $consentAccepted);
 
-        return DB::transaction(function () use ($assignment, $actor, $template, $validated, $consentAccepted) {
+        return DB::transaction(function () use ($campaign, $location, $template, $validated, $consentAccepted) {
             $submission = FormSubmission::query()->create([
-                'campaign_id' => $assignment->campaign_id,
-                'assignment_id' => $assignment->id,
+                'campaign_id' => $campaign->id,
+                'location_id' => $location->id,
                 'form_template_id' => $template->id,
-                'submitted_by' => $actor->id,
                 'answers' => $validated,
                 'consent_accepted' => $template->requires_consent ? true : $consentAccepted,
                 'consent_text_version' => $template->requires_consent ? $template->consent_text : null,

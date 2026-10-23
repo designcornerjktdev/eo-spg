@@ -31,7 +31,7 @@ export interface SharedData {
     quote: { message: string; author: string };
     branding: Branding;
     auth: Auth;
-    flash?: { success?: string | null };
+    flash?: { success?: string | null; submitted?: boolean };
     [key: string]: unknown;
 }
 
@@ -40,7 +40,7 @@ export interface User {
     name: string;
     email: string | null;
     username?: string | null;
-    role?: 'superadmin' | 'client' | 'spg';
+    role?: 'superadmin' | 'client';
     client_id?: number | null;
     home?: string;
     avatar?: string;

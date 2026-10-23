@@ -22,7 +22,7 @@ class CampaignPolicy
             return $user->client_id === $campaign->client_id;
         }
 
-        return $campaign->assignments()->where('user_id', $user->id)->exists();
+        return false;
     }
 
     public function create(User $user): bool

@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Campaigns;
 
-use App\Models\Assignment;
 use App\Models\CampaignLocation;
+use App\Models\FormSubmission;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\BuildsCampaignWorld;
 use Tests\TestCase;
@@ -50,18 +50,18 @@ class CampaignLocationTest extends TestCase
         ]))->assertSessionHasErrors('locations.0.longitude');
     }
 
-    public function test_location_used_by_assignment_cannot_be_removed(): void
+    public function test_location_with_entries_cannot_be_removed(): void
     {
         $world = $this->world();
+        $this->submitPublicEntry($world['location'])->assertSessionHasNoErrors();
 
-        // Replacing the location list without the old location that assignments use must be rejected.
+        // Replacing the location list without the old location that has entries must be rejected.
         $this->actingAs($world['eo'])->put('/campaigns/'.$world['campaign']->id, $this->payload($world, [
             ['name' => 'New Location', 'area' => 'Bandung'],
         ]))->assertSessionHasErrors('locations');
 
         $this->assertModelExists($world['location']);
-        $this->assertModelExists($world['assignment']);
-        $this->assertSame(1, Assignment::query()->count());
+        $this->assertSame(1, FormSubmission::query()->where('location_id', $world['location']->id)->count());
     }
 
     public function test_unused_location_can_be_removed(): void

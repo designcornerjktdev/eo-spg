@@ -31,7 +31,7 @@ export default function FormPreview({
             <FormPage>
                 <PageHeader
                     title={`Preview ${template.name} v${template.version}`}
-                    description="How the form looks to SPGs when they submit entries."
+                    description="How the form looks to consumers on the public link."
                 />
                 <div className="space-y-4 rounded-xl border p-4 sm:p-6">
                     {template.fields.map((field) => (

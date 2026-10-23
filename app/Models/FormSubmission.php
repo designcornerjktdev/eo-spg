@@ -17,9 +17,8 @@ class FormSubmission extends Model
 
     protected $fillable = [
         'campaign_id',
-        'assignment_id',
+        'location_id',
         'form_template_id',
-        'submitted_by',
         'answers',
         'consent_accepted',
         'consent_text_version',
@@ -29,7 +28,6 @@ class FormSubmission extends Model
         'voided_at',
         'voided_by',
         'void_reason',
-        'corrects_submission_id',
     ];
 
     protected function casts(): array
@@ -49,19 +47,14 @@ class FormSubmission extends Model
         return $this->belongsTo(Campaign::class);
     }
 
-    public function assignment(): BelongsTo
+    public function location(): BelongsTo
     {
-        return $this->belongsTo(Assignment::class);
+        return $this->belongsTo(CampaignLocation::class, 'location_id');
     }
 
     public function formTemplate(): BelongsTo
     {
         return $this->belongsTo(FormTemplate::class);
-    }
-
-    public function submitter(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'submitted_by');
     }
 
     public function voider(): BelongsTo
@@ -84,19 +77,11 @@ class FormSubmission extends Model
             return $query->whereHas('campaign', fn (Builder $campaigns) => $campaigns->where('client_id', $user->client_id));
         }
 
-        return $query->where('submitted_by', $user->id);
+        return $query->whereRaw('1 = 0');
     }
 
     public function isVoid(): bool
     {
         return $this->status === SubmissionStatus::Void;
-    }
-
-    /**
-     * An SPG may only correct/cancel their own entries on the same day (application timezone).
-     */
-    public function isCorrectableBySubmitter(): bool
-    {
-        return ! $this->isVoid() && $this->submitted_at?->isToday();
     }
 }

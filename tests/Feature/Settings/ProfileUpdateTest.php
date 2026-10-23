@@ -63,8 +63,8 @@ class ProfileUpdateTest extends TestCase
 
     public function test_users_cannot_delete_their_own_account()
     {
-        // Self-delete is disabled for every role: deleting a user cascades to their assignments and entries.
-        foreach ([User::factory()->superadmin()->create(), User::factory()->spg()->create(), User::factory()->clientUser()->create()] as $user) {
+        // Self-delete is disabled for every role; only the superadmin removes client accounts.
+        foreach ([User::factory()->superadmin()->create(), User::factory()->clientUser()->create()] as $user) {
             $this->actingAs($user)
                 ->delete('/settings/profile', ['password' => 'password'])
                 ->assertMethodNotAllowed();

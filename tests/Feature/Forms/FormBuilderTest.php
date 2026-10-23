@@ -32,10 +32,7 @@ class FormBuilderTest extends TestCase
     {
         $world = $this->world();
 
-        $this->actingAs($world['spg'])->post('/tasks/'.$world['assignment']->id.'/submissions', [
-            'answers' => $this->validAnswers(),
-            'consent_accepted' => true,
-        ])->assertRedirect();
+        $this->submitPublicEntry($world['location'])->assertSessionHasNoErrors();
 
         $this->assertSame(FormStatus::Locked, $world['form']->fresh()->status);
 

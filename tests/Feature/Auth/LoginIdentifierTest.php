@@ -3,6 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\AuditLog;
+use App\Models\Client;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -25,20 +26,20 @@ class LoginIdentifierTest extends TestCase
         $this->assertAuthenticatedAs($eo);
     }
 
-    public function test_client_and_spg_log_in_with_username_only(): void
+    public function test_clients_log_in_with_username_only(): void
     {
-        $spg = User::factory()->spg()->create(['username' => 'spg1', 'email' => 'spg1@eo.test']);
+        $client = User::factory()->clientUser()->create(['username' => 'mayora', 'email' => 'mayora@eo.test']);
 
-        $this->post('/login', ['login' => 'spg1@eo.test', 'password' => 'password'])->assertSessionHasErrors('login');
+        $this->post('/login', ['login' => 'mayora@eo.test', 'password' => 'password'])->assertSessionHasErrors('login');
         $this->assertGuest();
 
-        $this->post('/login', ['login' => 'SPG1', 'password' => 'password'])->assertRedirect('/tasks');
-        $this->assertAuthenticatedAs($spg);
+        $this->post('/login', ['login' => 'MAYORA', 'password' => 'password'])->assertRedirect('/dashboard');
+        $this->assertAuthenticatedAs($client);
     }
 
     public function test_inactive_account_cannot_log_in(): void
     {
-        User::factory()->spg()->create(['username' => 'inactive', 'is_active' => false]);
+        User::factory()->clientUser()->create(['username' => 'inactive', 'is_active' => false]);
 
         $this->post('/login', ['login' => 'inactive', 'password' => 'password'])->assertSessionHasErrors('login');
         $this->assertGuest();
@@ -58,17 +59,17 @@ class LoginIdentifierTest extends TestCase
         Notification::assertSentTo($eo, ResetPassword::class);
     }
 
-    public function test_superadmin_can_reset_password_of_spg(): void
+    public function test_superadmin_can_reset_password_of_client(): void
     {
         $eo = User::factory()->superadmin()->create();
-        $spg = User::factory()->spg()->create();
+        $client = User::factory()->clientUser()->create();
 
-        $this->actingAs($eo)->put('/users/'.$spg->id.'/password', [
+        $this->actingAs($eo)->put('/users/'.$client->id.'/password', [
             'password' => 'NewPassword123',
             'password_confirmation' => 'NewPassword123',
         ])->assertSessionHasNoErrors();
 
-        $this->assertTrue(Hash::check('NewPassword123', $spg->refresh()->password));
+        $this->assertTrue(Hash::check('NewPassword123', $client->refresh()->password));
         $this->assertTrue(AuditLog::query()->where('action', 'user.password_reset')->exists());
     }
 
@@ -76,10 +77,10 @@ class LoginIdentifierTest extends TestCase
     {
         $eo = User::factory()->superadmin()->create();
         $otherEo = User::factory()->superadmin()->create();
-        $spg = User::factory()->spg()->create();
+        $client = User::factory()->clientUser()->create();
         $payload = ['password' => 'NewPassword123', 'password_confirmation' => 'NewPassword123'];
 
-        $this->actingAs($spg)->put('/users/'.$spg->id.'/password', $payload)->assertForbidden();
+        $this->actingAs($client)->put('/users/'.$client->id.'/password', $payload)->assertForbidden();
         $this->actingAs($eo)->put('/users/'.$otherEo->id.'/password', $payload)->assertForbidden();
     }
 
@@ -87,14 +88,17 @@ class LoginIdentifierTest extends TestCase
     {
         $eo = User::factory()->superadmin()->create();
 
+        $company = Client::factory()->create();
+
         $this->actingAs($eo)->post('/users', [
-            'name' => 'New SPG',
-            'username' => 'spg.new',
+            'name' => 'New Client',
+            'username' => 'client.new',
             'password' => 'password',
-            'role' => 'spg',
+            'role' => 'client',
+            'client_id' => $company->id,
         ])->assertSessionHasNoErrors();
 
         $this->post('/logout');
-        $this->post('/login', ['login' => 'spg.new', 'password' => 'password'])->assertRedirect('/tasks');
+        $this->post('/login', ['login' => 'client.new', 'password' => 'password'])->assertRedirect('/dashboard');
     }
 }

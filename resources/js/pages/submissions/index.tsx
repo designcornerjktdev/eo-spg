@@ -15,7 +15,6 @@ interface SubmissionRow {
     qualified: boolean | null;
     campaign: { name: string };
     location: { name: string } | null;
-    spg: { name: string } | null;
 }
 
 export default function SubmissionsIndex({
@@ -23,13 +22,11 @@ export default function SubmissionsIndex({
     filters,
     campaigns,
     locations,
-    spgs,
 }: {
     submissions: { data: SubmissionRow[]; links: { url: string | null; label: string; active: boolean }[] };
     filters: Record<string, string>;
     campaigns: { id: number; name: string }[];
     locations: { id: number; name: string }[];
-    spgs: { id: number; name: string }[];
 }) {
     const apply = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -43,7 +40,6 @@ export default function SubmissionsIndex({
             <form onSubmit={apply} className="grid gap-3 rounded-lg border p-4 md:grid-cols-6">
                 <FilterSelect name="campaign_id" label="Campaign" value={filters.campaign_id} options={campaigns} />
                 <FilterSelect name="location_id" label="Location" value={filters.location_id} options={locations} />
-                {spgs.length > 0 && <FilterSelect name="spg_id" label="SPG" value={filters.spg_id} options={spgs} />}
                 <div>
                     <Label>From</Label>
                     <Input type="date" name="from" defaultValue={filters.from ?? ''} />
@@ -70,7 +66,6 @@ export default function SubmissionsIndex({
                             <th className="px-3 py-2 text-left">Time</th>
                             <th className="px-3 py-2 text-left">Campaign</th>
                             <th className="px-3 py-2 text-left">Location</th>
-                            <th className="px-3 py-2 text-left">SPG</th>
                             <th className="px-3 py-2 text-left">Status</th>
                             <th />
                         </tr>
@@ -81,7 +76,6 @@ export default function SubmissionsIndex({
                                 <td className="px-3 py-2 whitespace-nowrap">{formatDateTime(submission.submitted_at)}</td>
                                 <td className="px-3 py-2">{submission.campaign?.name}</td>
                                 <td className="px-3 py-2">{submission.location?.name}</td>
-                                <td className="px-3 py-2">{submission.spg?.name}</td>
                                 <td className="px-3 py-2">{label('submissionStatus', submission.status)}</td>
                                 <td className="px-3 py-2 text-right">
                                     <Button asChild size="sm" variant="outline">

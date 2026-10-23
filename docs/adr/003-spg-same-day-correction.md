@@ -1,6 +1,6 @@
 # ADR 003: Koreksi mandiri SPG di hari yang sama
 
-**Status:** Diterima  
+**Status:** Digantikan oleh ADR 004 (role SPG dihapus)  
 **Tanggal:** 2026-10-21  
 **Mengubah:** ADR 002 (poin "Submission tidak bisa diedit")
 

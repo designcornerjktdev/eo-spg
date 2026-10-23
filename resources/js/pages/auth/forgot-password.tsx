@@ -26,7 +26,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
             <Head title="Forgot password" />
 
             <div className="bg-muted rounded-md p-3 text-sm">
-                <span className="font-medium">Client or SPG account?</span> Contact the EO admin to reset your password.
+                <span className="font-medium">Client account?</span> Contact the EO admin to reset your password.
             </div>
 
             {status && <div className="text-center text-sm font-medium text-green-600">{status}</div>}

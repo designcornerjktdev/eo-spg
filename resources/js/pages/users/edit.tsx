@@ -1,33 +1,31 @@
+import DangerZone from '@/components/danger-zone';
 import FormPage from '@/components/form-page';
 import InputError from '@/components/input-error';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { FormEvent, useState } from 'react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { FormEvent } from 'react';
 
 interface EditableUser {
     id: number;
     name: string;
     username: string | null;
-    role: 'client' | 'spg';
+    role: 'client';
     client_id: number | null;
     is_active: boolean;
 }
 
-export default function UserEdit({ user, clients, deletable }: { user: EditableUser; clients: { id: number; name: string }[]; deletable: boolean }) {
+export default function UserEdit({ user, clients }: { user: EditableUser; clients: { id: number; name: string }[] }) {
     const { data, setData, put, processing, errors } = useForm({
         name: user.name,
         username: user.username ?? '',
         client_id: user.client_id ? String(user.client_id) : '',
         is_active: user.is_active,
     });
-    const [confirmDelete, setConfirmDelete] = useState(false);
-    const pageErrors = usePage().props.errors as Record<string, string>;
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -43,7 +41,7 @@ export default function UserEdit({ user, clients, deletable }: { user: EditableU
         >
             <Head title={`Edit ${user.name}`} />
             <FormPage>
-                <PageHeader title="Edit account" description={`Role: ${user.role === 'client' ? 'Client' : 'SPG'} (cannot be changed)`} />
+                <PageHeader title="Edit account" description="Client account" />
 
                 <form onSubmit={submit} className="grid gap-4 rounded-xl border p-4 sm:p-6">
                     <div className="grid gap-2">
@@ -98,45 +96,14 @@ export default function UserEdit({ user, clients, deletable }: { user: EditableU
                     </div>
                 </form>
 
-                <div className="space-y-2 rounded-lg border border-red-200 p-4 dark:border-red-900">
-                    <h2 className="font-semibold">Delete account</h2>
-                    {deletable ? (
-                        <>
-                            <p className="text-muted-foreground text-sm">
-                                This account has no assignments or entries, so it can be permanently deleted.
-                            </p>
-                            <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
-                                Delete account
-                            </Button>
-                        </>
-                    ) : (
-                        <p className="text-muted-foreground text-sm">
-                            This account already has assignments or entries, so it cannot be deleted to keep its history intact. Uncheck{' '}
-                            <b>Account active</b> to deactivate it.
-                        </p>
-                    )}
-                    <InputError message={pageErrors.user} />
-                </div>
-
-                <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-                    <DialogContent className="max-w-[calc(100%-1rem)] md:max-w-md">
-                        <DialogHeader className="text-left">
-                            <DialogTitle>Delete account {user.name}?</DialogTitle>
-                            <DialogDescription>This is permanent and cannot be undone.</DialogDescription>
-                        </DialogHeader>
-                        <div className="flex justify-end gap-2">
-                            <Button variant="outline" onClick={() => setConfirmDelete(false)}>
-                                Back
-                            </Button>
-                            <Button
-                                variant="destructive"
-                                onClick={() => router.delete(route('users.destroy', user.id), { onFinish: () => setConfirmDelete(false) })}
-                            >
-                                Delete permanently
-                            </Button>
-                        </div>
-                    </DialogContent>
-                </Dialog>
+                <DangerZone
+                    title="Delete account"
+                    description="The client will no longer be able to sign in. Campaign data is not affected."
+                    confirmTitle={`Delete account ${user.name}?`}
+                    deleteUrl={route('users.destroy', user.id)}
+                    blocker={null}
+                    errorKey="user"
+                />
             </FormPage>
         </AppLayout>
     );

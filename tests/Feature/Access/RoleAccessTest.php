@@ -31,26 +31,24 @@ class RoleAccessTest extends TestCase
         $this->actingAs($client)->get('/audit')->assertForbidden();
         $this->actingAs($client)->get('/users')->assertForbidden();
         $this->actingAs($client)->get('/forms')->assertForbidden();
-        $this->actingAs($client)->get('/assignments')->assertForbidden();
     }
 
-    public function test_spg_cannot_open_dashboard_or_client_pages(): void
+    public function test_spg_pages_no_longer_exist(): void
     {
-        $spg = User::factory()->spg()->create();
+        $eo = User::factory()->superadmin()->create();
 
-        $this->actingAs($spg)->get('/dashboard')->assertForbidden();
-        $this->actingAs($spg)->get('/clients')->assertForbidden();
-        $this->actingAs($spg)->get('/campaigns')->assertForbidden();
-        $this->actingAs($spg)->get('/tasks')->assertOk();
+        foreach (['/tasks', '/assignments', '/assignments/create'] as $url) {
+            $this->actingAs($eo)->get($url)->assertNotFound();
+        }
     }
 
-    public function test_login_redirects_spg_to_tasks(): void
+    public function test_login_redirects_client_to_dashboard(): void
     {
-        $spg = User::factory()->spg()->create();
+        $client = User::factory()->clientUser()->create();
 
         $this->post('/login', [
-            'login' => $spg->username,
+            'login' => $client->username,
             'password' => 'password',
-        ])->assertRedirect('/tasks');
+        ])->assertRedirect('/dashboard');
     }
 }

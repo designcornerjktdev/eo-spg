@@ -2,11 +2,10 @@
 
 namespace App\Domain\Reporting\Services;
 
-use App\Enums\AssignmentStatus;
 use App\Enums\FieldType;
 use App\Enums\SubmissionStatus;
-use App\Models\Assignment;
 use App\Models\Campaign;
+use App\Models\CampaignLocation;
 use App\Models\FormField;
 use App\Models\FormSubmission;
 use App\Models\SubmissionFieldValue;
@@ -24,8 +23,7 @@ class DashboardAggregator
         $submissions = FormSubmission::query()
             ->visibleTo($viewer)
             ->when($filters['campaign_id'] ?? null, fn (Builder $query, $id) => $query->where('form_submissions.campaign_id', $id))
-            ->when($filters['location_id'] ?? null, fn (Builder $query, $id) => $query->whereHas('assignment', fn (Builder $assignment) => $assignment->where('location_id', $id)))
-            ->when(($filters['spg_id'] ?? null) && $viewer->isSuperadmin(), fn (Builder $query) => $query->where('form_submissions.submitted_by', $filters['spg_id']))
+            ->when($filters['location_id'] ?? null, fn (Builder $query, $id) => $query->where('form_submissions.location_id', $id))
             ->when($filters['from'] ?? null, fn (Builder $query, $from) => $query->whereDate('form_submissions.submitted_at', '>=', $from))
             ->when($filters['to'] ?? null, fn (Builder $query, $to) => $query->whereDate('form_submissions.submitted_at', '<=', $to));
 
@@ -38,22 +36,18 @@ class DashboardAggregator
             ->get();
 
         $perLocation = (clone $active)
-            ->join('assignments', 'assignments.id', '=', 'form_submissions.assignment_id')
-            ->join('campaign_locations', 'campaign_locations.id', '=', 'assignments.location_id')
+            ->join('campaign_locations', 'campaign_locations.id', '=', 'form_submissions.location_id')
             ->selectRaw('campaign_locations.name as label, count(form_submissions.id) as total')
             ->groupBy('campaign_locations.id', 'campaign_locations.name')
             ->orderBy('campaign_locations.name')
             ->get();
 
-        $perSpg = (clone $active)
-            ->join('users', 'users.id', '=', 'form_submissions.submitted_by')
-            ->selectRaw('users.name as label, count(form_submissions.id) as total')
-            ->groupBy('users.id', 'users.name')
-            ->orderBy('users.name')
+        // Public links that can receive entries right now: active campaign with a published form.
+        $links = CampaignLocation::query()
+            ->whereHas('campaign', fn (Builder $campaign) => $campaign->visibleTo($viewer)
+                ->when($filters['campaign_id'] ?? null, fn (Builder $query, $id) => $query->whereKey($id)))
+            ->with('campaign')
             ->get();
-
-        $assignmentQuery = Assignment::query()->visibleTo($viewer)
-            ->when($filters['campaign_id'] ?? null, fn (Builder $query, $id) => $query->where('campaign_id', $id));
 
         $custom = $this->customFieldMetrics($active);
 
@@ -64,15 +58,12 @@ class DashboardAggregator
                 'qualified' => (clone $active)->where('qualified', true)->count(),
                 'campaigns' => Campaign::query()->visibleTo($viewer)->count(),
             ],
-            'assignments' => [
-                'scheduled' => (clone $assignmentQuery)->where('status', AssignmentStatus::Scheduled)->count(),
-                'active' => (clone $assignmentQuery)->where('status', AssignmentStatus::Active)->count(),
-                'done' => (clone $assignmentQuery)->where('status', AssignmentStatus::Done)->count(),
-                'cancelled' => (clone $assignmentQuery)->where('status', AssignmentStatus::Cancelled)->count(),
+            'links' => [
+                'open' => $links->filter(fn (CampaignLocation $location) => $location->campaign->isAcceptingEntries())->count(),
+                'total' => $links->count(),
             ],
             'per_day' => $perDay,
             'per_location' => $perLocation,
-            'per_spg' => $viewer->isSuperadmin() ? $perSpg : [],
             'custom_fields' => $custom,
         ];
     }

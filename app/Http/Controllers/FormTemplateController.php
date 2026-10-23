@@ -7,7 +7,6 @@ use App\Domain\Forms\Services\FormDefinitionService;
 use App\Enums\FieldType;
 use App\Enums\FormStatus;
 use App\Http\Requests\Forms\FormTemplateRequest;
-use App\Models\Assignment;
 use App\Models\Campaign;
 use App\Models\FormTemplate;
 use Illuminate\Http\RedirectResponse;
@@ -123,7 +122,7 @@ class FormTemplateController extends Controller
     }
 
     /**
-     * The assignment & submission -> form FKs cascade, so only unused drafts may be deleted.
+     * The submission -> form FK cascades, so only drafts without entries may be deleted.
      */
     private function deleteBlocker(FormTemplate $form): ?string
     {
@@ -131,8 +130,8 @@ class FormTemplateController extends Controller
             return 'Only draft forms can be deleted. Published forms are kept as history.';
         }
 
-        if (Assignment::query()->where('form_template_id', $form->id)->exists() || $form->submissions()->exists()) {
-            return 'This form is used by SPG assignments, so it cannot be deleted.';
+        if ($form->submissions()->exists()) {
+            return 'This form already has entries, so it cannot be deleted.';
         }
 
         return null;

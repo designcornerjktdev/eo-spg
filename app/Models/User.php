@@ -7,7 +7,6 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -46,11 +45,6 @@ class User extends Authenticatable
         return $this->belongsTo(Client::class);
     }
 
-    public function assignments(): HasMany
-    {
-        return $this->hasMany(Assignment::class);
-    }
-
     public function isSuperadmin(): bool
     {
         return $this->role === UserRole::Superadmin;
@@ -61,14 +55,9 @@ class User extends Authenticatable
         return $this->role === UserRole::Client;
     }
 
-    public function isSpg(): bool
-    {
-        return $this->role === UserRole::Spg;
-    }
-
     public function homeRoute(): string
     {
-        return $this->isSpg() ? route('spg.tasks.index', absolute: false) : route('dashboard', absolute: false);
+        return route('dashboard', absolute: false);
     }
 
     public function scopeVisibleTo(Builder $query, User $user): Builder

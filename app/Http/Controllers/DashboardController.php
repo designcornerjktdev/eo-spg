@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Domain\Reporting\Services\DashboardAggregator;
 use App\Models\Campaign;
 use App\Models\CampaignLocation;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,9 +15,7 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        abort_if($user->isSpg(), 403);
-
-        $filters = $request->only(['campaign_id', 'location_id', 'spg_id', 'from', 'to']);
+        $filters = $request->only(['campaign_id', 'location_id', 'from', 'to']);
 
         return Inertia::render('dashboard', [
             'summary' => $aggregator->summarize($user, $filters),
@@ -28,9 +25,6 @@ class DashboardController extends Controller
                 ->whereHas('campaign', fn ($query) => $query->visibleTo($user))
                 ->orderBy('name')
                 ->get(['id', 'name', 'campaign_id']),
-            'spgs' => $user->isSuperadmin()
-                ? User::query()->where('role', 'spg')->orderBy('name')->get(['id', 'name'])
-                : [],
         ]);
     }
 }

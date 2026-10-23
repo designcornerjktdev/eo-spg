@@ -9,7 +9,7 @@ class ProductPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isSuperadmin() || $user->isClient() || $user->isSpg();
+        return $user->isSuperadmin() || $user->isClient();
     }
 
     public function view(User $user, Product $product): bool
@@ -22,7 +22,7 @@ class ProductPolicy
             return $user->client_id === $product->client_id;
         }
 
-        return $product->campaigns()->whereHas('assignments', fn ($query) => $query->where('user_id', $user->id))->exists();
+        return false;
     }
 
     public function create(User $user): bool

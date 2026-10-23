@@ -58,6 +58,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'flash' => [
                 'success' => $request->session()->get('success'),
+                'submitted' => (bool) $request->session()->get('submitted'),
             ],
         ]);
     }

@@ -7,7 +7,6 @@ use App\Enums\UserRole;
 use App\Http\Requests\Users\StoreUserRequest;
 use App\Http\Requests\Users\UpdateUserRequest;
 use App\Models\Client;
-use App\Models\FormSubmission;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,12 +14,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Client & SPG account management by the superadmin. EO accounts are not managed here.
+ * Client account management by the superadmin. EO accounts are not managed here.
  */
 class UserController extends Controller
 {
@@ -37,7 +35,6 @@ class UserController extends Controller
                 ->when($filters['search'] ?? null, fn ($query, $search) => $query->where(fn ($query) => $query
                     ->where('name', 'like', '%'.$search.'%')
                     ->orWhere('username', 'like', '%'.$search.'%')))
-                ->when(in_array($filters['role'] ?? null, [UserRole::Client->value, UserRole::Spg->value], true), fn ($query) => $query->where('role', $filters['role']))
                 ->when(($filters['status'] ?? null) === 'active', fn ($query) => $query->where('is_active', true))
                 ->when(($filters['status'] ?? null) === 'inactive', fn ($query) => $query->where('is_active', false))
                 ->latest()
@@ -76,7 +73,6 @@ class UserController extends Controller
         return Inertia::render('users/edit', [
             'user' => $user->only(['id', 'name', 'username', 'role', 'client_id', 'is_active']),
             'clients' => Client::query()->orderBy('name')->get(['id', 'name']),
-            'deletable' => $this->isDeletable($user),
         ]);
     }
 
@@ -100,19 +96,12 @@ class UserController extends Controller
     }
 
     /**
-     * Hard delete only for accounts without history; the assignment/submission -> users FKs cascade,
-     * so deleting an account that has worked would delete its data too.
+     * Client accounts own no entries (entries are anonymous), so they can be deleted outright.
      */
     public function destroy(Request $request, User $user, AuditLogger $audit): RedirectResponse
     {
         $this->authorize('update', $user);
         abort_if($user->isSuperadmin(), 403);
-
-        if (! $this->isDeletable($user)) {
-            throw ValidationException::withMessages([
-                'user' => 'This account already has assignments or entries, so it cannot be deleted. Deactivate it instead.',
-            ]);
-        }
 
         DB::transaction(function () use ($request, $user, $audit) {
             $audit->record($request->user(), 'user.deleted', $user, $user->only(['name', 'username', 'role', 'client_id']));
@@ -144,12 +133,6 @@ class UserController extends Controller
         $audit->record($request->user(), 'user.password_reset', $user);
 
         return back()->with('success', 'Password for '.$user->name.' has been reset.');
-    }
-
-    private function isDeletable(User $user): bool
-    {
-        return ! $user->assignments()->exists()
-            && ! FormSubmission::query()->where('submitted_by', $user->id)->exists();
     }
 
     private function logoutEverywhere(User $user): void

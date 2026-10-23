@@ -22,12 +22,7 @@ class FormSubmissionPolicy
             return $user->client_id === $submission->campaign?->client_id;
         }
 
-        return $submission->submitted_by === $user->id;
-    }
-
-    public function create(User $user): bool
-    {
-        return $user->isSuperadmin() || $user->isSpg();
+        return false;
     }
 
     public function update(User $user, FormSubmission $submission): bool
@@ -38,14 +33,6 @@ class FormSubmissionPolicy
     public function void(User $user, FormSubmission $submission): bool
     {
         return $user->isSuperadmin();
-    }
-
-    /**
-     * Self-correction/cancellation by the owning SPG; the same-day limit is checked in SubmissionCorrector.
-     */
-    public function correct(User $user, FormSubmission $submission): bool
-    {
-        return $user->isSpg() && $submission->submitted_by === $user->id;
     }
 
     public function export(User $user): bool

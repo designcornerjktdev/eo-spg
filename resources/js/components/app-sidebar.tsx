@@ -3,10 +3,10 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavGroup, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { Building2, ClipboardList, FileSpreadsheet, LayoutGrid, ListChecks, MapPin, Package, ScrollText, Users } from 'lucide-react';
+import { Building2, FileSpreadsheet, LayoutGrid, ListChecks, MapPin, Package, ScrollText, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
-// Group order follows the EO workflow: set up the campaign -> run it in the field -> manage access.
+// Group order follows the EO workflow: set up the campaign -> collect results -> manage access.
 const eoNav: NavGroup[] = [
     { title: 'Overview', items: [{ title: 'Dashboard', url: '/dashboard', icon: LayoutGrid }] },
     {
@@ -19,11 +19,8 @@ const eoNav: NavGroup[] = [
         ],
     },
     {
-        title: 'Field operations',
-        items: [
-            { title: 'SPG assignments', url: '/assignments', icon: ClipboardList },
-            { title: 'Entries', url: '/submissions', icon: ListChecks },
-        ],
+        title: 'Results',
+        items: [{ title: 'Entries', url: '/submissions', icon: ListChecks }],
     },
     {
         title: 'Administration',
@@ -45,12 +42,10 @@ const clientNav: NavGroup[] = [
     },
 ];
 
-const spgNav: NavGroup[] = [{ title: 'Menu', items: [{ title: 'Tasks', url: '/tasks', icon: ClipboardList }] }];
-
 export function AppSidebar() {
     const { auth } = usePage<SharedData>().props;
     const role = auth.user?.role;
-    const groups = role === 'client' ? clientNav : role === 'spg' ? spgNav : eoNav;
+    const groups = role === 'client' ? clientNav : eoNav;
 
     return (
         <Sidebar collapsible="icon" variant="inset">

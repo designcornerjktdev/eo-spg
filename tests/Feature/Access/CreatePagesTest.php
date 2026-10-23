@@ -17,7 +17,7 @@ class CreatePagesTest extends TestCase
     {
         $eo = User::factory()->superadmin()->create();
 
-        foreach (['/clients/create', '/products/create', '/campaigns/create', '/forms/create', '/assignments/create', '/users/create'] as $url) {
+        foreach (['/clients/create', '/products/create', '/campaigns/create', '/forms/create', '/users/create'] as $url) {
             $this->actingAs($eo)->get($url)->assertOk();
         }
     }

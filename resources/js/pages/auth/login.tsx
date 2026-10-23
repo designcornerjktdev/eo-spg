@@ -58,7 +58,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             spellCheck={false}
                             value={data.login}
                             onChange={(e) => setData('login', e.target.value)}
-                            placeholder="Admin EO: email · Client/SPG: username"
+                            placeholder="EO admin: email · Client: username"
                         />
                         <InputError message={errors.login} />
                     </div>

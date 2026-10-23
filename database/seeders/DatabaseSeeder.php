@@ -5,10 +5,8 @@ namespace Database\Seeders;
 use App\Domain\Forms\MayoraFormDefinition;
 use App\Domain\Submissions\Services\SubmissionRecorder;
 use App\Domain\Submissions\Services\SubmissionVoider;
-use App\Enums\AssignmentStatus;
 use App\Enums\CampaignStatus;
 use App\Enums\FormStatus;
-use App\Models\Assignment;
 use App\Models\Campaign;
 use App\Models\CampaignLocation;
 use App\Models\Client;
@@ -52,18 +50,11 @@ class DatabaseSeeder extends Seeder
         User::factory()->clientUser($mayora)->create(['name' => 'Client Mayora', 'username' => 'mayora']);
         User::factory()->clientUser($imoby)->create(['name' => 'Client IMOBY', 'username' => 'imoby']);
 
-        $spgs = collect([
-            ['Siti SPG', 'spg1'],
-            ['Budi SPG', 'spg2'],
-            ['Rina SPG', 'spg3'],
-            ['Dewi SPG', 'spg4'],
-        ])->map(fn (array $spg) => User::factory()->spg()->create(['name' => $spg[0], 'username' => $spg[1]]));
-
         $kopi = Product::query()->create(['client_id' => $mayora->id, 'name' => 'Kopi Lepas Haus', 'sku' => 'KLH-01']);
         $imobyCore = Product::query()->create(['client_id' => $imoby->id, 'name' => 'IMOBY Core', 'sku' => 'IMB-01']);
 
         // Mayora: three Jakarta/Bandung locations, running for two weeks already.
-        [$mayoraCampaign, $mayoraForm, $mayoraLocations] = $this->campaign(
+        [, , $mayoraLocations] = $this->campaign(
             $mayora,
             $kopi,
             'Sampling Kopi Lepas Haus',
@@ -76,7 +67,7 @@ class DatabaseSeeder extends Seeder
         );
 
         // IMOBY: one Surabaya location, started a week ago — keeps client data isolation visible.
-        [$imobyCampaign, $imobyForm, $imobyLocations] = $this->campaign(
+        [, , $imobyLocations] = $this->campaign(
             $imoby,
             $imobyCore,
             'IMOBY Core Roadshow',
@@ -85,58 +76,27 @@ class DatabaseSeeder extends Seeder
             startedDaysAgo: 6,
         );
 
-        // One SPG per location keeps every schedule overlap-free.
-        $shifts = [
-            [$mayoraCampaign, $mayoraForm, $mayoraLocations[0], $spgs[0], self::PAST_DAYS],
-            [$mayoraCampaign, $mayoraForm, $mayoraLocations[1], $spgs[1], self::PAST_DAYS],
-            [$mayoraCampaign, $mayoraForm, $mayoraLocations[2], $spgs[2], self::PAST_DAYS],
-            [$imobyCampaign, $imobyForm, $imobyLocations[0], $spgs[3], 6],
+        $locations = [
+            [$mayoraLocations[0], self::PAST_DAYS],
+            [$mayoraLocations[1], self::PAST_DAYS],
+            [$mayoraLocations[2], self::PAST_DAYS],
+            [$imobyLocations[0], 6],
         ];
 
-        foreach ($shifts as [$campaign, $form, $location, $spg, $days]) {
+        foreach ($locations as [$location, $days]) {
             for ($daysAgo = $days; $daysAgo >= 1; $daysAgo--) {
-                // Weekends are busier, and the odd day off makes the chart less uniform.
+                // Weekends are busier, and the odd quiet day makes the chart less uniform.
                 $day = now()->subDays($daysAgo)->startOfDay();
                 if (mt_rand(1, 10) === 1) {
                     continue;
                 }
                 $entries = $day->isWeekend() ? mt_rand(9, 16) : mt_rand(3, 9);
-                $this->workShift($recorder, $voider, $eo, $campaign, $form, $location, $spg, $day, $entries);
+                $this->collectDay($recorder, $voider, $eo, $location, $day, $entries);
             }
         }
 
-        // Today: Siti is on shift right now (the SPG demo account), Budi starts later today.
-        $today = Assignment::query()->create([
-            'campaign_id' => $mayoraCampaign->id,
-            'location_id' => $mayoraLocations[0]->id,
-            'form_template_id' => $mayoraForm->id,
-            'user_id' => $spgs[0]->id,
-            'starts_at' => now()->subHours(2),
-            'ends_at' => now()->addHours(6),
-            'status' => AssignmentStatus::Active,
-        ]);
-        $this->recordEntries($recorder, $today, $spgs[0], now()->subHours(2), now()->subMinutes(5), 3);
-
-        Assignment::query()->create([
-            'campaign_id' => $mayoraCampaign->id,
-            'location_id' => $mayoraLocations[1]->id,
-            'form_template_id' => $mayoraForm->id,
-            'user_id' => $spgs[1]->id,
-            'starts_at' => now()->addHours(7),
-            'ends_at' => now()->addHours(12),
-            'status' => AssignmentStatus::Scheduled,
-        ]);
-
-        // A cancelled shift so every assignment status shows up on the dashboard.
-        Assignment::query()->create([
-            'campaign_id' => $mayoraCampaign->id,
-            'location_id' => $mayoraLocations[2]->id,
-            'form_template_id' => $mayoraForm->id,
-            'user_id' => $spgs[2]->id,
-            'starts_at' => now()->addDays(2)->setTime(10, 0),
-            'ends_at' => now()->addDays(2)->setTime(18, 0),
-            'status' => AssignmentStatus::Cancelled,
-        ]);
+        // A few responses already came in this morning at PIK Avenue.
+        $this->recordEntries($recorder, $mayoraLocations[0], now()->subHours(2), now()->subMinutes(5), 3);
 
         $eo->forceFill(['email_verified_at' => now()])->save();
     }
@@ -184,28 +144,10 @@ class DatabaseSeeder extends Seeder
         return [$campaign, $form, $models];
     }
 
-    private function workShift(
-        SubmissionRecorder $recorder,
-        SubmissionVoider $voider,
-        User $eo,
-        Campaign $campaign,
-        FormTemplate $form,
-        CampaignLocation $location,
-        User $spg,
-        Carbon $day,
-        int $entries,
-    ): void {
-        $assignment = Assignment::query()->create([
-            'campaign_id' => $campaign->id,
-            'location_id' => $location->id,
-            'form_template_id' => $form->id,
-            'user_id' => $spg->id,
-            'starts_at' => $day->copy()->setTime(10, 0),
-            'ends_at' => $day->copy()->setTime(18, 0),
-            'status' => AssignmentStatus::Active,
-        ]);
-
-        $submissions = $this->recordEntries($recorder, $assignment, $spg, $assignment->starts_at, $assignment->ends_at, $entries);
+    private function collectDay(SubmissionRecorder $recorder, SubmissionVoider $voider, User $eo, CampaignLocation $location, Carbon $day, int $entries): void
+    {
+        // Booth hours 10:00-18:00.
+        $submissions = $this->recordEntries($recorder, $location, $day->copy()->setTime(10, 0), $day->copy()->setTime(18, 0), $entries);
 
         // About 1 in 20 entries is voided by the EO, as happens with real duplicates.
         foreach ($submissions as $submission) {
@@ -215,17 +157,15 @@ class DatabaseSeeder extends Seeder
             }
         }
         Carbon::setTestNow();
-
-        $assignment->update(['status' => AssignmentStatus::Done]);
     }
 
     /**
      * Records entries through the real SubmissionRecorder (qualification, dashboard values, form lock)
-     * by moving "now" to each entry's time inside the shift.
+     * by moving "now" to each entry's time inside the booth hours.
      *
      * @return array<int, FormSubmission>
      */
-    private function recordEntries(SubmissionRecorder $recorder, Assignment $assignment, User $spg, Carbon $from, Carbon $to, int $count): array
+    private function recordEntries(SubmissionRecorder $recorder, CampaignLocation $location, Carbon $from, Carbon $to, int $count): array
     {
         $times = collect(range(1, $count))
             ->map(fn () => $from->copy()->addSeconds(mt_rand(60, max(61, $from->diffInSeconds($to) - 60))))
@@ -235,7 +175,7 @@ class DatabaseSeeder extends Seeder
         $submissions = [];
         foreach ($times as $time) {
             Carbon::setTestNow($time);
-            $submissions[] = $recorder->record($assignment, $spg, $this->answers(), true);
+            $submissions[] = $recorder->record($location, $this->answers(), true);
         }
         Carbon::setTestNow();
 

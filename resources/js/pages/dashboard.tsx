@@ -4,16 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
-import { label } from '@/lib/format';
 import { Head, router } from '@inertiajs/react';
 import { FormEvent } from 'react';
 
 interface Summary {
     totals: { submissions: number; voided: number; qualified: number; campaigns: number };
-    assignments: { scheduled: number; active: number; done: number; cancelled: number };
+    links: { open: number; total: number };
     per_day: { day: string; total: number }[];
     per_location: { label: string; total: number }[];
-    per_spg: { label: string; total: number }[];
     custom_fields: {
         key: string;
         label: string;
@@ -36,13 +34,11 @@ export default function Dashboard({
     filters,
     campaigns,
     locations,
-    spgs,
 }: {
     summary: Summary;
     filters: Record<string, string>;
     campaigns: Option[];
     locations: Option[];
-    spgs: Option[];
 }) {
     const apply = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -86,19 +82,6 @@ export default function Dashboard({
                         ))}
                     </select>
                 </div>
-                {spgs.length > 0 && (
-                    <div>
-                        <Label>SPG</Label>
-                        <select name="spg_id" defaultValue={filters.spg_id ?? ''} className="border-input h-9 w-full rounded-md border px-2 text-sm">
-                            <option value="">All</option>
-                            {spgs.map((item) => (
-                                <option key={item.id} value={item.id}>
-                                    {item.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                )}
                 <div>
                     <Label>From</Label>
                     <Input type="date" name="from" defaultValue={filters.from ?? ''} />
@@ -122,20 +105,15 @@ export default function Dashboard({
             <div className="grid gap-4 md:grid-cols-2">
                 <BarCard title="Per day" rows={summary.per_day.map((row) => ({ label: formatDayLabel(row.day), total: row.total }))} />
                 <BarCard title="Per location" rows={summary.per_location} />
-                {summary.per_spg.length > 0 && <BarCard title="Per SPG" rows={summary.per_spg} />}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Assignment status</CardTitle>
+                        <CardTitle>Public links</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <dl className="grid grid-cols-2 gap-3 text-sm">
-                            {(['scheduled', 'active', 'done', 'cancelled'] as const).map((status) => (
-                                <div key={status} className="rounded-md border p-3">
-                                    <dt className="text-muted-foreground">{label('assignmentStatus', status)}</dt>
-                                    <dd className="text-2xl font-semibold">{summary.assignments[status]}</dd>
-                                </div>
-                            ))}
-                        </dl>
+                    <CardContent className="space-y-1">
+                        <div className="text-3xl font-semibold">
+                            {summary.links.open} <span className="text-muted-foreground text-base font-normal">of {summary.links.total} open</span>
+                        </div>
+                        <p className="text-muted-foreground text-sm">Locations whose link accepts responses right now.</p>
                     </CardContent>
                 </Card>
             </div>
