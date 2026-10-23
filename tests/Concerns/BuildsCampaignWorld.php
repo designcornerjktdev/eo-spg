@@ -7,9 +7,7 @@ use App\Enums\CampaignStatus;
 use App\Enums\FormStatus;
 use App\Models\Campaign;
 use App\Models\CampaignLocation;
-use App\Models\Client;
 use App\Models\FormTemplate;
-use App\Models\Product;
 use App\Models\User;
 use Illuminate\Testing\TestResponse;
 
@@ -18,11 +16,8 @@ trait BuildsCampaignWorld
     /**
      * @return array{
      *     eo: User,
-     *     clientA: Client,
-     *     clientB: Client,
      *     userA: User,
      *     userB: User,
-     *     product: Product,
      *     campaign: Campaign,
      *     otherCampaign: Campaign,
      *     location: CampaignLocation,
@@ -33,25 +28,22 @@ trait BuildsCampaignWorld
     protected function world(): array
     {
         $eo = User::factory()->superadmin()->create();
-        $clientA = Client::factory()->create(['name' => 'Mayora']);
-        $clientB = Client::factory()->create(['name' => 'IMOBY']);
-        $userA = User::factory()->clientUser($clientA)->create();
-        $userB = User::factory()->clientUser($clientB)->create();
+        // userA may view the Mayora campaign only, userB the IMOBY campaign only.
+        $userA = User::factory()->clientUser()->create();
+        $userB = User::factory()->clientUser()->create();
 
-        $product = Product::factory()->create(['client_id' => $clientA->id, 'name' => 'Kopi Lepas Haus']);
         $campaign = Campaign::factory()->create([
-            'client_id' => $clientA->id,
             'name' => 'Sampling Kopi Lepas Haus',
             'status' => CampaignStatus::Active,
             'mask_identity_for_client' => true,
         ]);
-        $campaign->products()->attach($product);
+        $campaign->viewers()->attach($userA);
 
         $otherCampaign = Campaign::factory()->create([
-            'client_id' => $clientB->id,
             'name' => 'Campaign IMOBY',
             'status' => CampaignStatus::Active,
         ]);
+        $otherCampaign->viewers()->attach($userB);
 
         $location = CampaignLocation::factory()->create([
             'campaign_id' => $campaign->id,
@@ -73,6 +65,19 @@ trait BuildsCampaignWorld
             $form->fields()->create($field);
         }
 
+        // The other campaign gets its own published form so its public link is open too.
+        $otherForm = FormTemplate::factory()->create([
+            'campaign_id' => $otherCampaign->id,
+            'name' => 'Form IMOBY',
+            'status' => FormStatus::Published,
+            'requires_consent' => true,
+            'consent_text' => 'I agree my data may be used for this campaign.',
+        ]);
+
+        foreach (MayoraFormDefinition::fields() as $field) {
+            $otherForm->fields()->create($field);
+        }
+
         // A location of the other client's campaign, to check that entries never cross clients.
         $otherLocation = CampaignLocation::factory()->create([
             'campaign_id' => $otherCampaign->id,
@@ -82,11 +87,8 @@ trait BuildsCampaignWorld
 
         return compact(
             'eo',
-            'clientA',
-            'clientB',
             'userA',
             'userB',
-            'product',
             'campaign',
             'otherCampaign',
             'location',

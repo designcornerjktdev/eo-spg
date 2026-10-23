@@ -1,3 +1,4 @@
+import CampaignAccessPicker, { type CampaignOption } from '@/components/campaign-access-picker';
 import FormPage from '@/components/form-page';
 import InputError from '@/components/input-error';
 import PageHeader from '@/components/page-header';
@@ -9,13 +10,13 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
 
-export default function UserCreate({ clients }: { clients: { id: number; name: string }[] }) {
+export default function UserCreate({ campaigns }: { campaigns: CampaignOption[] }) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         username: '',
         password: '',
         role: 'client',
-        client_id: '',
+        campaign_ids: [] as number[],
     });
 
     const submit = (event: FormEvent) => {
@@ -55,22 +56,12 @@ export default function UserCreate({ clients }: { clients: { id: number; name: s
                         <PasswordInput value={data.password} onChange={(e) => setData('password', e.target.value)} />
                         <InputError message={errors.password} />
                     </div>
-                    <div className="grid gap-2">
-                        <Label>Client</Label>
-                        <select
-                            className="border-input h-9 rounded-md border px-2"
-                            value={data.client_id}
-                            onChange={(e) => setData('client_id', e.target.value)}
-                        >
-                            <option value="">Select a client</option>
-                            {clients.map((client) => (
-                                <option key={client.id} value={client.id}>
-                                    {client.name}
-                                </option>
-                            ))}
-                        </select>
-                        <InputError message={errors.client_id} />
-                    </div>
+                    <CampaignAccessPicker
+                        campaigns={campaigns}
+                        value={data.campaign_ids}
+                        onChange={(ids) => setData('campaign_ids', ids)}
+                        error={errors.campaign_ids}
+                    />
                     <Button disabled={processing}>Save</Button>
                 </form>
             </FormPage>

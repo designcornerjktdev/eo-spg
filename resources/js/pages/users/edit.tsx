@@ -1,3 +1,4 @@
+import CampaignAccessPicker, { type CampaignOption } from '@/components/campaign-access-picker';
 import DangerZone from '@/components/danger-zone';
 import FormPage from '@/components/form-page';
 import InputError from '@/components/input-error';
@@ -15,15 +16,15 @@ interface EditableUser {
     name: string;
     username: string | null;
     role: 'client';
-    client_id: number | null;
+    campaign_ids: number[];
     is_active: boolean;
 }
 
-export default function UserEdit({ user, clients }: { user: EditableUser; clients: { id: number; name: string }[] }) {
+export default function UserEdit({ user, campaigns }: { user: EditableUser; campaigns: CampaignOption[] }) {
     const { data, setData, put, processing, errors } = useForm({
         name: user.name,
         username: user.username ?? '',
-        client_id: user.client_id ? String(user.client_id) : '',
+        campaign_ids: user.campaign_ids,
         is_active: user.is_active,
     });
 
@@ -60,25 +61,12 @@ export default function UserEdit({ user, clients }: { user: EditableUser; client
                         <p className="text-muted-foreground text-xs">Changing the username means this account must sign in with the new one.</p>
                         <InputError message={errors.username} />
                     </div>
-                    {user.role === 'client' && (
-                        <div className="grid gap-2">
-                            <Label htmlFor="client">Client</Label>
-                            <select
-                                id="client"
-                                className="border-input bg-background h-9 rounded-md border px-2"
-                                value={data.client_id}
-                                onChange={(e) => setData('client_id', e.target.value)}
-                            >
-                                <option value="">Select a client</option>
-                                {clients.map((client) => (
-                                    <option key={client.id} value={client.id}>
-                                        {client.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <InputError message={errors.client_id} />
-                        </div>
-                    )}
+                    <CampaignAccessPicker
+                        campaigns={campaigns}
+                        value={data.campaign_ids}
+                        onChange={(ids) => setData('campaign_ids', ids)}
+                        error={errors.campaign_ids}
+                    />
                     <label className="flex items-start gap-2 text-sm">
                         <Checkbox checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked === true)} />
                         <span>

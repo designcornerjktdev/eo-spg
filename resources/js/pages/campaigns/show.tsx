@@ -15,8 +15,7 @@ interface CampaignShow {
     starts_on: string;
     ends_on: string;
     mask_identity_for_client: boolean;
-    client: { name: string };
-    products: { id: number; name: string }[];
+    viewers: { id: number; name: string; username: string | null }[];
     locations: (LinkLocation & { address: string | null; latitude: number | null; longitude: number | null })[];
     form_templates: { id: number; name: string; version: number; status: string }[];
 }
@@ -34,10 +33,7 @@ export default function CampaignShow({ campaign, accepting }: { campaign: Campai
             <Head title={campaign.name} />
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="space-y-2">
-                    <PageHeader
-                        title={campaign.name}
-                        description={`${campaign.client.name} · ${formatDateRange(campaign.starts_on, campaign.ends_on)}`}
-                    />
+                    <PageHeader title={campaign.name} description={formatDateRange(campaign.starts_on, campaign.ends_on)} />
                     <Badge variant={campaign.status === 'active' ? 'default' : 'secondary'}>{label('campaignStatus', campaign.status)}</Badge>
                 </div>
                 {canEdit && (
@@ -62,7 +58,7 @@ export default function CampaignShow({ campaign, accepting }: { campaign: Campai
             <div className="grid gap-4 md:grid-cols-2">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Products & locations</CardTitle>
+                        <CardTitle>Details</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
@@ -70,8 +66,15 @@ export default function CampaignShow({ campaign, accepting }: { campaign: Campai
                             <dd>{formatDateRange(campaign.starts_on, campaign.ends_on)}</dd>
                             <dt className="text-muted-foreground">Identity masking</dt>
                             <dd>{campaign.mask_identity_for_client ? 'Yes, consumer identity is masked for the client' : 'No'}</dd>
-                            <dt className="text-muted-foreground">Products</dt>
-                            <dd>{campaign.products.map((product) => product.name).join(', ') || '-'}</dd>
+                            <dt className="text-muted-foreground">Client access</dt>
+                            <dd>
+                                {campaign.viewers.length === 0 ? 'No client accounts yet' : campaign.viewers.map((viewer) => viewer.name).join(', ')}
+                                {canEdit && (
+                                    <Link href={route('users.index')} className="ml-2 underline">
+                                        Manage
+                                    </Link>
+                                )}
+                            </dd>
                             <dt className="text-muted-foreground">Location</dt>
                             <dd className="space-y-1">
                                 {campaign.locations.length === 0 && '-'}

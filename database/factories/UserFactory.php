@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Enums\UserRole;
-use App\Models\Client;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -25,7 +24,6 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
             'role' => UserRole::Superadmin,
-            'client_id' => null,
             'is_active' => true,
         ];
     }
@@ -41,15 +39,13 @@ class UserFactory extends Factory
     {
         return $this->state(fn () => [
             'role' => UserRole::Superadmin,
-            'client_id' => null,
         ]);
     }
 
-    public function clientUser(?Client $client = null): static
+    public function clientUser(): static
     {
         return $this->state(fn () => [
             'role' => UserRole::Client,
-            'client_id' => $client?->id ?? Client::factory(),
             'username' => fake()->unique()->userName(),
             'email' => null,
         ]);

@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavGroup, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { Building2, FileSpreadsheet, LayoutGrid, ListChecks, MapPin, Package, ScrollText, Users } from 'lucide-react';
+import { FileSpreadsheet, LayoutGrid, ListChecks, MapPin, ScrollText, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
 // Group order follows the EO workflow: set up the campaign -> collect results -> manage access.
@@ -12,8 +12,6 @@ const eoNav: NavGroup[] = [
     {
         title: 'Campaign setup',
         items: [
-            { title: 'Client', url: '/clients', icon: Building2 },
-            { title: 'Products', url: '/products', icon: Package },
             { title: 'Campaign', url: '/campaigns', icon: MapPin },
             { title: 'Form', url: '/forms', icon: FileSpreadsheet },
         ],
@@ -36,7 +34,6 @@ const clientNav: NavGroup[] = [
         title: 'Menu',
         items: [
             { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
-            { title: 'Campaign', url: '/campaigns', icon: MapPin },
             { title: 'Entries', url: '/submissions', icon: ListChecks },
         ],
     },

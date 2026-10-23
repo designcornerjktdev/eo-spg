@@ -61,7 +61,7 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * The superadmin (EO) can only sign in with email; clients & SPGs only with a username.
+     * The superadmin (EO) can only sign in with email; clients only with a username.
      */
     private function findUser(): ?User
     {

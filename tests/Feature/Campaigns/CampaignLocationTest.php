@@ -15,11 +15,9 @@ class CampaignLocationTest extends TestCase
     private function payload(array $world, array $locations): array
     {
         return [
-            'client_id' => $world['clientA']->id,
             'name' => $world['campaign']->name,
             'starts_on' => $world['campaign']->starts_on->toDateString(),
             'ends_on' => $world['campaign']->ends_on->toDateString(),
-            'product_ids' => [$world['product']->id],
             'locations' => $locations,
         ];
     }

@@ -20,7 +20,7 @@ interface Row {
     username: string | null;
     role: string;
     is_active: boolean;
-    client?: { name: string } | null;
+    campaigns: { id: number; name: string }[];
 }
 
 interface Filters {
@@ -81,7 +81,7 @@ export default function UsersIndex({
                         <tr>
                             <th className="px-3 py-2 text-left">Name</th>
                             <th className="px-3 py-2 text-left">Username</th>
-                            <th className="px-3 py-2 text-left">Client</th>
+                            <th className="px-3 py-2 text-left">Campaign access</th>
                             <th className="px-3 py-2 text-left">Status</th>
                             <th className="px-3 py-2 text-left">Actions</th>
                         </tr>
@@ -91,7 +91,13 @@ export default function UsersIndex({
                             <tr key={user.id} className={cn('border-t', !user.is_active && 'text-muted-foreground')}>
                                 <td className="px-3 py-2">{user.name}</td>
                                 <td className="px-3 py-2 font-mono">{user.username ?? '-'}</td>
-                                <td className="px-3 py-2">{user.client?.name ?? '-'}</td>
+                                <td className="max-w-72 truncate px-3 py-2" title={user.campaigns.map((c) => c.name).join(', ')}>
+                                    {user.campaigns.length ? (
+                                        user.campaigns.map((c) => c.name).join(', ')
+                                    ) : (
+                                        <span className="text-muted-foreground">None</span>
+                                    )}
+                                </td>
                                 <td className="px-3 py-2">
                                     {user.is_active ? <Badge variant="secondary">Active</Badge> : <Badge variant="outline">Inactive</Badge>}
                                 </td>

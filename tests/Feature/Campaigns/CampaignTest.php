@@ -16,11 +16,9 @@ class CampaignTest extends TestCase
         $world = $this->world();
 
         $this->actingAs($world['eo'])->post('/campaigns', [
-            'client_id' => $world['clientA']->id,
             'name' => 'Campaign Salah',
             'starts_on' => '2026-10-20',
             'ends_on' => '2026-10-19',
-            'product_ids' => [$world['product']->id],
             'locations' => [['name' => 'Mall', 'area' => 'Jakarta', 'address' => 'Jl. Sudirman']],
         ])->assertSessionHasErrors('ends_on');
     }
@@ -30,11 +28,9 @@ class CampaignTest extends TestCase
         $world = $this->world();
 
         $this->actingAs($world['eo'])->post('/campaigns', [
-            'client_id' => $world['clientA']->id,
             'name' => 'Campaign Baru',
             'starts_on' => '2026-10-20',
             'ends_on' => '2026-10-25',
-            'product_ids' => [$world['product']->id],
             'locations' => [['name' => 'Mall', 'area' => 'Jakarta', 'address' => 'Jl. Sudirman']],
         ])->assertRedirect();
 

@@ -20,7 +20,7 @@ class RoleAccessTest extends TestCase
         $eo = User::factory()->superadmin()->create();
 
         $this->actingAs($eo)->get('/dashboard')->assertOk();
-        $this->actingAs($eo)->get('/clients')->assertOk();
+        $this->actingAs($eo)->get('/campaigns')->assertOk();
         $this->actingAs($eo)->get('/audit')->assertOk();
     }
 
@@ -31,13 +31,14 @@ class RoleAccessTest extends TestCase
         $this->actingAs($client)->get('/audit')->assertForbidden();
         $this->actingAs($client)->get('/users')->assertForbidden();
         $this->actingAs($client)->get('/forms')->assertForbidden();
+        $this->actingAs($client)->get('/campaigns')->assertForbidden();
     }
 
-    public function test_spg_pages_no_longer_exist(): void
+    public function test_removed_pages_no_longer_exist(): void
     {
         $eo = User::factory()->superadmin()->create();
 
-        foreach (['/tasks', '/assignments', '/assignments/create'] as $url) {
+        foreach (['/tasks', '/assignments', '/clients', '/products'] as $url) {
             $this->actingAs($eo)->get($url)->assertNotFound();
         }
     }

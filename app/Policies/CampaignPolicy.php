@@ -19,7 +19,7 @@ class CampaignPolicy
         }
 
         if ($user->isClient()) {
-            return $user->client_id === $campaign->client_id;
+            return $user->canViewCampaign($campaign->id);
         }
 
         return false;

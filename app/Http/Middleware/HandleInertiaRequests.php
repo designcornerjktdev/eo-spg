@@ -52,7 +52,6 @@ class HandleInertiaRequests extends Middleware
                     'username' => $user->username,
                     'email' => $user->email,
                     'role' => $user->role->value,
-                    'client_id' => $user->client_id,
                     'home' => $user->homeRoute(),
                 ] : null,
             ],

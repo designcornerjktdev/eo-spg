@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Users;
 
-use App\Enums\UserRole;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -28,7 +27,8 @@ class UpdateUserRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:50', 'regex:/^[a-z0-9._-]+$/', Rule::unique('users', 'username')->ignore($target->id)],
             'is_active' => ['required', 'boolean'],
-            'client_id' => [Rule::requiredIf($target->role === UserRole::Client), 'nullable', 'exists:clients,id'],
+            'campaign_ids' => ['array'],
+            'campaign_ids.*' => ['integer', 'exists:campaigns,id'],
         ];
     }
 }

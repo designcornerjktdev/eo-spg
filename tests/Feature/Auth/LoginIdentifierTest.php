@@ -3,7 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\AuditLog;
-use App\Models\Client;
+use App\Models\Campaign;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -88,17 +88,18 @@ class LoginIdentifierTest extends TestCase
     {
         $eo = User::factory()->superadmin()->create();
 
-        $company = Client::factory()->create();
+        $campaign = Campaign::factory()->create();
 
         $this->actingAs($eo)->post('/users', [
             'name' => 'New Client',
             'username' => 'client.new',
             'password' => 'password',
             'role' => 'client',
-            'client_id' => $company->id,
+            'campaign_ids' => [$campaign->id],
         ])->assertSessionHasNoErrors();
 
         $this->post('/logout');
         $this->post('/login', ['login' => 'client.new', 'password' => 'password'])->assertRedirect('/dashboard');
+        $this->assertTrue(User::query()->where('username', 'client.new')->sole()->canViewCampaign($campaign->id));
     }
 }

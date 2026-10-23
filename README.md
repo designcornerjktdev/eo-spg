@@ -1,6 +1,6 @@
 # EO Campaign
 
-Aplikasi manajemen campaign EO: EO membuat form per campaign, konsumen mengisinya lewat link/QR publik per lokasi (tanpa login), dan client melihat hasil campaign-nya sendiri. Lihat `docs/adr/004-public-location-forms.md`.
+Aplikasi manajemen campaign EO: EO membuat form per campaign, konsumen mengisinya lewat link/QR publik per lokasi (tanpa login), dan akun client hanya bisa membaca dashboard serta entri dari campaign yang diberikan EO. Lihat `docs/adr/004-public-location-forms.md` dan `docs/adr/005-client-accounts-with-campaign-access.md`.
 
 ## Stack
 
@@ -10,7 +10,7 @@ Development memakai SQLite. PostgreSQL diutamakan untuk production; MySQL jika s
 
 ## Akun demo (`php artisan db:seed`)
 
-EO (superadmin) login dengan email dan bisa reset password sendiri. Client login dengan username; jika lupa password, EO meresetnya dari menu Users. Link form publik ada di halaman detail campaign (bagian **Public form links**).
+EO (superadmin) login dengan email dan bisa reset password sendiri. Client login dengan username dan hanya melihat campaign yang dicentang EO di menu **Users**; jika lupa password, EO meresetnya dari menu yang sama. Link form publik ada di halaman detail campaign (bagian **Public form links**).
 
 | Role | Login | Password |
 | --- | --- | --- |

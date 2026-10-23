@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use App\Enums\CampaignStatus;
 use App\Models\Campaign;
-use App\Models\Client;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +16,6 @@ class CampaignFactory extends Factory
         $start = now()->toDateString();
 
         return [
-            'client_id' => Client::factory(),
             'name' => fake()->words(3, true),
             'starts_on' => $start,
             'ends_on' => now()->addDays(7)->toDateString(),

@@ -34,7 +34,7 @@ class UserManagementTest extends TestCase
             'name' => 'New Name',
             'username' => 'newname',
             'is_active' => false,
-            'client_id' => $account->client_id,
+            'campaign_ids' => [],
         ])->assertSessionHasNoErrors()->assertRedirect('/users');
 
         $account->refresh();

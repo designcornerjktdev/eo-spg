@@ -74,7 +74,7 @@ class FormSubmission extends Model
         }
 
         if ($user->isClient()) {
-            return $query->whereHas('campaign', fn (Builder $campaigns) => $campaigns->where('client_id', $user->client_id));
+            return $query->whereHas('campaign', fn (Builder $campaigns) => $campaigns->visibleTo($user));
         }
 
         return $query->whereRaw('1 = 0');

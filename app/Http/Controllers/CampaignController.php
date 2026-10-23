@@ -6,8 +6,6 @@ use App\Domain\Audit\Services\AuditLogger;
 use App\Enums\CampaignStatus;
 use App\Http\Requests\Campaigns\CampaignRequest;
 use App\Models\Campaign;
-use App\Models\Client;
-use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,16 +22,14 @@ class CampaignController extends Controller
         $filters = [
             'search' => $request->string('search')->trim()->value(),
             'status' => in_array($request->query('status'), array_column(CampaignStatus::cases(), 'value'), true) ? $request->query('status') : null,
-            'client_id' => $request->integer('client_id') ?: null,
         ];
 
         $campaigns = Campaign::query()
             ->visibleTo($request->user())
-            ->with('client')
+            ->withCount('viewers')
             ->withCount(['locations', 'submissions'])
             ->when($filters['search'] !== '', fn ($query) => $query->where('name', 'like', '%'.$filters['search'].'%'))
             ->when($filters['status'], fn ($query, $status) => $query->where('status', $status))
-            ->when($filters['client_id'] && $request->user()->isSuperadmin(), fn ($query) => $query->where('client_id', $filters['client_id']))
             ->latest()
             ->paginate(15)
             ->withQueryString();
@@ -41,7 +37,6 @@ class CampaignController extends Controller
         return Inertia::render('campaigns/index', [
             'campaigns' => $campaigns,
             'filters' => $filters,
-            'clients' => $request->user()->isSuperadmin() ? Client::query()->orderBy('name')->get(['id', 'name']) : [],
         ]);
     }
 
@@ -49,24 +44,20 @@ class CampaignController extends Controller
     {
         $this->authorize('create', Campaign::class);
 
-        return Inertia::render('campaigns/create', [
-            'clients' => Client::query()->orderBy('name')->get(['id', 'name']),
-            'products' => Product::query()->orderBy('name')->get(['id', 'name', 'client_id']),
-        ]);
+        return Inertia::render('campaigns/create');
     }
 
     public function store(CampaignRequest $request, AuditLogger $audit): RedirectResponse
     {
         $campaign = DB::transaction(function () use ($request, $audit) {
             $campaign = Campaign::query()->create([
-                ...$request->safe()->only(['client_id', 'name', 'starts_on', 'ends_on', 'notes']),
+                ...$request->safe()->only(['name', 'starts_on', 'ends_on', 'notes']),
                 'mask_identity_for_client' => $request->boolean('mask_identity_for_client', true),
                 'status' => CampaignStatus::Draft,
             ]);
 
-            $campaign->products()->sync($request->input('product_ids', []));
             $this->syncLocations($campaign, $request->input('locations', []));
-            $audit->record($request->user(), 'campaign.created', $campaign, null, $campaign->only(['name', 'client_id', 'starts_on', 'ends_on']));
+            $audit->record($request->user(), 'campaign.created', $campaign, null, $campaign->only(['name', 'starts_on', 'ends_on']));
 
             return $campaign;
         });
@@ -78,7 +69,7 @@ class CampaignController extends Controller
     {
         $this->authorize('view', $campaign);
 
-        $campaign->load(['client', 'products', 'formTemplates.fields'])->load(['locations' => fn ($query) => $query->withCount(['submissions' => fn ($submissions) => $submissions->where('status', 'submitted')])]);
+        $campaign->load(['formTemplates.fields', 'viewers:id,name,username'])->load(['locations' => fn ($query) => $query->withCount(['submissions' => fn ($submissions) => $submissions->where('status', 'submitted')])]);
 
         return Inertia::render('campaigns/show', [
             'campaign' => $campaign,
@@ -90,12 +81,10 @@ class CampaignController extends Controller
     {
         $this->authorize('update', $campaign);
 
-        $campaign->load(['products', 'locations']);
+        $campaign->load('locations');
 
         return Inertia::render('campaigns/edit', [
             'campaign' => $campaign,
-            'clients' => Client::query()->orderBy('name')->get(['id', 'name']),
-            'products' => Product::query()->orderBy('name')->get(['id', 'name', 'client_id']),
             'deleteBlocker' => $this->deleteBlocker($campaign),
         ]);
     }
@@ -106,10 +95,9 @@ class CampaignController extends Controller
 
         DB::transaction(function () use ($request, $campaign) {
             $campaign->update([
-                ...$request->safe()->only(['client_id', 'name', 'starts_on', 'ends_on', 'notes']),
+                ...$request->safe()->only(['name', 'starts_on', 'ends_on', 'notes']),
                 'mask_identity_for_client' => $request->boolean('mask_identity_for_client', true),
             ]);
-            $campaign->products()->sync($request->input('product_ids', []));
             $this->syncLocations($campaign, $request->input('locations', []));
         });
 
@@ -148,7 +136,7 @@ class CampaignController extends Controller
             throw ValidationException::withMessages(['campaign' => $blocker]);
         }
 
-        $audit->record($request->user(), 'campaign.deleted', $campaign, $campaign->only(['name', 'client_id', 'status']));
+        $audit->record($request->user(), 'campaign.deleted', $campaign, $campaign->only(['name', 'status']));
         $campaign->delete();
 
         return redirect()->route('campaigns.index')->with('success', 'Campaign '.$campaign->name.' deleted.');

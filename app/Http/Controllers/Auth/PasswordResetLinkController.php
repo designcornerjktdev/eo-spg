@@ -34,7 +34,7 @@ class PasswordResetLinkController extends Controller
             'email' => 'required|email',
         ]);
 
-        // Self-service reset is only for EO (superadmin) accounts; clients & SPGs ask an admin to reset.
+        // Self-service reset is only for EO (superadmin) accounts; clients ask an admin to reset.
         Password::sendResetLink([
             ...$request->only('email'),
             'role' => UserRole::Superadmin->value,

@@ -41,7 +41,6 @@ export interface User {
     email: string | null;
     username?: string | null;
     role?: 'superadmin' | 'client';
-    client_id?: number | null;
     home?: string;
     avatar?: string;
     email_verified_at: string | null;

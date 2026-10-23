@@ -15,9 +15,8 @@ class UserStoriesAccessTest extends TestCase
     {
         $world = $this->world();
 
-        $this->actingAs($world['eo'])->get('/clients/'.$world['clientA']->id)->assertOk();
-        $this->actingAs($world['userA'])->get('/products')->assertOk()->assertSee('Kopi Lepas Haus');
-        $this->actingAs($world['userB'])->get('/products')->assertOk()->assertDontSee('Kopi Lepas Haus');
+        $this->actingAs($world['eo'])->get('/campaigns/'.$world['campaign']->id)->assertOk();
+        $this->actingAs($world['userA'])->get('/campaigns/'.$world['campaign']->id)->assertForbidden();
 
         // A consumer opens the location link without logging in and submits an entry.
         $this->get('/f/'.$world['location']->public_token)->assertOk()->assertSee('Sampling Kopi Lepas Haus');

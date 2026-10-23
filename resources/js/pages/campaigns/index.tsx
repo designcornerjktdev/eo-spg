@@ -15,7 +15,7 @@ interface CampaignRow {
     status: string;
     starts_on: string;
     ends_on: string;
-    client: { name: string };
+    viewers_count: number;
     locations_count: number;
     submissions_count: number;
 }
@@ -23,11 +23,9 @@ interface CampaignRow {
 export default function CampaignsIndex({
     campaigns,
     filters,
-    clients,
 }: {
     campaigns: { data: CampaignRow[]; links: { url: string | null; label: string; active: boolean }[] };
-    filters: { search?: string; status?: string | null; client_id?: number | null };
-    clients: { id: number; name: string }[];
+    filters: { search?: string; status?: string | null };
 }) {
     const canEdit = usePage<SharedData>().props.auth.user?.role === 'superadmin';
 
@@ -43,17 +41,14 @@ export default function CampaignsIndex({
                 url={route('campaigns.index')}
                 filters={filters}
                 searchPlaceholder="Search campaign name"
-                selects={[
-                    { name: 'status', label: 'All statuses', options: labelOptions('campaignStatus') },
-                    ...(canEdit ? [{ name: 'client_id', label: 'All clients', options: clients.map((c) => ({ value: c.id, label: c.name })) }] : []),
-                ]}
+                selects={[{ name: 'status', label: 'All statuses', options: labelOptions('campaignStatus') }]}
             />
             <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full text-sm">
                     <thead className="bg-muted/50">
                         <tr>
                             <th className="px-3 py-2 text-left">Name</th>
-                            <th className="px-3 py-2 text-left">Client</th>
+                            <th className="px-3 py-2 text-left">Client access</th>
                             <th className="px-3 py-2 text-left">Period</th>
                             <th className="px-3 py-2 text-left">Status</th>
                             <th className="px-3 py-2 text-left">Location</th>
@@ -65,7 +60,7 @@ export default function CampaignsIndex({
                         {campaigns.data.map((campaign) => (
                             <tr key={campaign.id} className="border-t">
                                 <td className="px-3 py-2">{campaign.name}</td>
-                                <td className="px-3 py-2">{campaign.client.name}</td>
+                                <td className="px-3 py-2">{campaign.viewers_count === 1 ? '1 account' : `${campaign.viewers_count} accounts`}</td>
                                 <td className="px-3 py-2 whitespace-nowrap">{formatDateRange(campaign.starts_on, campaign.ends_on)}</td>
                                 <td className="px-3 py-2">
                                     <Badge variant={campaign.status === 'active' ? 'default' : 'secondary'}>

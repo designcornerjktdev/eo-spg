@@ -2,10 +2,8 @@
 
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\CampaignController;
-use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FormTemplateController;
-use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PublicFormController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\UserController;
@@ -27,20 +25,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     Route::middleware('role:superadmin,client')->group(function () {
-        Route::get('clients', [ClientController::class, 'index'])->name('clients.index');
-        Route::get('clients/{client}', [ClientController::class, 'show'])->whereNumber('client')->name('clients.show');
-        Route::get('products', [ProductController::class, 'index'])->name('products.index');
-        Route::get('campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
-        Route::get('campaigns/{campaign}', [CampaignController::class, 'show'])->whereNumber('campaign')->name('campaigns.show');
         Route::get('submissions', [SubmissionController::class, 'index'])->name('submissions.index');
         Route::get('submissions/export', [SubmissionController::class, 'export'])->name('submissions.export');
         Route::get('submissions/{submission}', [SubmissionController::class, 'show'])->whereNumber('submission')->name('submissions.show');
     });
 
     Route::middleware('role:superadmin')->group(function () {
-        Route::resource('clients', ClientController::class)->except(['index', 'show']);
-        Route::resource('products', ProductController::class)->except(['index', 'show']);
-        Route::resource('campaigns', CampaignController::class)->except(['index', 'show']);
+        // Campaign management (incl. public links) is EO-only; clients see results via dashboard & entries.
+        Route::resource('campaigns', CampaignController::class);
         Route::post('campaigns/{campaign}/activate', [CampaignController::class, 'activate'])->name('campaigns.activate');
         Route::post('campaigns/{campaign}/close', [CampaignController::class, 'close'])->name('campaigns.close');
 

@@ -9,10 +9,8 @@ use App\Enums\CampaignStatus;
 use App\Enums\FormStatus;
 use App\Models\Campaign;
 use App\Models\CampaignLocation;
-use App\Models\Client;
 use App\Models\FormSubmission;
 use App\Models\FormTemplate;
-use App\Models\Product;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
@@ -35,28 +33,12 @@ class DatabaseSeeder extends Seeder
             'email' => 'eo@eo.test',
         ]);
 
-        $mayora = Client::query()->create([
-            'name' => 'Mayora',
-            'code' => 'MAYORA',
-            'notes' => 'Sample client for the Kopi Lepas Haus sampling form.',
-        ]);
-
-        $imoby = Client::query()->create([
-            'name' => 'IMOBY',
-            'code' => 'IMOBY',
-            'notes' => 'Second client for data isolation testing.',
-        ]);
-
-        User::factory()->clientUser($mayora)->create(['name' => 'Client Mayora', 'username' => 'mayora']);
-        User::factory()->clientUser($imoby)->create(['name' => 'Client IMOBY', 'username' => 'imoby']);
-
-        $kopi = Product::query()->create(['client_id' => $mayora->id, 'name' => 'Kopi Lepas Haus', 'sku' => 'KLH-01']);
-        $imobyCore = Product::query()->create(['client_id' => $imoby->id, 'name' => 'IMOBY Core', 'sku' => 'IMB-01']);
+        // Client accounts are read-only and only see the campaigns they are granted below.
+        $mayora = User::factory()->clientUser()->create(['name' => 'Client Mayora', 'username' => 'mayora']);
+        $imoby = User::factory()->clientUser()->create(['name' => 'Client IMOBY', 'username' => 'imoby']);
 
         // Mayora: three Jakarta/Bandung locations, running for two weeks already.
-        [, , $mayoraLocations] = $this->campaign(
-            $mayora,
-            $kopi,
+        [$mayoraCampaign, , $mayoraLocations] = $this->campaign(
             'Sampling Kopi Lepas Haus',
             'Form Sampling Kopi Lepas Haus',
             [
@@ -66,15 +48,16 @@ class DatabaseSeeder extends Seeder
             ],
         );
 
-        // IMOBY: one Surabaya location, started a week ago — keeps client data isolation visible.
-        [, , $imobyLocations] = $this->campaign(
-            $imoby,
-            $imobyCore,
+        // IMOBY: one Surabaya location, started a week ago — a second client account keeps access isolation visible.
+        [$imobyCampaign, , $imobyLocations] = $this->campaign(
             'IMOBY Core Roadshow',
             'Form IMOBY Core Roadshow',
             [['Pakuwon Mall', 'Surabaya', 'Jl. Puncak Indah Lontar No.2', -7.2894, 112.6764]],
             startedDaysAgo: 6,
         );
+
+        $mayoraCampaign->viewers()->attach($mayora);
+        $imobyCampaign->viewers()->attach($imoby);
 
         $locations = [
             [$mayoraLocations[0], self::PAST_DAYS],
@@ -105,17 +88,15 @@ class DatabaseSeeder extends Seeder
      * @param  array<int, array{0: string, 1: string, 2: string, 3: float, 4: float}>  $locations
      * @return array{0: Campaign, 1: FormTemplate, 2: array<int, CampaignLocation>}
      */
-    private function campaign(Client $client, Product $product, string $name, string $formName, array $locations, int $startedDaysAgo = self::PAST_DAYS): array
+    private function campaign(string $name, string $formName, array $locations, int $startedDaysAgo = self::PAST_DAYS): array
     {
         $campaign = Campaign::query()->create([
-            'client_id' => $client->id,
             'name' => $name,
             'starts_on' => now()->subDays($startedDaysAgo)->toDateString(),
             'ends_on' => now()->addDays(14)->toDateString(),
             'status' => CampaignStatus::Active,
             'mask_identity_for_client' => true,
         ]);
-        $campaign->products()->attach($product);
 
         $models = collect($locations)->map(fn (array $location) => CampaignLocation::query()->create([
             'campaign_id' => $campaign->id,

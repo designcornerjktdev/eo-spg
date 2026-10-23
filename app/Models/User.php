@@ -6,7 +6,7 @@ use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -21,7 +21,6 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
-        'client_id',
         'is_active',
     ];
 
@@ -40,9 +39,17 @@ class User extends Authenticatable
         ];
     }
 
-    public function client(): BelongsTo
+    /**
+     * Campaigns a client account may view (read-only results).
+     */
+    public function campaigns(): BelongsToMany
     {
-        return $this->belongsTo(Client::class);
+        return $this->belongsToMany(Campaign::class)->withTimestamps();
+    }
+
+    public function canViewCampaign(int $campaignId): bool
+    {
+        return $this->isSuperadmin() || ($this->isClient() && $this->campaigns()->whereKey($campaignId)->exists());
     }
 
     public function isSuperadmin(): bool
@@ -64,10 +71,6 @@ class User extends Authenticatable
     {
         if ($user->isSuperadmin()) {
             return $query;
-        }
-
-        if ($user->isClient()) {
-            return $query->where('client_id', $user->client_id);
         }
 
         return $query->whereKey($user->id);

@@ -19,7 +19,7 @@ class FormSubmissionPolicy
         }
 
         if ($user->isClient()) {
-            return $user->client_id === $submission->campaign?->client_id;
+            return $user->canViewCampaign($submission->campaign_id);
         }
 
         return false;

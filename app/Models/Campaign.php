@@ -8,7 +8,6 @@ use Database\Factories\CampaignFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -19,7 +18,6 @@ class Campaign extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'client_id',
         'name',
         'starts_on',
         'ends_on',
@@ -38,14 +36,12 @@ class Campaign extends Model
         ];
     }
 
-    public function client(): BelongsTo
+    /**
+     * Client accounts that may view this campaign's results.
+     */
+    public function viewers(): BelongsToMany
     {
-        return $this->belongsTo(Client::class);
-    }
-
-    public function products(): BelongsToMany
-    {
-        return $this->belongsToMany(Product::class, 'campaign_products')->withTimestamps();
+        return $this->belongsToMany(User::class)->withTimestamps();
     }
 
     public function locations(): HasMany
@@ -70,7 +66,7 @@ class Campaign extends Model
         }
 
         if ($user->isClient()) {
-            return $query->where('client_id', $user->client_id);
+            return $query->whereHas('viewers', fn (Builder $viewers) => $viewers->whereKey($user->id));
         }
 
         return $query->whereRaw('1 = 0');
