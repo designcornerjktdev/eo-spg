@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+{{-- Public consumer forms always use the light theme, whatever the device or a signed-in user prefers. --}}
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @if (request()->routeIs('public-form.*')) data-force-theme="light" @endif>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">

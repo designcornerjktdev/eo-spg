@@ -4,8 +4,11 @@ export type Appearance = 'light' | 'dark' | 'system';
 
 const prefersDark = () => window.matchMedia('(prefers-color-scheme: dark)').matches;
 
+// Set server-side on pages that must stay light (public consumer forms).
+const forcedLight = () => document.documentElement.dataset.forceTheme === 'light';
+
 const applyTheme = (appearance: Appearance) => {
-    const isDark = appearance === 'dark' || (appearance === 'system' && prefersDark());
+    const isDark = !forcedLight() && (appearance === 'dark' || (appearance === 'system' && prefersDark()));
 
     document.documentElement.classList.toggle('dark', isDark);
 };

@@ -24,6 +24,15 @@ class PublicFormTest extends TestCase
         $this->assertNotSame($world['location']->public_token, $other->public_token);
     }
 
+    public function test_public_form_is_always_rendered_in_light_theme(): void
+    {
+        $world = $this->world();
+
+        $this->get('/f/'.$world['location']->public_token)->assertSee('data-force-theme="light"', false);
+        $this->get('/login')->assertDontSee('data-force-theme', false);
+        $this->actingAs($world['eo'])->get('/dashboard')->assertDontSee('data-force-theme', false);
+    }
+
     public function test_guest_can_open_link_and_submit_an_entry(): void
     {
         $world = $this->world();
