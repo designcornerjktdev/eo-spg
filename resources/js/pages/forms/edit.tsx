@@ -50,6 +50,9 @@ const emptyField = (): Field => ({
     max_value: null,
 });
 
+// Field types that get a dashboard chart (mirrors FieldType::canShowOnDashboard()).
+const DASHBOARD_TYPES = ['number', 'single_choice', 'multiple_choice'];
+
 export default function FormEdit({
     template,
     campaigns,
@@ -195,7 +198,13 @@ export default function FormEdit({
                                         className="border-input h-9 rounded-md border px-2"
                                         value={field.type}
                                         disabled={locked}
-                                        onChange={(e) => updateField(index, { type: e.target.value })}
+                                        onChange={(e) =>
+                                            updateField(index, {
+                                                type: e.target.value,
+                                                // Only number/choice fields can be charted; drop the flag for other types.
+                                                ...(DASHBOARD_TYPES.includes(e.target.value) ? {} : { show_on_dashboard: false }),
+                                            })
+                                        }
                                     >
                                         {fieldTypes.map((type) => (
                                             <option key={type.value} value={type.value}>
@@ -244,14 +253,17 @@ export default function FormEdit({
                                         />
                                         Identity
                                     </label>
-                                    <label className="flex items-center gap-2">
-                                        <Checkbox
-                                            checked={field.show_on_dashboard}
-                                            disabled={locked}
-                                            onCheckedChange={(checked) => updateField(index, { show_on_dashboard: checked === true })}
-                                        />
-                                        Dashboard
-                                    </label>
+                                    {/* Yes/No and free-text answers have no dashboard chart; Yes/No feeds qualification instead. */}
+                                    {DASHBOARD_TYPES.includes(field.type) && (
+                                        <label className="flex items-center gap-2">
+                                            <Checkbox
+                                                checked={field.show_on_dashboard}
+                                                disabled={locked}
+                                                onCheckedChange={(checked) => updateField(index, { show_on_dashboard: checked === true })}
+                                            />
+                                            Dashboard
+                                        </label>
+                                    )}
                                 </div>
                                 {!locked && data.fields.length > 1 && (
                                     <Button

@@ -1,4 +1,6 @@
+import FormPage from '@/components/form-page';
 import PageHeader from '@/components/page-header';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
@@ -38,49 +40,66 @@ export default function SubmissionShow({ submission }: { submission: Submission 
         <AppLayout
             breadcrumbs={[
                 { title: 'Entries', href: '/submissions' },
-                { title: `#${submission.id}`, href: '#' },
+                { title: `Entry #${submission.id}`, href: '#' },
             ]}
         >
-            <Head title={`Submission #${submission.id}`} />
-            <PageHeader
-                title={`Submission #${submission.id}`}
-                description={`${submission.campaign?.name} · ${label('submissionStatus', submission.status)}`}
-            />
-            <div className="grid gap-2 text-sm">
-                <div>Submitted at: {formatDateTime(submission.submitted_at)}</div>
-                <div>
-                    Location: {submission.location?.name} {submission.location?.area ? `(${submission.location.area})` : ''}
+            <Head title={`Entry #${submission.id}`} />
+            <FormPage>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                    <PageHeader title={`Entry #${submission.id}`} description={submission.campaign?.name ?? ''} />
+                    <Badge variant={submission.status === 'void' ? 'destructive' : 'secondary'}>{label('submissionStatus', submission.status)}</Badge>
                 </div>
-                <div>
-                    Location check:{' '}
-                    {submission.distance_meters === null
-                        ? 'not checked (location had no map point)'
-                        : `${submission.distance_meters} m from the location pin (GPS accuracy ±${submission.location_accuracy_meters ?? '?'} m)`}
+
+                {submission.void_reason && (
+                    <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
+                        Void reason: {submission.void_reason}
+                    </p>
+                )}
+
+                <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 rounded-xl border p-4 text-sm sm:p-6">
+                    <dt className="text-muted-foreground">Submitted at</dt>
+                    <dd>{formatDateTime(submission.submitted_at)}</dd>
+                    <dt className="text-muted-foreground">Location</dt>
+                    <dd>
+                        {submission.location?.name ?? '-'}
+                        {submission.location?.area ? ` (${submission.location.area})` : ''}
+                    </dd>
+                    <dt className="text-muted-foreground">Location check</dt>
+                    <dd>
+                        {submission.distance_meters === null
+                            ? 'Not checked (location had no map point)'
+                            : `${submission.distance_meters} m from the location pin (GPS accuracy ±${submission.location_accuracy_meters ?? '?'} m)`}
+                    </dd>
+                    <dt className="text-muted-foreground">Qualification</dt>
+                    <dd>{submission.qualified === null ? '-' : submission.qualified ? 'Qualified' : 'Not qualified'}</dd>
+                </dl>
+
+                <div className="overflow-hidden rounded-xl border">
+                    <table className="w-full text-sm">
+                        <tbody>
+                            {submission.fields.map((field, index) => (
+                                <tr key={field.key} className={index > 0 ? 'border-t' : undefined}>
+                                    <th className="bg-muted/40 w-2/5 px-4 py-2 text-left align-top font-medium">{field.label}</th>
+                                    <td className="px-4 py-2 break-words">{formatAnswer(submission.answers[field.key])}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
-                <div>Qualification: {submission.qualified === null ? '-' : submission.qualified ? 'Qualified' : 'Not qualified'}</div>
-            </div>
-            <div className="overflow-x-auto rounded-lg border">
-                <table className="w-full text-sm">
-                    <tbody>
-                        {submission.fields.map((field) => (
-                            <tr key={field.key} className="border-t">
-                                <th className="px-3 py-2 text-left font-medium">{field.label}</th>
-                                <td className="px-3 py-2">{formatAnswer(submission.answers[field.key])}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-            {submission.can_void && (
-                <form onSubmit={voidSubmit} className="grid max-w-lg gap-3 rounded-lg border p-4">
-                    <p className="text-sm">Voiding requires a reason and is recorded in the audit log. Data is never overwritten.</p>
-                    <Textarea value={data.void_reason} onChange={(e) => setData('void_reason', e.target.value)} placeholder="Void reason" />
-                    <Button variant="destructive" disabled={processing}>
-                        Void entry
-                    </Button>
-                </form>
-            )}
-            {submission.void_reason && <p className="text-muted-foreground text-sm">Void reason: {submission.void_reason}</p>}
+
+                {submission.can_void && (
+                    <form onSubmit={voidSubmit} className="grid gap-3 rounded-xl border border-red-200 p-4 sm:p-6 dark:border-red-900">
+                        <h2 className="font-semibold">Void entry</h2>
+                        <p className="text-muted-foreground text-sm">
+                            Voiding requires a reason and is recorded in the audit log. Data is never overwritten.
+                        </p>
+                        <Textarea value={data.void_reason} onChange={(e) => setData('void_reason', e.target.value)} placeholder="Void reason" />
+                        <Button variant="destructive" className="justify-self-start" disabled={processing}>
+                            Void entry
+                        </Button>
+                    </form>
+                )}
+            </FormPage>
         </AppLayout>
     );
 }

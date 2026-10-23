@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Reporting;
 
+use App\Enums\FieldType;
 use App\Models\CampaignLocation;
+use App\Models\FormSubmission;
 use App\Models\SubmissionFieldValue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\BuildsCampaignWorld;
@@ -22,38 +24,73 @@ class DashboardFieldMetricsTest extends TestCase
         return collect($page['props']['summary']['custom_fields'])->firstWhere('key', $key);
     }
 
-    public function test_yes_no_metrics_count_no_answers_and_use_field_labels(): void
+    public function test_yes_no_questions_count_towards_qualified_but_get_no_chart(): void
     {
         $world = $this->world();
         $this->submit($world['location'], ['kunjungi_poi' => true, 'usia' => 20]);
         $this->submit($world['location'], ['kunjungi_poi' => false, 'usia' => 30]);
         $this->submit($world['location'], ['kunjungi_poi' => false, 'usia' => 40]);
 
-        $this->assertSame('0', SubmissionFieldValue::query()->where('field_key', 'kunjungi_poi')->where('value_text', '0')->first()?->value_text);
-
         $page = $this->actingAs($world['eo'])->get('/dashboard')->assertOk()->viewData('page');
+        $summary = $page['props']['summary'];
 
-        $poi = $this->field($page, 'kunjungi_poi');
-        $this->assertSame('Mengunjungi POI minimal 2x seminggu', $poi['label']);
-        $this->assertSame([['label' => 'No', 'total' => 2], ['label' => 'Yes', 'total' => 1]], $poi['options']);
+        // Only the all-Yes entry qualifies, and no Yes/No question appears as its own chart.
+        $this->assertSame(1, $summary['totals']['qualified']);
+        $this->assertSame([], collect($summary['custom_fields'])->where('type', 'yes_no')->values()->all());
+        $this->assertSame(0, SubmissionFieldValue::query()->where('field_type', 'yes_no')->count());
 
         $age = $this->field($page, 'usia');
+        $this->assertSame('Usia', $age['label']);
         $this->assertSame(3, $age['responses']);
         $this->assertEquals(30, $age['avg']);
         $this->assertEquals(20, $age['min']);
         $this->assertEquals(40, $age['max']);
     }
 
-    public function test_legacy_empty_no_answers_still_count_as_no(): void
+    public function test_chart_series_match_the_totals(): void
     {
         $world = $this->world();
-        $this->submit($world['location'], ['kunjungi_poi' => false]);
-        // Rows written before the fix stored "No" as an empty string.
-        SubmissionFieldValue::query()->where('field_key', 'kunjungi_poi')->update(['value_text' => '']);
+        $this->travelTo(now()->setTime(10, 15));
+        $this->submit($world['location'], ['usia' => 20]);
+        $this->submit($world['location'], ['usia' => 41, 'kunjungi_poi' => false]);
+        $this->travelTo(now()->setTime(14, 5));
+        $this->submit($world['location'], ['usia' => 45]);
 
-        $page = $this->actingAs($world['eo'])->get('/dashboard')->viewData('page');
+        $summary = $this->actingAs($world['eo'])->get('/dashboard')->viewData('page')['props']['summary'];
 
-        $this->assertSame([['label' => 'No', 'total' => 1]], $this->field($page, 'kunjungi_poi')['options']);
+        // Per day splits qualified / not qualified and adds up to the headline numbers.
+        $this->assertSame([['day' => now()->toDateString(), 'total' => 3, 'qualified' => 2]], $summary['per_day']);
+        $this->assertSame(2, $summary['totals']['qualified']);
+
+        $this->assertSame([['hour' => 10, 'total' => 2], ['hour' => 14, 'total' => 1]], $summary['per_hour']);
+        $this->assertSame([['id' => $world['location']->id, 'label' => 'PIK Avenue', 'total' => 3]], $summary['per_location']);
+
+        $bins = collect($this->field(['props' => ['summary' => $summary]], 'usia')['bins']);
+        $this->assertSame(3, $bins->sum('total'));
+        $this->assertSame('20-23', $bins->first()['label']);
+    }
+
+    public function test_older_yes_no_dashboard_rows_are_ignored(): void
+    {
+        $world = $this->world();
+        $this->submit($world['location'], ['usia' => 25]);
+        // Rows indexed before Yes/No left the dashboard.
+        SubmissionFieldValue::query()->create([
+            'form_submission_id' => FormSubmission::query()->sole()->id,
+            'field_key' => 'kunjungi_poi',
+            'field_type' => 'yes_no',
+            'value_text' => '1',
+        ]);
+
+        $summary = $this->actingAs($world['eo'])->get('/dashboard')->viewData('page')['props']['summary'];
+
+        $this->assertSame(['usia'], collect($summary['custom_fields'])->pluck('key')->all());
+    }
+
+    public function test_yes_no_fields_cannot_be_put_on_the_dashboard(): void
+    {
+        $this->assertFalse(FieldType::YesNo->canShowOnDashboard());
+        $this->assertTrue(FieldType::Number->canShowOnDashboard());
     }
 
     public function test_field_metrics_follow_location_filter(): void

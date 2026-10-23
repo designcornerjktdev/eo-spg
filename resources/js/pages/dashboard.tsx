@@ -1,17 +1,21 @@
+import { Histogram, HourlyChart, QualifiedGauge, RankedBars, ShareDonut, TrendChart } from '@/components/dashboard-charts';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { formatDate } from '@/lib/format';
+import { cn } from '@/lib/utils';
 import { Head, router } from '@inertiajs/react';
-import { FormEvent } from 'react';
+import { Ban, Link2, ListChecks, X } from 'lucide-react';
 
 interface Summary {
     totals: { submissions: number; voided: number; qualified: number; campaigns: number };
     links: { open: number; total: number };
-    per_day: { day: string; total: number }[];
-    per_location: { label: string; total: number }[];
+    per_day: { day: string; total: number; qualified: number }[];
+    per_hour: { hour: number; total: number }[];
+    per_location: { id: number; label: string; total: number }[];
     custom_fields: {
         key: string;
         label: string;
@@ -20,6 +24,7 @@ interface Summary {
         avg?: number | null;
         min?: number | null;
         max?: number | null;
+        bins?: { label: string; total: number }[];
         options?: { label: string; total: number }[];
     }[];
 }
@@ -29,6 +34,19 @@ interface Option {
     name: string;
 }
 
+type Filters = Partial<Record<'campaign_id' | 'location_id' | 'from' | 'to', string>>;
+
+function isoDaysAgo(days: number): string {
+    const date = new Date(Date.now() - days * 86400000);
+    return date.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+}
+
+const PRESETS = [
+    { label: 'Today', from: () => isoDaysAgo(0) },
+    { label: '7 days', from: () => isoDaysAgo(6) },
+    { label: '30 days', from: () => isoDaysAgo(29) },
+];
+
 export default function Dashboard({
     summary,
     filters,
@@ -36,187 +54,251 @@ export default function Dashboard({
     locations,
 }: {
     summary: Summary;
-    filters: Record<string, string>;
+    filters: Filters;
     campaigns: Option[];
-    locations: Option[];
+    locations: (Option & { campaign_id: number })[];
 }) {
-    const apply = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const data = Object.fromEntries(new FormData(event.currentTarget).entries());
-        router.get(route('dashboard'), data, { preserveState: true });
+    // Every filter change reloads the data right away; no "apply" step.
+    const apply = (next: Filters) => {
+        const merged = Object.fromEntries(Object.entries({ ...filters, ...next }).filter(([, value]) => value));
+        router.get(route('dashboard'), merged, { preserveState: true, preserveScroll: true, replace: true });
     };
+
+    const visibleLocations = filters.campaign_id ? locations.filter((l) => String(l.campaign_id) === filters.campaign_id) : locations;
+    const { totals } = summary;
+    const activeFilters = Object.values(filters).some(Boolean);
+    const today = isoDaysAgo(0);
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Dashboard', href: '/dashboard' }]}>
             <Head title="Dashboard" />
-            <PageHeader title="Dashboard" description="Totals are calculated from the same entries shown in the entries list." />
+            <PageHeader title="Dashboard" description="Live results from the public form links. Voided entries are excluded." />
 
-            <form onSubmit={apply} className="grid gap-3 rounded-lg border p-4 md:grid-cols-5">
-                <div>
-                    <Label>Campaign</Label>
-                    <select
-                        name="campaign_id"
-                        defaultValue={filters.campaign_id ?? ''}
-                        className="border-input h-9 w-full rounded-md border px-2 text-sm"
-                    >
-                        <option value="">All</option>
-                        {campaigns.map((item) => (
-                            <option key={item.id} value={item.id}>
-                                {item.name}
-                            </option>
-                        ))}
-                    </select>
+            {/* Filters: one row above the charts. */}
+            <div className="flex flex-wrap items-end gap-3 rounded-lg border p-3">
+                <FilterSelect
+                    label="Campaign"
+                    value={filters.campaign_id}
+                    options={campaigns}
+                    onChange={(value) => apply({ campaign_id: value, location_id: '' })}
+                />
+                <FilterSelect
+                    label="Location"
+                    value={filters.location_id}
+                    options={visibleLocations}
+                    onChange={(value) => apply({ location_id: value })}
+                />
+                <div className="grid gap-1">
+                    <Label htmlFor="from" className="text-xs">
+                        From
+                    </Label>
+                    <Input
+                        id="from"
+                        type="date"
+                        className="h-9 w-40"
+                        value={filters.from ?? ''}
+                        max={filters.to || today}
+                        onChange={(e) => apply({ from: e.target.value })}
+                    />
                 </div>
-                <div>
-                    <Label>Location</Label>
-                    <select
-                        name="location_id"
-                        defaultValue={filters.location_id ?? ''}
-                        className="border-input h-9 w-full rounded-md border px-2 text-sm"
-                    >
-                        <option value="">All</option>
-                        {locations.map((item) => (
-                            <option key={item.id} value={item.id}>
-                                {item.name}
-                            </option>
-                        ))}
-                    </select>
+                <div className="grid gap-1">
+                    <Label htmlFor="to" className="text-xs">
+                        To
+                    </Label>
+                    <Input
+                        id="to"
+                        type="date"
+                        className="h-9 w-40"
+                        value={filters.to ?? ''}
+                        min={filters.from}
+                        onChange={(e) => apply({ to: e.target.value })}
+                    />
                 </div>
-                <div>
-                    <Label>From</Label>
-                    <Input type="date" name="from" defaultValue={filters.from ?? ''} />
+                <div className="flex flex-wrap gap-1">
+                    {PRESETS.map((preset) => {
+                        const from = preset.from();
+                        const selected = filters.from === from && (!filters.to || filters.to === today);
+                        return (
+                            <Button key={preset.label} size="sm" variant={selected ? 'default' : 'outline'} onClick={() => apply({ from, to: '' })}>
+                                {preset.label}
+                            </Button>
+                        );
+                    })}
+                    {activeFilters && (
+                        <Button size="sm" variant="ghost" onClick={() => router.get(route('dashboard'), {}, { preserveScroll: true, replace: true })}>
+                            <X className="size-4" />
+                            Clear
+                        </Button>
+                    )}
                 </div>
-                <div>
-                    <Label>To</Label>
-                    <Input type="date" name="to" defaultValue={filters.to ?? ''} />
-                </div>
-                <div className="md:col-span-5">
-                    <Button type="submit">Apply filters</Button>
-                </div>
-            </form>
-
-            <div className="grid gap-4 md:grid-cols-4">
-                <Metric title="Entries" value={summary.totals.submissions} />
-                <Metric title="Qualified" value={summary.totals.qualified} hint={percent(summary.totals.qualified, summary.totals.submissions)} />
-                <Metric title="Voided" value={summary.totals.voided} />
-                <Metric title="Campaigns" value={summary.totals.campaigns} />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-                <BarCard title="Per day" rows={summary.per_day.map((row) => ({ label: formatDayLabel(row.day), total: row.total }))} />
-                <BarCard title="Per location" rows={summary.per_location} />
+            {/* Headline numbers. */}
+            <div className="grid gap-4 sm:grid-cols-3">
+                <StatTile icon={ListChecks} title="Entries" value={totals.submissions.toLocaleString('en-GB')} />
+                <StatTile icon={Ban} title="Voided" value={totals.voided.toLocaleString('en-GB')} hint="Excluded from charts" />
+                <StatTile
+                    icon={Link2}
+                    title="Open links"
+                    value={`${summary.links.open} / ${summary.links.total}`}
+                    hint="Locations accepting responses"
+                />
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-3">
+                <Card className="lg:col-span-2">
+                    <CardHeader>
+                        <CardTitle>Entries over time</CardTitle>
+                        <CardDescription>Daily qualified and not qualified responses, or the running total</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <TrendChart rows={summary.per_day} />
+                        {summary.per_day.length > 0 && (
+                            <details className="mt-3 text-sm">
+                                <summary className="text-muted-foreground cursor-pointer">View as table</summary>
+                                <div className="mt-2 max-h-64 overflow-y-auto rounded-md border">
+                                    <table className="w-full">
+                                        <thead className="bg-muted/50 sticky top-0">
+                                            <tr>
+                                                <th className="px-3 py-1.5 text-left font-medium">Day</th>
+                                                <th className="px-3 py-1.5 text-right font-medium">Qualified</th>
+                                                <th className="px-3 py-1.5 text-right font-medium">Not qualified</th>
+                                                <th className="px-3 py-1.5 text-right font-medium">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {summary.per_day.map((row) => (
+                                                <tr key={row.day} className="border-t tabular-nums">
+                                                    <td className="px-3 py-1.5">{formatDate(row.day)}</td>
+                                                    <td className="px-3 py-1.5 text-right">{row.qualified}</td>
+                                                    <td className="px-3 py-1.5 text-right">{row.total - row.qualified}</td>
+                                                    <td className="px-3 py-1.5 text-right font-medium">{row.total}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </details>
+                        )}
+                    </CardContent>
+                </Card>
                 <Card>
                     <CardHeader>
-                        <CardTitle>Public links</CardTitle>
+                        <CardTitle>Qualification rate</CardTitle>
+                        <CardDescription>Entries that answered Yes to every qualifying question</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-1">
-                        <div className="text-3xl font-semibold">
-                            {summary.links.open} <span className="text-muted-foreground text-base font-normal">of {summary.links.total} open</span>
-                        </div>
-                        <p className="text-muted-foreground text-sm">Locations whose link accepts responses right now.</p>
+                    <CardContent className="flex items-center justify-center">
+                        <QualifiedGauge qualified={totals.qualified} total={totals.submissions} />
+                    </CardContent>
+                </Card>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Busiest hours</CardTitle>
+                        <CardDescription>Entries by hour of day</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <HourlyChart rows={summary.per_hour} />
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>By location</CardTitle>
+                        <CardDescription>
+                            {filters.location_id ? 'Filtered to one location. ' : ''}Click a slice or row to filter by that location.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <ShareDonut
+                            rows={summary.per_location}
+                            selectedId={filters.location_id ? Number(filters.location_id) : null}
+                            onSelect={(id) => apply({ location_id: String(id) === filters.location_id ? '' : String(id) })}
+                        />
                     </CardContent>
                 </Card>
             </div>
 
             {summary.custom_fields.length > 0 && (
-                <div className="grid gap-4 md:grid-cols-2">
-                    {summary.custom_fields.map((field) => (
-                        <Card key={field.key}>
-                            <CardHeader>
-                                <CardTitle>{field.label}</CardTitle>
-                                <p className="text-muted-foreground text-sm">{field.responses} responses</p>
-                            </CardHeader>
-                            <CardContent>
-                                {field.type === 'number' ? (
-                                    <dl className="grid grid-cols-3 gap-3 text-sm">
-                                        {(
-                                            [
-                                                ['Average', field.avg],
-                                                ['Lowest', field.min],
-                                                ['Highest', field.max],
-                                            ] as const
-                                        ).map(([name, value]) => (
-                                            <div key={name} className="rounded-md border p-3">
-                                                <dt className="text-muted-foreground">{name}</dt>
-                                                <dd className="text-2xl font-semibold">{value ?? '-'}</dd>
+                <>
+                    <h2 className="text-lg font-semibold">Answers</h2>
+                    <div className="grid gap-4 md:grid-cols-2">
+                        {summary.custom_fields.map((field) => (
+                            <Card key={field.key} className={cn(field.type === 'number' && 'md:col-span-2')}>
+                                <CardHeader>
+                                    <CardTitle className="text-base">{field.label}</CardTitle>
+                                    <CardDescription>{field.responses.toLocaleString('en-GB')} responses</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    {field.type === 'number' ? (
+                                        <>
+                                            <div className="grid grid-cols-3 gap-3 text-sm">
+                                                <MiniStat label="Average" value={field.avg} />
+                                                <MiniStat label="Lowest" value={field.min} />
+                                                <MiniStat label="Highest" value={field.max} />
                                             </div>
-                                        ))}
-                                    </dl>
-                                ) : (
-                                    <BarList rows={field.options ?? []} showShare />
-                                )}
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
+                                            <Histogram bins={field.bins ?? []} />
+                                        </>
+                                    ) : field.type === 'single_choice' ? (
+                                        <ShareDonut rows={field.options ?? []} />
+                                    ) : (
+                                        <RankedBars rows={field.options ?? []} name="Responses" />
+                                    )}
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                </>
             )}
         </AppLayout>
     );
 }
 
-function Metric({ title, value, hint }: { title: string; value: number; hint?: string }) {
+function FilterSelect({ label, value, options, onChange }: { label: string; value?: string; options: Option[]; onChange: (value: string) => void }) {
+    const id = `filter-${label.toLowerCase()}`;
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="text-muted-foreground text-sm font-medium">{title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <span className="text-3xl font-semibold">{value.toLocaleString('en-GB')}</span>
-                {hint && <span className="text-muted-foreground ml-2 text-sm">{hint}</span>}
-            </CardContent>
-        </Card>
+        <div className="grid gap-1">
+            <Label htmlFor={id} className="text-xs">
+                {label}
+            </Label>
+            <select
+                id={id}
+                className="border-input bg-background h-9 min-w-44 rounded-md border px-2 text-sm"
+                value={value ?? ''}
+                onChange={(e) => onChange(e.target.value)}
+            >
+                <option value="">All</option>
+                {options.map((option) => (
+                    <option key={option.id} value={option.id}>
+                        {option.name}
+                    </option>
+                ))}
+            </select>
+        </div>
     );
 }
 
-function percent(part: number, whole: number): string | undefined {
-    return whole > 0 ? `${Math.round((part / whole) * 100)}%` : undefined;
-}
-
-// "Thu, 9 Oct" — short enough for the chart rows, with the weekday to spot weekend peaks.
-function formatDayLabel(day: string): string {
-    const date = new Date(`${day}T00:00:00+07:00`);
-    return Number.isNaN(date.getTime())
-        ? day
-        : date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Asia/Jakarta' });
-}
-
-function BarCard({ title, rows }: { title: string; rows: { label: string; total: number }[] }) {
+function StatTile({ icon: Icon, title, value, hint }: { icon: typeof ListChecks; title: string; value: string; hint?: string }) {
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>{title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <BarList rows={rows} />
-            </CardContent>
-        </Card>
-    );
-}
-
-function BarList({ rows, showShare = false }: { rows: { label: string; total: number }[]; showShare?: boolean }) {
-    const max = Math.max(...rows.map((row) => row.total), 1);
-    const sum = rows.reduce((total, row) => total + row.total, 0);
-
-    if (rows.length === 0) {
-        return <p className="text-muted-foreground text-sm">No entries yet.</p>;
-    }
-
-    return (
-        <div className="space-y-2">
-            {rows.map((row) => (
-                <div key={row.label}>
-                    <div className="mb-1 flex justify-between text-sm">
-                        <span>{row.label}</span>
-                        <span>
-                            {row.total}
-                            {showShare && <span className="text-muted-foreground ml-1">({percent(row.total, sum)})</span>}
-                        </span>
-                    </div>
-                    <div className="bg-muted h-2 rounded">
-                        <div className="bg-primary h-2 rounded" style={{ width: `${(row.total / max) * 100}%` }} />
-                    </div>
+        <Card className="gap-0">
+            <CardContent className="flex items-start justify-between gap-3 p-5">
+                <div>
+                    <div className="text-muted-foreground text-sm">{title}</div>
+                    <div className="mt-1 text-3xl font-semibold tabular-nums">{value}</div>
+                    {hint && <div className="text-muted-foreground mt-1 text-xs">{hint}</div>}
                 </div>
-            ))}
+                <Icon className="text-muted-foreground size-5" />
+            </CardContent>
+        </Card>
+    );
+}
+
+function MiniStat({ label, value }: { label: string; value?: number | null }) {
+    return (
+        <div className="rounded-md border p-3">
+            <div className="text-muted-foreground">{label}</div>
+            <div className="text-2xl font-semibold tabular-nums">{value ?? '-'}</div>
         </div>
     );
 }

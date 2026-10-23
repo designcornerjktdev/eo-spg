@@ -29,6 +29,7 @@ enum FieldType: string
 
     public function canShowOnDashboard(): bool
     {
-        return in_array($this, [self::Number, self::SingleChoice, self::MultipleChoice, self::YesNo], true);
+        // Yes/No questions feed the qualification count, not their own dashboard chart.
+        return in_array($this, [self::Number, self::SingleChoice, self::MultipleChoice], true);
     }
 }
