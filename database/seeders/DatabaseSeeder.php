@@ -29,8 +29,8 @@ class DatabaseSeeder extends Seeder
         fake()->seed(2026);
 
         $eo = User::factory()->superadmin()->create([
-            'name' => 'EO Admin',
-            'email' => 'eo@eo.test',
+            'name' => 'Admin',
+            'email' => 'admin@mail.com',
         ]);
 
         // Client accounts are read-only and only see the campaigns they are granted below.
