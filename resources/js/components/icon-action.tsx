@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { Link } from '@inertiajs/react';
+import Link from '@/components/link';
 import { type LucideIcon } from 'lucide-react';
 
 /**

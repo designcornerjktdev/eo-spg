@@ -1,4 +1,5 @@
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { withBase } from '@/lib/base';
 import { type BreadcrumbItem as BreadcrumbItemType } from '@/types';
 import { Fragment } from 'react';
 
@@ -16,7 +17,7 @@ export function Breadcrumbs({ breadcrumbs }: { breadcrumbs: BreadcrumbItemType[]
                                         {isLast ? (
                                             <BreadcrumbPage>{item.title}</BreadcrumbPage>
                                         ) : (
-                                            <BreadcrumbLink href={item.href}>{item.title}</BreadcrumbLink>
+                                            <BreadcrumbLink href={withBase(item.href)}>{item.title}</BreadcrumbLink>
                                         )}
                                     </BreadcrumbItem>
                                     {!isLast && <BreadcrumbSeparator />}

@@ -1,6 +1,7 @@
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
+import Link from '@/components/link';
 import { FormEventHandler } from 'react';
 
 import HeadingSmall from '@/components/heading-small';

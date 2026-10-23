@@ -5,6 +5,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { route as routeFn } from 'ziggy-js';
 import { initializeTheme } from './hooks/use-appearance';
+import { withBase } from './lib/base';
 
 declare global {
     const route: typeof routeFn;
@@ -18,7 +19,7 @@ const setAppName = (props: Record<string, unknown>) => {
 
     // The favicon follows the company logo, falling back to the default icon.
     const favicon = document.getElementById('app-favicon') as HTMLLinkElement | null;
-    const href = branding?.logo_url ?? '/favicon.ico';
+    const href = branding?.logo_url ?? withBase('/favicon.ico');
     if (favicon && favicon.getAttribute('href') !== href) favicon.setAttribute('href', href);
 };
 

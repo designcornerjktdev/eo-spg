@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { label } from '@/lib/format';
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
+import Link from '@/components/link';
 
 interface Field {
     key: string;

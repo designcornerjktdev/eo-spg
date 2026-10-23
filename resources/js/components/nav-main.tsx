@@ -1,10 +1,12 @@
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
+import Link from '@/components/link';
+import { stripBase } from '@/lib/base';
 
 // Keep the menu item active on sub-pages, e.g. /campaigns/create highlights "Campaign".
 function isActive(currentUrl: string, itemUrl: string) {
-    const path = currentUrl.split('?')[0];
+    const path = stripBase(currentUrl.split('?')[0]);
     return path === itemUrl || path.startsWith(itemUrl + '/');
 }
 

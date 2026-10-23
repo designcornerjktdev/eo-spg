@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import Link from '@/components/link';
 import { Button } from '@/components/ui/button';
 import Heading from '@/components/heading';
 

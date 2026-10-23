@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import Link from '@/components/link';
 
 interface PaginatorLink {
     url: string | null;

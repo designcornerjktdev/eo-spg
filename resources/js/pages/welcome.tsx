@@ -1,5 +1,6 @@
 import { type SharedData } from '@/types';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
+import Link from '@/components/link';
 
 export default function Welcome() {
     const { auth } = usePage<SharedData>().props;

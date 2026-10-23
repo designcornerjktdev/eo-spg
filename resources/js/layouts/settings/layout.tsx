@@ -3,7 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { type NavItem, type SharedData } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
+import Link from '@/components/link';
+import { stripBase } from '@/lib/base';
 
 const sidebarNavItems: NavItem[] = [
     {
@@ -24,7 +26,7 @@ const sidebarNavItems: NavItem[] = [
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
-    const currentPath = window.location.pathname;
+    const currentPath = stripBase(window.location.pathname);
     const isEo = usePage<SharedData>().props.auth.user?.role === 'superadmin';
     // Company branding is application-wide, so only the superadmin sees it.
     const navItems = isEo ? [...sidebarNavItems, { title: 'Company', url: '/settings/company', icon: null }] : sidebarNavItems;

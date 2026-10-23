@@ -10,7 +10,9 @@ import { UserMenuContent } from '@/components/user-menu-content';
 import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type NavItem, type SharedData } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
+import Link from '@/components/link';
+import { stripBase } from '@/lib/base';
 import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-react';
 import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
@@ -108,14 +110,14 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                             href={item.url}
                                             className={cn(
                                                 navigationMenuTriggerStyle(),
-                                                page.url === item.url && activeItemStyles,
+                                                stripBase(page.url) === item.url && activeItemStyles,
                                                 'h-9 cursor-pointer px-3',
                                             )}
                                         >
                                             {item.icon && <Icon iconNode={item.icon} className="mr-2 h-4 w-4" />}
                                             {item.title}
                                         </Link>
-                                        {page.url === item.url && (
+                                        {stripBase(page.url) === item.url && (
                                             <div className="absolute bottom-0 left-0 h-0.5 w-full translate-y-px bg-black dark:bg-white"></div>
                                         )}
                                     </NavigationMenuItem>
