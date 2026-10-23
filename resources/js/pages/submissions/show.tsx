@@ -20,6 +20,8 @@ interface Submission {
     can_void: boolean;
     campaign: { name: string } | null;
     location: { name: string; area: string | null } | null;
+    distance_meters: number | null;
+    location_accuracy_meters: number | null;
     answers: Record<string, string | string[] | boolean | number>;
     fields: Field[];
 }
@@ -48,6 +50,12 @@ export default function SubmissionShow({ submission }: { submission: Submission 
                 <div>Submitted at: {formatDateTime(submission.submitted_at)}</div>
                 <div>
                     Location: {submission.location?.name} {submission.location?.area ? `(${submission.location.area})` : ''}
+                </div>
+                <div>
+                    Location check:{' '}
+                    {submission.distance_meters === null
+                        ? 'not checked (location had no map point)'
+                        : `${submission.distance_meters} m from the location pin (GPS accuracy ±${submission.location_accuracy_meters ?? '?'} m)`}
                 </div>
                 <div>Qualification: {submission.qualified === null ? '-' : submission.qualified ? 'Qualified' : 'Not qualified'}</div>
             </div>

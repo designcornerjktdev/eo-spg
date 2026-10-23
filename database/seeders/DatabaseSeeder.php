@@ -156,7 +156,7 @@ class DatabaseSeeder extends Seeder
         $submissions = [];
         foreach ($times as $time) {
             Carbon::setTestNow($time);
-            $submissions[] = $recorder->record($location, $this->answers(), true);
+            $submissions[] = $recorder->record($location, $this->answers(), true, $this->positionNear($location));
         }
         Carbon::setTestNow();
 
@@ -181,6 +181,23 @@ class DatabaseSeeder extends Seeder
             'kunjungi_poi' => mt_rand(1, 10) <= 8,
             'aktivitas_area' => mt_rand(1, 10) <= 8,
             'konsumsi_csd' => mt_rand(1, 10) <= 8,
+        ];
+    }
+
+    /**
+     * A phone position up to ~150 m from the location pin, so seeded entries pass the geofence.
+     *
+     * @return array{latitude: float, longitude: float, accuracy: float}
+     */
+    private function positionNear(CampaignLocation $location): array
+    {
+        $meters = mt_rand(0, 150);
+        $angle = deg2rad(mt_rand(0, 359));
+
+        return [
+            'latitude' => $location->latitude + ($meters * cos($angle)) / 111320,
+            'longitude' => $location->longitude + ($meters * sin($angle)) / (111320 * cos(deg2rad($location->latitude))),
+            'accuracy' => (float) mt_rand(5, 40),
         ];
     }
 }

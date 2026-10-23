@@ -25,6 +25,10 @@ class PublicFormController extends Controller
             'campaign' => $campaign->name,
             'location' => $location->name,
             'open' => $campaign->isAcceptingEntries(),
+            // Only locations with a map point can check that the visitor is on site.
+            'geofence' => $location->latitude !== null && $location->longitude !== null
+                ? ['radius' => $location->radius_meters]
+                : null,
             'form' => $form ? [
                 'name' => $form->name,
                 'requires_consent' => $form->requires_consent,
@@ -41,6 +45,9 @@ class PublicFormController extends Controller
         $request->validate([
             'answers' => ['required', 'array'],
             'consent_accepted' => ['sometimes', 'boolean'],
+            'position.latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'position.longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'position.accuracy' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         // Honeypot: real people never see this field, so a filled value means a bot. Pretend it worked.
@@ -48,7 +55,8 @@ class PublicFormController extends Controller
             return back()->with('submitted', true);
         }
 
-        $recorder->record($location, $request->input('answers', []), $request->boolean('consent_accepted'));
+        // A browser without location support sends no position at all; treat it as "unknown".
+        $recorder->record($location, $request->input('answers', []), $request->boolean('consent_accepted'), (array) $request->input('position'));
 
         return back()->with('submitted', true);
     }

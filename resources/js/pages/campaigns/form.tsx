@@ -16,6 +16,7 @@ interface Location {
     address: string | null;
     latitude?: number | null;
     longitude?: number | null;
+    radius_meters?: number;
 }
 
 interface Campaign {
@@ -37,9 +38,11 @@ type FormLocation = {
     address: string;
     latitude: number | null;
     longitude: number | null;
+    radius_meters: number;
 };
 
-const EMPTY_LOCATION: FormLocation = { name: '', area: '', address: '', latitude: null, longitude: null };
+const DEFAULT_RADIUS = 300;
+const EMPTY_LOCATION: FormLocation = { name: '', area: '', address: '', latitude: null, longitude: null, radius_meters: DEFAULT_RADIUS };
 
 export default function CampaignForm({ campaign, footer }: { footer?: React.ReactNode; campaign?: Campaign }) {
     const { data, setData, post, put, processing, errors } = useForm({
@@ -57,6 +60,7 @@ export default function CampaignForm({ campaign, footer }: { footer?: React.Reac
                       address: location.address ?? '',
                       latitude: location.latitude ?? null,
                       longitude: location.longitude ?? null,
+                      radius_meters: location.radius_meters ?? DEFAULT_RADIUS,
                   }),
               )
             : [{ ...EMPTY_LOCATION }],
@@ -176,6 +180,30 @@ export default function CampaignForm({ campaign, footer }: { footer?: React.Reac
                                         />
                                     </Suspense>
                                     <InputError message={fieldError('latitude')} />
+                                    <div className="grid gap-1 sm:max-w-xs">
+                                        <Label htmlFor={`radius-${index}`}>Allowed radius (meters)</Label>
+                                        <Input
+                                            id={`radius-${index}`}
+                                            type="number"
+                                            min={50}
+                                            max={5000}
+                                            step={50}
+                                            value={location.radius_meters}
+                                            onChange={(e) => update({ radius_meters: Number(e.target.value) })}
+                                        />
+                                        <InputError message={fieldError('radius_meters')} />
+                                    </div>
+                                    <p
+                                        className={
+                                            location.latitude === null
+                                                ? 'text-sm text-amber-700 dark:text-amber-300'
+                                                : 'text-muted-foreground text-xs'
+                                        }
+                                    >
+                                        {location.latitude === null
+                                            ? 'No map point yet: entries for this location are accepted from anywhere. Pick a point to only accept entries on site.'
+                                            : `Consumers can only submit within ${location.radius_meters} m of the pin (plus up to 100 m of GPS accuracy).`}
+                                    </p>
                                 </div>
                             );
                         })}

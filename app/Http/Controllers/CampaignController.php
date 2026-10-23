@@ -172,6 +172,7 @@ class CampaignController extends Controller
                 'address' => $location['address'] ?? null,
                 'latitude' => $location['latitude'] ?? null,
                 'longitude' => $location['longitude'] ?? null,
+                'radius_meters' => $location['radius_meters'] ?? 300,
             ];
 
             $model = ! empty($location['id'])

@@ -21,11 +21,18 @@ class CampaignLocation extends Model
         'address',
         'latitude',
         'longitude',
+        'radius_meters',
+    ];
+
+    /** Mirrors the column default so new, not-yet-refreshed models geofence correctly. */
+    protected $attributes = [
+        'radius_meters' => 300,
     ];
 
     protected function casts(): array
     {
         return [
+            'radius_meters' => 'integer',
             'latitude' => 'float',
             'longitude' => 'float',
         ];

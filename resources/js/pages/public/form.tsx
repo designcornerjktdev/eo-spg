@@ -4,10 +4,11 @@ import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { type DevicePosition, type PositionStatus, useDevicePosition } from '@/hooks/use-device-position';
 import { cn } from '@/lib/utils';
 import { type SharedData } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { CheckCircle2, LoaderCircle } from 'lucide-react';
+import { CheckCircle2, LoaderCircle, MapPin, MapPinOff } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 interface PublicForm {
@@ -25,12 +26,14 @@ export default function PublicFormPage({
     campaign,
     location,
     open,
+    geofence,
     form,
 }: {
     token: string;
     campaign: string;
     location: string;
     open: boolean;
+    geofence: { radius: number } | null;
     form: PublicForm | null;
 }) {
     const { branding, flash } = usePage<SharedData & { flash: { submitted?: boolean } }>().props;
@@ -62,7 +65,7 @@ export default function PublicFormPage({
                     {!open || !form ? (
                         <p className="text-muted-foreground py-6 text-center">This form is not accepting responses right now.</p>
                     ) : showForm ? (
-                        <EntryForm token={token} form={form} onDone={() => setShowForm(false)} />
+                        <EntryForm token={token} form={form} location={location} geofence={geofence} onDone={() => setShowForm(false)} />
                     ) : (
                         <div className="flex flex-col items-center gap-4 py-6 text-center">
                             <CheckCircle2 className="size-12 text-green-600" />
@@ -83,8 +86,22 @@ export default function PublicFormPage({
     );
 }
 
-function EntryForm({ token, form, onDone }: { token: string; form: PublicForm; onDone: () => void }) {
-    const { data, setData, post, processing, errors, reset } = useForm<{
+function EntryForm({
+    token,
+    form,
+    location,
+    geofence,
+    onDone,
+}: {
+    token: string;
+    form: PublicForm;
+    location: string;
+    geofence: { radius: number } | null;
+    onDone: () => void;
+}) {
+    const device = useDevicePosition(geofence !== null);
+    const [locating, setLocating] = useState(false);
+    const { data, setData, post, transform, processing, errors, reset } = useForm<{
         answers: Record<string, Answer>;
         consent_accepted: boolean;
         website: string;
@@ -95,8 +112,19 @@ function EntryForm({ token, form, onDone }: { token: string; form: PublicForm; o
     });
     const fieldErrors = errors as Record<string, string>;
 
-    const submit = (event: FormEvent) => {
+    const submit = async (event: FormEvent) => {
         event.preventDefault();
+
+        // Re-read the position right before sending so a stale fix cannot be reused.
+        let position = null;
+        if (geofence) {
+            setLocating(true);
+            position = await device.refresh();
+            setLocating(false);
+            if (!position) return;
+        }
+
+        transform((payload) => ({ ...payload, position }));
         post(route('public-form.store', token), {
             preserveScroll: true,
             onSuccess: () => {
@@ -153,10 +181,57 @@ function EntryForm({ token, form, onDone }: { token: string; form: PublicForm; o
             )}
             <InputError message={fieldErrors.consent_accepted ?? fieldErrors.form} />
 
-            <Button type="submit" className="h-12 w-full" disabled={processing}>
-                {processing && <LoaderCircle className="size-4 animate-spin" />}
-                Submit
+            {geofence && <LocationStatus status={device.status} position={device.position} location={location} onRetry={device.refresh} />}
+            <InputError message={fieldErrors.position} />
+
+            <Button type="submit" className="h-12 w-full" disabled={processing || locating || (geofence !== null && device.status !== 'ready')}>
+                {(processing || locating) && <LoaderCircle className="size-4 animate-spin" />}
+                {locating ? 'Checking your location…' : 'Submit'}
             </Button>
         </form>
+    );
+}
+
+function LocationStatus({
+    status,
+    position,
+    location,
+    onRetry,
+}: {
+    status: PositionStatus;
+    position: DevicePosition | null;
+    location: string;
+    onRetry: () => void;
+}) {
+    if (status === 'ready' && position) {
+        return (
+            <p className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800 dark:border-green-900 dark:bg-green-950 dark:text-green-200">
+                <MapPin className="size-4 shrink-0" />
+                Location found (±{Math.round(position.accuracy)} m). We'll confirm you're at {location} when you submit.
+            </p>
+        );
+    }
+
+    if (status === 'denied' || status === 'unavailable') {
+        return (
+            <div className="space-y-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100">
+                <p className="flex items-start gap-2">
+                    <MapPinOff className="mt-0.5 size-4 shrink-0" />
+                    {status === 'denied'
+                        ? `This form can only be submitted at ${location}. Allow location access in your browser settings, then try again.`
+                        : "We couldn't get your location. Turn on location services and try again."}
+                </p>
+                <Button type="button" size="sm" variant="outline" onClick={onRetry}>
+                    Try again
+                </Button>
+            </div>
+        );
+    }
+
+    return (
+        <p className="text-muted-foreground flex items-center gap-2 text-sm">
+            <LoaderCircle className="size-4 animate-spin" />
+            Getting your location…
+        </p>
     );
 }

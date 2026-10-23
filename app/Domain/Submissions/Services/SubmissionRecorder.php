@@ -17,14 +17,16 @@ class SubmissionRecorder
     public function __construct(
         private readonly DynamicFormValidator $validator,
         private readonly FormDefinitionService $forms,
+        private readonly Geofence $geofence,
     ) {}
 
     /**
      * Records one public entry for a campaign location, using the campaign's current form.
      *
      * @param  array<string, mixed>  $answers
+     * @param  array{latitude?: float|null, longitude?: float|null, accuracy?: float|null}  $position  device location from the browser
      */
-    public function record(CampaignLocation $location, array $answers, bool $consentAccepted = false): FormSubmission
+    public function record(CampaignLocation $location, array $answers, bool $consentAccepted = false, array $position = []): FormSubmission
     {
         $campaign = $location->campaign;
         $template = $campaign?->currentForm();
@@ -37,11 +39,13 @@ class SubmissionRecorder
 
         $template->loadMissing('fields');
         $validated = $this->validator->validate($template, $answers, $consentAccepted);
+        $geo = $this->geofence->check($location, $position);
 
-        return DB::transaction(function () use ($campaign, $location, $template, $validated, $consentAccepted) {
+        return DB::transaction(function () use ($campaign, $location, $template, $validated, $consentAccepted, $geo) {
             $submission = FormSubmission::query()->create([
                 'campaign_id' => $campaign->id,
                 'location_id' => $location->id,
+                ...$geo,
                 'form_template_id' => $template->id,
                 'answers' => $validated,
                 'consent_accepted' => $template->requires_consent ? true : $consentAccepted,

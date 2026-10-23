@@ -18,6 +18,10 @@ class FormSubmission extends Model
     protected $fillable = [
         'campaign_id',
         'location_id',
+        'latitude',
+        'longitude',
+        'location_accuracy_meters',
+        'distance_meters',
         'form_template_id',
         'answers',
         'consent_accepted',
@@ -39,6 +43,8 @@ class FormSubmission extends Model
             'submitted_at' => 'datetime',
             'status' => SubmissionStatus::class,
             'voided_at' => 'datetime',
+            'latitude' => 'float',
+            'longitude' => 'float',
         ];
     }
 
