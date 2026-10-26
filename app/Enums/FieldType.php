@@ -12,6 +12,7 @@ enum FieldType: string
     case MultipleChoice = 'multiple_choice';
     case YesNo = 'yes_no';
     case Date = 'date';
+    case Image = 'image';
 
     public function label(): string
     {
@@ -24,6 +25,7 @@ enum FieldType: string
             self::MultipleChoice => 'Multiple choice',
             self::YesNo => 'Yes/No',
             self::Date => 'Date',
+            self::Image => 'Image upload',
         };
     }
 

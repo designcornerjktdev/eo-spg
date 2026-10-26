@@ -11,6 +11,7 @@ import { FormEvent } from 'react';
 interface Field {
     key: string;
     label: string;
+    type: string;
 }
 
 interface Submission {
@@ -80,7 +81,19 @@ export default function SubmissionShow({ submission }: { submission: Submission 
                             {submission.fields.map((field, index) => (
                                 <tr key={field.key} className={index > 0 ? 'border-t' : undefined}>
                                     <th className="bg-muted/40 w-2/5 px-4 py-2 text-left align-top font-medium">{field.label}</th>
-                                    <td className="px-4 py-2 break-words">{formatAnswer(submission.answers[field.key])}</td>
+                                    <td className="px-4 py-2 break-words">
+                                        {field.type === 'image' && submission.answers[field.key] ? (
+                                            <a href={String(submission.answers[field.key])} target="_blank" rel="noreferrer">
+                                                <img
+                                                    src={String(submission.answers[field.key])}
+                                                    alt={field.label}
+                                                    className="max-h-64 rounded-md border object-contain"
+                                                />
+                                            </a>
+                                        ) : (
+                                            formatAnswer(submission.answers[field.key])
+                                        )}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>

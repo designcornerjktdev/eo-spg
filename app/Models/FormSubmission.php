@@ -90,4 +90,12 @@ class FormSubmission extends Model
     {
         return $this->status === SubmissionStatus::Void;
     }
+
+    /**
+     * Link for staff to view an uploaded image answer.
+     */
+    public function fileUrl(string $fieldKey): string
+    {
+        return route('submissions.file', [$this, $fieldKey]);
+    }
 }

@@ -52,6 +52,7 @@ const labels = {
         single_choice: 'Single choice',
         multiple_choice: 'Multiple choice',
         yes_no: 'Yes/No',
+        image: 'Image upload',
         date: 'Date',
     },
     // Assignment and SPG-correction actions stay labelled so older audit entries remain readable.

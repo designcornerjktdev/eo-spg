@@ -9,6 +9,8 @@ use Illuminate\Validation\ValidationException;
 
 class DynamicFormValidator
 {
+    public const MAX_IMAGE_KILOBYTES = 10240;
+
     /**
      * @param  array<string, mixed>  $answers
      * @return array<string, mixed>
@@ -36,6 +38,8 @@ class DynamicFormValidator
                 FieldType::MultipleChoice => ['array'],
                 FieldType::YesNo => ['boolean'],
                 FieldType::Date => ['date'],
+                // Phone photos are often several MB; HEIC covers iPhone cameras.
+                FieldType::Image => ['file', 'mimes:jpg,jpeg,png,webp,heic,heif', 'max:'.self::MAX_IMAGE_KILOBYTES],
             });
 
             $rules[$key] = $fieldRules;

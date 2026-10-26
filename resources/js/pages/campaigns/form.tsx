@@ -33,6 +33,8 @@ const LocationPicker = lazy(() => import('@/components/location-picker'));
 
 type FormLocation = {
     id?: number;
+    // Client-only key for unsaved rows, so React keeps each map with its row when rows move.
+    uid?: string;
     name: string;
     area: string;
     address: string;
@@ -42,6 +44,7 @@ type FormLocation = {
 };
 
 const DEFAULT_RADIUS = 300;
+let newRowCount = 0;
 const EMPTY_LOCATION: FormLocation = { name: '', area: '', address: '', latitude: null, longitude: null, radius_meters: DEFAULT_RADIUS };
 
 export default function CampaignForm({ campaign, footer }: { footer?: React.ReactNode; campaign?: Campaign }) {
@@ -117,7 +120,8 @@ export default function CampaignForm({ campaign, footer }: { footer?: React.Reac
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                onClick={() => setData('locations', [...data.locations, { ...EMPTY_LOCATION }])}
+                                // New rows go on top so the empty form is always in view.
+                                onClick={() => setData('locations', [{ ...EMPTY_LOCATION, uid: `new-${++newRowCount}` }, ...data.locations])}
                             >
                                 Add location
                             </Button>
@@ -131,9 +135,9 @@ export default function CampaignForm({ campaign, footer }: { footer?: React.Reac
                             const fieldError = (key: string) => (errors as Record<string, string>)[`locations.${index}.${key}`];
 
                             return (
-                                <div key={location.id ?? `new-${index}`} className="space-y-3 rounded-md border p-3">
+                                <div key={location.id ?? location.uid ?? `new-${index}`} className="space-y-3 rounded-md border p-3">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm font-medium">Location {index + 1}</span>
+                                        <span className="text-sm font-medium">{location.id ? `Location ${index + 1}` : 'New location'}</span>
                                         {data.locations.length > 1 && (
                                             <Button
                                                 type="button"

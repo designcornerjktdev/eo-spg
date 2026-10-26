@@ -28,6 +28,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('submissions', [SubmissionController::class, 'index'])->name('submissions.index');
         Route::get('submissions/export', [SubmissionController::class, 'export'])->name('submissions.export');
         Route::get('submissions/{submission}', [SubmissionController::class, 'show'])->whereNumber('submission')->name('submissions.show');
+        Route::get('submissions/{submission}/files/{field}', [SubmissionController::class, 'file'])->whereNumber('submission')->name('submissions.file');
     });
 
     Route::middleware('role:superadmin')->group(function () {

@@ -2,6 +2,7 @@
 
 namespace App\Domain\Reporting\Services;
 
+use App\Enums\FieldType;
 use App\Models\FormSubmission;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -87,6 +88,9 @@ class SubmissionExporter
 
             $field = $fields->get($header) ?? $fieldsByKey->get($header);
             $value = $field ? ($answers[$field->key] ?? '') : '';
+            if ($field?->type === FieldType::Image && filled($value)) {
+                $value = $submission->fileUrl($field->key);
+            }
             $row[] = is_array($value) ? implode('|', $value) : (string) $value;
         }
 

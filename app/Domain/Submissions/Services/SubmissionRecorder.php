@@ -9,11 +9,16 @@ use App\Enums\SubmissionStatus;
 use App\Models\CampaignLocation;
 use App\Models\FormSubmission;
 use App\Models\FormTemplate;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class SubmissionRecorder
 {
+    /** Uploaded images are private; staff view them through SubmissionController::file. */
+    public const IMAGE_DISK = 'local';
+
     public function __construct(
         private readonly DynamicFormValidator $validator,
         private readonly FormDefinitionService $forms,
@@ -40,7 +45,25 @@ class SubmissionRecorder
         $template->loadMissing('fields');
         $validated = $this->validator->validate($template, $answers, $consentAccepted);
         $geo = $this->geofence->check($location, $position);
+        $validated = $this->normalize($template, $validated);
+        $stored = $this->storeImages($template, $validated, $campaign->id);
+        $validated = [...$validated, ...$stored];
 
+        try {
+            return $this->persist($campaign, $location, $template, $validated, $consentAccepted, $geo);
+        } catch (\Throwable $exception) {
+            Storage::disk(self::IMAGE_DISK)->delete(array_values($stored));
+
+            throw $exception;
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     * @param  array<string, mixed>  $geo
+     */
+    private function persist($campaign, CampaignLocation $location, FormTemplate $template, array $validated, bool $consentAccepted, array $geo): FormSubmission
+    {
         return DB::transaction(function () use ($campaign, $location, $template, $validated, $consentAccepted, $geo) {
             $submission = FormSubmission::query()->create([
                 'campaign_id' => $campaign->id,
@@ -60,6 +83,42 @@ class SubmissionRecorder
 
             return $submission->fresh(['fieldValues']);
         });
+    }
+
+    /**
+     * Multipart posts (forms with an image) send booleans as "1"/"0"; store them as real booleans.
+     *
+     * @param  array<string, mixed>  $answers
+     * @return array<string, mixed>
+     */
+    private function normalize(FormTemplate $template, array $answers): array
+    {
+        foreach ($template->fields as $field) {
+            if ($field->type === FieldType::YesNo && isset($answers[$field->key]) && ! is_bool($answers[$field->key])) {
+                $answers[$field->key] = filter_var($answers[$field->key], FILTER_VALIDATE_BOOLEAN);
+            }
+        }
+
+        return $answers;
+    }
+
+    /**
+     * @param  array<string, mixed>  $answers
+     * @return array<string, string> field key => stored path
+     */
+    private function storeImages(FormTemplate $template, array $answers, int $campaignId): array
+    {
+        $paths = [];
+
+        foreach ($template->fields as $field) {
+            $file = $answers[$field->key] ?? null;
+
+            if ($field->type === FieldType::Image && $file instanceof UploadedFile) {
+                $paths[$field->key] = $file->store('submissions/'.$campaignId, self::IMAGE_DISK);
+            }
+        }
+
+        return $paths;
     }
 
     /**

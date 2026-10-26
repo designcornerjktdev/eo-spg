@@ -43,7 +43,7 @@ class PublicFormController extends Controller
         $location = $this->location($token);
 
         $request->validate([
-            'answers' => ['required', 'array'],
+            'answers' => ['array'],
             'consent_accepted' => ['sometimes', 'boolean'],
             'position.latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'position.longitude' => ['nullable', 'numeric', 'between:-180,180'],
@@ -56,7 +56,9 @@ class PublicFormController extends Controller
         }
 
         // A browser without location support sends no position at all; treat it as "unknown".
-        $recorder->record($location, $request->input('answers', []), $request->boolean('consent_accepted'), (array) $request->input('position'));
+        // Uploaded images arrive in the file bag, not the input bag.
+        $answers = array_replace($request->input('answers', []), $request->file('answers', []));
+        $recorder->record($location, $answers, $request->boolean('consent_accepted'), (array) $request->input('position'));
 
         return back()->with('submitted', true);
     }

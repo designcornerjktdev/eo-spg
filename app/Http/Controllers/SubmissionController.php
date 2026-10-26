@@ -4,13 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Domain\Reporting\Services\IdentityMasker;
 use App\Domain\Reporting\Services\SubmissionExporter;
+use App\Domain\Submissions\Services\SubmissionRecorder;
 use App\Domain\Submissions\Services\SubmissionVoider;
+use App\Enums\FieldType;
 use App\Http\Requests\Submissions\VoidSubmissionRequest;
 use App\Models\Campaign;
 use App\Models\CampaignLocation;
 use App\Models\FormSubmission;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -51,6 +54,24 @@ class SubmissionController extends Controller
         ]);
     }
 
+    /**
+     * Streams an uploaded image answer to staff who can see the entry and that field.
+     */
+    public function file(Request $request, FormSubmission $submission, string $field)
+    {
+        $this->authorize('view', $submission);
+
+        $definition = $submission->formTemplate?->fields->firstWhere('key', $field);
+        abort_unless($definition && $definition->type === FieldType::Image, 404);
+        abort_if($request->user()->isClient() && ! $definition->visible_to_client, 403);
+
+        $path = $submission->answers[$field] ?? null;
+        $disk = Storage::disk(SubmissionRecorder::IMAGE_DISK);
+        abort_unless(is_string($path) && $disk->exists($path), 404);
+
+        return $disk->response($path, headers: ['Cache-Control' => 'private, max-age=3600']);
+    }
+
     public function void(VoidSubmissionRequest $request, FormSubmission $submission, SubmissionVoider $voider)
     {
         $voider->void($submission, $request->user(), $request->string('void_reason')->toString());
@@ -88,6 +109,23 @@ class SubmissionController extends Controller
     }
 
     /**
+     * Replaces stored image paths with viewable links.
+     *
+     * @param  array<string, mixed>  $answers
+     * @return array<string, mixed>
+     */
+    private function withFileUrls(FormSubmission $submission, array $answers): array
+    {
+        foreach ($submission->formTemplate?->fields ?? [] as $field) {
+            if ($field->type === FieldType::Image && filled($answers[$field->key] ?? null)) {
+                $answers[$field->key] = $submission->fileUrl($field->key);
+            }
+        }
+
+        return $answers;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function present(User $viewer, FormSubmission $submission, IdentityMasker $masker): array
@@ -107,7 +145,7 @@ class SubmissionController extends Controller
             'status' => $submission->status,
             'qualified' => $submission->qualified,
             'void_reason' => $viewer->isSuperadmin() ? $submission->void_reason : null,
-            'answers' => $masker->maskAnswers($viewer, $submission, $submission->answers ?? [], $submission->formTemplate),
+            'answers' => $this->withFileUrls($submission, $masker->maskAnswers($viewer, $submission, $submission->answers ?? [], $submission->formTemplate)),
             'fields' => $visibleFields,
             'can_void' => $viewer->can('void', $submission) && ! $submission->isVoid(),
         ];
