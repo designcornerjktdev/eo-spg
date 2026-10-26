@@ -61,7 +61,7 @@ class Campaign extends Model
 
     public function scopeVisibleTo(Builder $query, User $user): Builder
     {
-        if ($user->isSuperadmin()) {
+        if ($user->isStaff()) {
             return $query;
         }
 

@@ -61,14 +61,14 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * The superadmin (EO) can only sign in with email; clients only with a username.
+     * EO staff (superadmin, admin) can sign in with email; admins and clients with a username.
      */
     private function findUser(): ?User
     {
         $login = Str::lower(trim($this->string('login')->value()));
 
         return str_contains($login, '@')
-            ? User::query()->where('email', $login)->where('role', UserRole::Superadmin)->first()
+            ? User::query()->where('email', $login)->whereIn('role', UserRole::withEmailLogin())->first()
             : User::query()->where('username', $login)->where('role', '!=', UserRole::Superadmin)->first();
     }
 

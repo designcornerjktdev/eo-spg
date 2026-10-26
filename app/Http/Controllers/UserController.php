@@ -19,7 +19,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Client account management by the superadmin. EO accounts are not managed here.
+ * Client and admin account management by the superadmin. The superadmin account itself is not managed here.
  */
 class UserController extends Controller
 {
@@ -33,9 +33,11 @@ class UserController extends Controller
             'users' => User::query()
                 ->with('campaigns:id,name')
                 ->where('role', '!=', UserRole::Superadmin)
+                ->when(in_array($filters['role'] ?? null, [UserRole::Client->value, UserRole::Admin->value], true), fn ($query) => $query->where('role', $filters['role']))
                 ->when($filters['search'] ?? null, fn ($query, $search) => $query->where(fn ($query) => $query
                     ->where('name', 'like', '%'.$search.'%')
-                    ->orWhere('username', 'like', '%'.$search.'%')))
+                    ->orWhere('username', 'like', '%'.$search.'%')
+                    ->orWhere('email', 'like', '%'.$search.'%')))
                 ->when(($filters['status'] ?? null) === 'active', fn ($query) => $query->where('is_active', true))
                 ->when(($filters['status'] ?? null) === 'inactive', fn ($query) => $query->where('is_active', false))
                 ->latest()
@@ -57,8 +59,9 @@ class UserController extends Controller
     public function store(StoreUserRequest $request, AuditLogger $audit): RedirectResponse
     {
         $user = DB::transaction(function () use ($request) {
-            $user = User::query()->create($request->safe()->only(['name', 'username', 'password', 'role']));
-            $user->campaigns()->sync($request->input('campaign_ids', []));
+            $user = User::query()->create($request->safe()->only(['name', 'username', 'email', 'password', 'role']));
+            // Admins see every campaign, so campaign access only applies to clients.
+            $user->campaigns()->sync($user->isClient() ? $request->input('campaign_ids', []) : []);
 
             return $user;
         });
@@ -78,7 +81,7 @@ class UserController extends Controller
 
         return Inertia::render('users/edit', [
             'user' => [
-                ...$user->only(['id', 'name', 'username', 'role', 'is_active']),
+                ...$user->only(['id', 'name', 'username', 'email', 'role', 'is_active']),
                 'campaign_ids' => $user->campaigns()->pluck('campaigns.id'),
             ],
             'campaigns' => $this->campaignOptions(),
@@ -88,13 +91,13 @@ class UserController extends Controller
     public function update(UpdateUserRequest $request, User $user, AuditLogger $audit): RedirectResponse
     {
         $old = [
-            ...$user->only(['name', 'username', 'is_active']),
+            ...$user->only(['name', 'username', 'email', 'is_active']),
             'campaign_ids' => $user->campaigns()->pluck('campaigns.id')->all(),
         ];
 
         DB::transaction(function () use ($request, $user) {
-            $user->update($request->safe()->only(['name', 'username', 'is_active']));
-            $user->campaigns()->sync($request->input('campaign_ids', []));
+            $user->update($request->safe()->only(['name', 'username', 'email', 'is_active']));
+            $user->campaigns()->sync($user->isClient() ? $request->input('campaign_ids', []) : []);
         });
 
         // Deactivated accounts are signed out of every session immediately.

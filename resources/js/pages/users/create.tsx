@@ -11,16 +11,19 @@ import { Head, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
 
 export default function UserCreate({ campaigns }: { campaigns: CampaignOption[] }) {
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, transform, processing, errors } = useForm({
         name: '',
         username: '',
         password: '',
         role: 'client',
+        email: '',
         campaign_ids: [] as number[],
     });
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
+        // Clients have no email; drop a value typed before switching the role.
+        transform((payload) => ({ ...payload, email: payload.role === 'admin' ? payload.email : null }));
         post(route('users.store'));
     };
 
@@ -56,12 +59,38 @@ export default function UserCreate({ campaigns }: { campaigns: CampaignOption[] 
                         <PasswordInput value={data.password} onChange={(e) => setData('password', e.target.value)} />
                         <InputError message={errors.password} />
                     </div>
-                    <CampaignAccessPicker
-                        campaigns={campaigns}
-                        value={data.campaign_ids}
-                        onChange={(ids) => setData('campaign_ids', ids)}
-                        error={errors.campaign_ids}
-                    />
+                    <div className="grid gap-2">
+                        <Label htmlFor="role">Role</Label>
+                        <select
+                            id="role"
+                            className="border-input bg-background h-9 rounded-md border px-2 text-sm"
+                            value={data.role}
+                            onChange={(e) => setData('role', e.target.value)}
+                        >
+                            <option value="client">Client: dashboard and entries of granted campaigns</option>
+                            <option value="admin">Admin: runs campaigns, forms and entries</option>
+                        </select>
+                        <InputError message={errors.role} />
+                    </div>
+                    {data.role === 'admin' && (
+                        <div className="grid gap-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input id="email" type="email" autoComplete="off" value={data.email} onChange={(e) => setData('email', e.target.value)} />
+                            <p className="text-muted-foreground text-xs">
+                                Admins can sign in with this email or the username, and reset a forgotten password themselves.
+                            </p>
+                            <InputError message={errors.email} />
+                        </div>
+                    )}
+                    {/* Admins see every campaign, so access is only picked for clients. */}
+                    {data.role === 'client' && (
+                        <CampaignAccessPicker
+                            campaigns={campaigns}
+                            value={data.campaign_ids}
+                            onChange={(ids) => setData('campaign_ids', ids)}
+                            error={errors.campaign_ids}
+                        />
+                    )}
                     <Button disabled={processing}>Save</Button>
                 </form>
             </FormPage>

@@ -131,6 +131,9 @@ function EntryForm({
     onDone: () => void;
 }) {
     const [locating, setLocating] = useState(false);
+    // Keys of photo fields still being optimized; submitting now would send them empty.
+    const [busyFields, setBusyFields] = useState<string[]>([]);
+    const preparing = busyFields.length > 0;
     const { data, setData, post, transform, processing, errors, reset } = useForm<{
         answers: Record<string, Answer>;
         consent_accepted: boolean;
@@ -181,6 +184,7 @@ function EntryForm({
                             value={data.answers[field.key]}
                             // Functional update: quick successive answers must not overwrite each other.
                             onChange={(value) => setData((current) => ({ ...current, answers: { ...current.answers, [field.key]: value } }))}
+                            onBusyChange={(busy) => setBusyFields((keys) => (busy ? [...keys, field.key] : keys.filter((key) => key !== field.key)))}
                         />
                         <InputError message={fieldErrors[`answers.${field.key}`]} />
                     </div>
@@ -219,9 +223,13 @@ function EntryForm({
             )}
             <InputError message={fieldErrors.position} />
 
-            <Button type="submit" className="h-12 w-full" disabled={processing || locating || (device !== null && device.status !== 'ready')}>
-                {(processing || locating) && <LoaderCircle className="size-4 animate-spin" />}
-                {locating ? 'Checking your location…' : 'Submit'}
+            <Button
+                type="submit"
+                className="h-12 w-full"
+                disabled={processing || locating || preparing || (device !== null && device.status !== 'ready')}
+            >
+                {(processing || locating || preparing) && <LoaderCircle className="size-4 animate-spin" />}
+                {locating ? 'Checking your location…' : preparing ? 'Preparing photo…' : 'Submit'}
             </Button>
         </form>
     );

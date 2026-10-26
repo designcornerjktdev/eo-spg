@@ -1,7 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ImagePlus, X } from 'lucide-react';
+import { optimizeImage } from '@/lib/image';
+import { ImagePlus, LoaderCircle, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 export interface DynamicField {
@@ -28,7 +29,18 @@ export function emptyAnswer(field: DynamicField): Answer {
 /**
  * Input for one dynamic form field, matching the field types of the form builder.
  */
-export default function FormFieldInput({ field, value, onChange }: { field: DynamicField; value: Answer; onChange: (value: Answer) => void }) {
+export default function FormFieldInput({
+    field,
+    value,
+    onChange,
+    onBusyChange,
+}: {
+    field: DynamicField;
+    value: Answer;
+    onChange: (value: Answer) => void;
+    /** Reports work still running (e.g. a photo being optimized) so the form can hold off submitting. */
+    onBusyChange?: (busy: boolean) => void;
+}) {
     const id = `field-${field.key}`;
 
     if (field.type === 'yes_no') {
@@ -45,7 +57,7 @@ export default function FormFieldInput({ field, value, onChange }: { field: Dyna
     }
 
     if (field.type === 'image') {
-        return <ImageInput id={id} value={value instanceof File ? value : null} onChange={onChange} />;
+        return <ImageInput id={id} value={value instanceof File ? value : null} onChange={onChange} onBusyChange={onBusyChange} />;
     }
 
     if (field.type === 'long_text') {
@@ -105,9 +117,29 @@ export default function FormFieldInput({ field, value, onChange }: { field: Dyna
 }
 
 /** Photo picker with a preview; on phones it offers the camera or the gallery. */
-function ImageInput({ id, value, onChange }: { id: string; value: File | null; onChange: (value: Answer) => void }) {
+function ImageInput({
+    id,
+    value,
+    onChange,
+    onBusyChange,
+}: {
+    id: string;
+    value: File | null;
+    onChange: (value: Answer) => void;
+    onBusyChange?: (busy: boolean) => void;
+}) {
     const input = useRef<HTMLInputElement>(null);
     const [preview, setPreview] = useState<string | null>(null);
+    const [optimizing, setOptimizing] = useState(false);
+
+    const pick = async (file: File | undefined) => {
+        if (!file) return onChange('');
+        setOptimizing(true);
+        onBusyChange?.(true);
+        onChange(await optimizeImage(file));
+        setOptimizing(false);
+        onBusyChange?.(false);
+    };
 
     useEffect(() => {
         if (!value) {
@@ -122,7 +154,7 @@ function ImageInput({ id, value, onChange }: { id: string; value: File | null; o
 
     return (
         <div className="space-y-2">
-            <input ref={input} id={id} type="file" accept="image/*" className="sr-only" onChange={(e) => onChange(e.target.files?.[0] ?? '')} />
+            <input ref={input} id={id} type="file" accept="image/*" className="sr-only" onChange={(e) => pick(e.target.files?.[0])} />
             {preview ? (
                 <div className="relative w-fit">
                     <img src={preview} alt="" className="max-h-56 rounded-md border object-contain" />
@@ -142,8 +174,8 @@ function ImageInput({ id, value, onChange }: { id: string; value: File | null; o
                     htmlFor={id}
                     className="text-muted-foreground hover:bg-muted/50 flex h-28 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border border-dashed text-sm"
                 >
-                    <ImagePlus className="size-6" />
-                    Take or choose a photo
+                    {optimizing ? <LoaderCircle className="size-6 animate-spin" /> : <ImagePlus className="size-6" />}
+                    {optimizing ? 'Preparing photo…' : 'Take or choose a photo'}
                 </label>
             )}
         </div>

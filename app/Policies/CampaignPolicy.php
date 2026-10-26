@@ -14,7 +14,7 @@ class CampaignPolicy
 
     public function view(User $user, Campaign $campaign): bool
     {
-        if ($user->isSuperadmin()) {
+        if ($user->isStaff()) {
             return true;
         }
 
@@ -27,14 +27,17 @@ class CampaignPolicy
 
     public function create(User $user): bool
     {
-        return $user->isSuperadmin();
+        return $user->isStaff();
     }
 
     public function update(User $user, Campaign $campaign): bool
     {
-        return $user->isSuperadmin();
+        return $user->isStaff();
     }
 
+    /**
+     * Deleting a campaign stays with the superadmin.
+     */
     public function delete(User $user, Campaign $campaign): bool
     {
         return $user->isSuperadmin();

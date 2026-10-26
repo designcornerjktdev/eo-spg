@@ -16,8 +16,8 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        // Only the EO (superadmin) uses an email; clients sign in with an admin-managed username.
-        if (! $this->user()->isSuperadmin()) {
+        // Only EO staff use an email; clients sign in with an admin-managed username.
+        if (! $this->user()->isStaff()) {
             return [
                 'name' => ['required', 'string', 'max:255'],
             ];

@@ -40,7 +40,7 @@ export interface User {
     name: string;
     email: string | null;
     username?: string | null;
-    role?: 'superadmin' | 'client';
+    role?: 'superadmin' | 'admin' | 'client';
     home?: string;
     avatar?: string;
     email_verified_at: string | null;

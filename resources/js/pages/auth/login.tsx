@@ -40,7 +40,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
     };
 
     return (
-        <AuthLayout title={`Sign in to ${branding.name}`} description="Use the account provided by the EO team">
+        <AuthLayout title={`Sign in to ${branding.name}`} description="Sign in with your email or username">
             <Head title="Sign in" />
 
             <form className="flex flex-col gap-6" onSubmit={submit}>
@@ -58,7 +58,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             spellCheck={false}
                             value={data.login}
                             onChange={(e) => setData('login', e.target.value)}
-                            placeholder="EO admin: email · Client: username"
+                            placeholder="Email or username"
                         />
                         <InputError message={errors.login} />
                     </div>

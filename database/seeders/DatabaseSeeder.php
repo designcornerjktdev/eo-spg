@@ -6,6 +6,7 @@ use App\Domain\Forms\MayoraFormDefinition;
 use App\Domain\Submissions\Services\SubmissionRecorder;
 use App\Domain\Submissions\Services\SubmissionVoider;
 use App\Enums\CampaignStatus;
+use App\Enums\FieldType;
 use App\Enums\FormStatus;
 use App\Models\Campaign;
 use App\Models\CampaignLocation;
@@ -13,7 +14,9 @@ use App\Models\FormSubmission;
 use App\Models\FormTemplate;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class DatabaseSeeder extends Seeder
 {
@@ -22,16 +25,30 @@ class DatabaseSeeder extends Seeder
 
     private const JOBS = ['Karyawan swasta', 'Mahasiswa', 'Wiraswasta', 'Ibu rumah tangga', 'Freelancer', 'PNS'];
 
+    /** Weighted so the dashboard charts show a clear leader. */
+    private const SOURCES = ['Instagram' => 5, 'TikTok' => 4, 'Lewat booth' => 3, 'Teman' => 2];
+
+    private const FLAVOURS = ['Original', 'Caramel', 'Hazelnut', 'Less sugar'];
+
+    /** Colours for the generated demo photos. */
+    private const PHOTO_COLOURS = [[37, 99, 235], [22, 163, 74], [217, 119, 6], [219, 39, 119], [124, 58, 237]];
+
     public function run(SubmissionRecorder $recorder, SubmissionVoider $voider): void
     {
         // Deterministic demo data: the same seed always produces the same dashboard.
         mt_srand(2026);
         fake()->seed(2026);
 
+        // Photos from a previous seed would be orphaned by migrate:fresh.
+        Storage::disk(SubmissionRecorder::IMAGE_DISK)->deleteDirectory('submissions');
+
         $eo = User::factory()->superadmin()->create([
             'name' => 'Admin',
             'email' => 'admin@mail.com',
         ]);
+
+        // Operations admin: runs campaigns, forms and entries; signs in with email or username.
+        User::factory()->adminUser()->create(['name' => 'Ops Admin', 'username' => 'ops', 'email' => 'ops@mail.com']);
 
         // Client accounts are read-only and only see the campaigns they are granted below.
         $mayora = User::factory()->clientUser()->create(['name' => 'Client Mayora', 'username' => 'mayora']);
@@ -118,8 +135,29 @@ class DatabaseSeeder extends Seeder
             'qualification_rule' => ['type' => 'all_yes_no_true'],
         ]);
 
-        foreach (MayoraFormDefinition::fields() as $field) {
+        $fields = MayoraFormDefinition::fields();
+        foreach ($fields as $field) {
             $form->fields()->create($field);
+        }
+
+        // Choice questions feed the dashboard answer charts; the photo field shows image upload and Excel thumbnails.
+        $extra = [
+            ['sumber_info', 'Tahu acara ini dari mana?', FieldType::SingleChoice, true, true, array_keys(self::SOURCES)],
+            ['varian_favorit', 'Varian yang ingin dicoba', FieldType::MultipleChoice, false, true, self::FLAVOURS],
+            ['foto_dokumentasi', 'Foto dokumentasi', FieldType::Image, false, false, null],
+        ];
+        foreach ($extra as $index => [$key, $label, $type, $required, $dashboard, $options]) {
+            $form->fields()->create([
+                'key' => $key,
+                'label' => $label,
+                'type' => $type->value,
+                'required' => $required,
+                'sort_order' => count($fields) + $index + 1,
+                'visible_to_client' => true,
+                'is_identity' => false,
+                'show_on_dashboard' => $dashboard,
+                'options' => $options,
+            ]);
         }
 
         return [$campaign, $form, $models];
@@ -181,7 +219,46 @@ class DatabaseSeeder extends Seeder
             'kunjungi_poi' => mt_rand(1, 10) <= 8,
             'aktivitas_area' => mt_rand(1, 10) <= 8,
             'konsumsi_csd' => mt_rand(1, 10) <= 8,
+            'sumber_info' => $this->weighted(self::SOURCES),
+            'varian_favorit' => collect(self::FLAVOURS)->filter(fn () => mt_rand(1, 10) <= 4)->values()->all(),
+            // Most booths snap a photo, but not every visitor agrees to one.
+            'foto_dokumentasi' => mt_rand(1, 10) <= 7 ? $this->photo() : null,
         ];
+    }
+
+    /**
+     * @param  array<string, int>  $weights
+     */
+    private function weighted(array $weights): string
+    {
+        $pick = mt_rand(1, array_sum($weights));
+        foreach ($weights as $value => $weight) {
+            if (($pick -= $weight) <= 0) {
+                return $value;
+            }
+        }
+
+        return array_key_first($weights);
+    }
+
+    /**
+     * A small generated JPEG standing in for a booth photo; the recorder converts it to WebP like a real upload.
+     */
+    private function photo(): UploadedFile
+    {
+        [$r, $g, $b] = self::PHOTO_COLOURS[array_rand(self::PHOTO_COLOURS)];
+        $image = imagecreatetruecolor(640, 480);
+        imagefilledrectangle($image, 0, 0, 640, 480, imagecolorallocate($image, $r, $g, $b));
+        $light = imagecolorallocatealpha($image, 255, 255, 255, 80);
+        imagefilledellipse($image, mt_rand(120, 520), mt_rand(120, 360), 260, 260, $light);
+        imagefilledrectangle($image, 0, 400, 640, 480, imagecolorallocatealpha($image, 0, 0, 0, 60));
+        imagestring($image, 5, 20, 430, 'Demo photo '.now()->format('d M H:i'), imagecolorallocate($image, 255, 255, 255));
+
+        $path = tempnam(sys_get_temp_dir(), 'seed').'.jpg';
+        imagejpeg($image, $path, 85);
+        imagedestroy($image);
+
+        return new UploadedFile($path, 'photo.jpg', 'image/jpeg', null, true);
     }
 
     /**

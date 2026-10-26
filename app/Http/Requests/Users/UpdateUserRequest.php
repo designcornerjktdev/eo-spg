@@ -27,6 +27,9 @@ class UpdateUserRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:50', 'regex:/^[a-z0-9._-]+$/', Rule::unique('users', 'username')->ignore($target->id)],
             'is_active' => ['required', 'boolean'],
+            'email' => $target->isAdmin()
+                ? ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($target->id)]
+                : ['prohibited'],
             'campaign_ids' => ['array'],
             'campaign_ids.*' => ['integer', 'exists:campaigns,id'],
         ];

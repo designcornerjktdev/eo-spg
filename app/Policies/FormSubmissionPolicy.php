@@ -14,7 +14,7 @@ class FormSubmissionPolicy
 
     public function view(User $user, FormSubmission $submission): bool
     {
-        if ($user->isSuperadmin()) {
+        if ($user->isStaff()) {
             return true;
         }
 
@@ -32,11 +32,11 @@ class FormSubmissionPolicy
 
     public function void(User $user, FormSubmission $submission): bool
     {
-        return $user->isSuperadmin();
+        return $user->isStaff();
     }
 
     public function export(User $user): bool
     {
-        return $user->isSuperadmin() || $user->isClient();
+        return $user->isStaff() || $user->isClient();
     }
 }

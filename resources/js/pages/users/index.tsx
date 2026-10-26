@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { label } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { Head, router, useForm } from '@inertiajs/react';
 import { KeyRound, Pencil } from 'lucide-react';
@@ -18,6 +19,7 @@ interface Row {
     id: number;
     name: string;
     username: string | null;
+    email: string | null;
     role: string;
     is_active: boolean;
     campaigns: { id: number; name: string }[];
@@ -47,8 +49,8 @@ export default function UsersIndex({
         <AppLayout breadcrumbs={[{ title: 'Users', href: '/users' }]}>
             <Head title="Users" />
             <PageHeader
-                title="Client accounts"
-                description="Clients sign in with a username to see their own campaign results. Reset forgotten passwords here."
+                title="Accounts"
+                description="Admins run campaigns, forms and entries; clients see results of their granted campaigns. Admins sign in with email or username and can reset their own password; clients use a username and ask you to reset it."
                 action={{ href: route('users.create'), label: 'New account' }}
             />
 
@@ -59,7 +61,22 @@ export default function UsersIndex({
                     applyFilters({ search });
                 }}
             >
-                <Input className="w-full sm:w-64" placeholder="Search name or username" value={search} onChange={(e) => setSearch(e.target.value)} />
+                <Input
+                    className="w-full sm:w-64"
+                    placeholder="Search name, username or email"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                />
+                <select
+                    aria-label="Filter role"
+                    className="border-input bg-background h-9 rounded-md border px-2 text-sm"
+                    value={filters.role ?? ''}
+                    onChange={(e) => applyFilters({ role: e.target.value })}
+                >
+                    <option value="">All roles</option>
+                    <option value="admin">Admin</option>
+                    <option value="client">Client</option>
+                </select>
                 <select
                     aria-label="Filter status"
                     className="border-input bg-background h-9 rounded-md border px-2 text-sm"
@@ -81,6 +98,7 @@ export default function UsersIndex({
                         <tr>
                             <th className="px-3 py-2 text-left">Name</th>
                             <th className="px-3 py-2 text-left">Username</th>
+                            <th className="px-3 py-2 text-left">Role</th>
                             <th className="px-3 py-2 text-left">Campaign access</th>
                             <th className="px-3 py-2 text-left">Status</th>
                             <th className="px-3 py-2 text-left">Actions</th>
@@ -90,9 +108,15 @@ export default function UsersIndex({
                         {users.data.map((user) => (
                             <tr key={user.id} className={cn('border-t', !user.is_active && 'text-muted-foreground')}>
                                 <td className="px-3 py-2">{user.name}</td>
-                                <td className="px-3 py-2 font-mono">{user.username ?? '-'}</td>
+                                <td className="px-3 py-2">
+                                    <span className="font-mono">{user.username ?? '-'}</span>
+                                    {user.email && <span className="text-muted-foreground block text-xs">{user.email}</span>}
+                                </td>
+                                <td className="px-3 py-2">{label('role', user.role)}</td>
                                 <td className="max-w-72 truncate px-3 py-2" title={user.campaigns.map((c) => c.name).join(', ')}>
-                                    {user.campaigns.length ? (
+                                    {user.role === 'admin' ? (
+                                        <span className="text-muted-foreground">All campaigns</span>
+                                    ) : user.campaigns.length ? (
                                         user.campaigns.map((c) => c.name).join(', ')
                                     ) : (
                                         <span className="text-muted-foreground">None</span>

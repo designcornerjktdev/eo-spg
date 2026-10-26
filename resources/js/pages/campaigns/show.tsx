@@ -1,3 +1,4 @@
+import Link from '@/components/link';
 import PageHeader from '@/components/page-header';
 import PublicLinks, { type LinkLocation } from '@/components/public-links';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +8,6 @@ import AppLayout from '@/layouts/app-layout';
 import { formatDateRange, label } from '@/lib/format';
 import { SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
-import Link from '@/components/link';
 
 interface CampaignShow {
     id: number;
@@ -22,7 +22,7 @@ interface CampaignShow {
 }
 
 export default function CampaignShow({ campaign, accepting }: { campaign: CampaignShow; accepting: boolean }) {
-    const canEdit = usePage<SharedData>().props.auth.user?.role === 'superadmin';
+    const canEdit = usePage<SharedData>().props.auth.user?.role !== 'client';
 
     return (
         <AppLayout

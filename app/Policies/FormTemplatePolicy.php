@@ -9,7 +9,7 @@ class FormTemplatePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isSuperadmin();
+        return $user->isStaff();
     }
 
     public function view(User $user, FormTemplate $formTemplate): bool
@@ -19,16 +19,16 @@ class FormTemplatePolicy
 
     public function create(User $user): bool
     {
-        return $user->isSuperadmin();
+        return $user->isStaff();
     }
 
     public function update(User $user, FormTemplate $formTemplate): bool
     {
-        return $user->isSuperadmin();
+        return $user->isStaff();
     }
 
     public function delete(User $user, FormTemplate $formTemplate): bool
     {
-        return $user->isSuperadmin();
+        return $user->isStaff();
     }
 }

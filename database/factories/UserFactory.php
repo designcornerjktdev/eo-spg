@@ -42,6 +42,15 @@ class UserFactory extends Factory
         ]);
     }
 
+    public function adminUser(): static
+    {
+        return $this->state(fn () => [
+            'role' => UserRole::Admin,
+            'username' => fake()->unique()->userName(),
+            'email' => null,
+        ]);
+    }
+
     public function clientUser(): static
     {
         return $this->state(fn () => [

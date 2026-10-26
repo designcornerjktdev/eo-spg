@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Reporting\Services\IdentityMasker;
-use App\Domain\Reporting\Services\SubmissionExporter;
+use App\Domain\Reporting\Services\SubmissionXlsxExporter;
 use App\Domain\Submissions\Services\SubmissionRecorder;
 use App\Domain\Submissions\Services\SubmissionVoider;
 use App\Enums\FieldType;
@@ -34,7 +34,8 @@ class SubmissionController extends Controller
 
         return Inertia::render('submissions/index', [
             'submissions' => $submissions,
-            'filters' => $request->only(['campaign_id', 'location_id', 'from', 'to', 'q']),
+            // Drop empty filters so links built from them never carry "null" values.
+            'filters' => array_filter($request->only(['campaign_id', 'location_id', 'from', 'to', 'q']), 'filled'),
             'campaigns' => Campaign::query()->visibleTo($request->user())->orderBy('name')->get(['id', 'name']),
             'locations' => CampaignLocation::query()
                 ->whereHas('campaign', fn ($query) => $query->visibleTo($request->user()))
@@ -79,13 +80,14 @@ class SubmissionController extends Controller
         return back()->with('success', 'Entry voided.');
     }
 
-    public function export(Request $request, SubmissionExporter $exporter): StreamedResponse
+    /**
+     * Excel export of the filtered entries, with photo answers as thumbnails.
+     */
+    public function export(Request $request, SubmissionXlsxExporter $exporter): StreamedResponse
     {
         $this->authorize('export', FormSubmission::class);
 
-        $submissions = $this->filtered($request)->get();
-
-        return $exporter->download($request->user(), $submissions);
+        return $exporter->download($request->user(), $this->filtered($request)->get());
     }
 
     private function filtered(Request $request)
@@ -144,7 +146,7 @@ class SubmissionController extends Controller
             'submitted_at' => $submission->submitted_at,
             'status' => $submission->status,
             'qualified' => $submission->qualified,
-            'void_reason' => $viewer->isSuperadmin() ? $submission->void_reason : null,
+            'void_reason' => $viewer->isStaff() ? $submission->void_reason : null,
             'answers' => $this->withFileUrls($submission, $masker->maskAnswers($viewer, $submission, $submission->answers ?? [], $submission->formTemplate)),
             'fields' => $visibleFields,
             'can_void' => $viewer->can('void', $submission) && ! $submission->isVoid(),

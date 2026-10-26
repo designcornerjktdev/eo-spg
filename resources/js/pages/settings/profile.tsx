@@ -1,7 +1,7 @@
+import Link from '@/components/link';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
 import { Head, useForm, usePage } from '@inertiajs/react';
-import Link from '@/components/link';
 import { FormEventHandler } from 'react';
 
 import HeadingSmall from '@/components/heading-small';
@@ -26,7 +26,9 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
         name: auth.user.name,
         email: auth.user.email ?? '',
     });
-    const isEo = auth.user.role === 'superadmin';
+    // EO staff manage their own email; clients and admins also have a username.
+    const hasEmail = auth.user.role !== 'client';
+    const hasUsername = auth.user.role !== 'superadmin';
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -59,7 +61,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                             <InputError className="mt-2" message={errors.name} />
                         </div>
 
-                        {!isEo && (
+                        {hasUsername && (
                             <div className="grid gap-2">
                                 <Label htmlFor="username">Username</Label>
                                 <Input id="username" className="mt-1 block w-full" value={auth.user.username ?? ''} disabled readOnly />
@@ -67,7 +69,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                             </div>
                         )}
 
-                        {isEo && (
+                        {hasEmail && (
                             <div className="grid gap-2">
                                 <Label htmlFor="email">Email address</Label>
 
@@ -86,7 +88,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                             </div>
                         )}
 
-                        {isEo && mustVerifyEmail && auth.user.email_verified_at === null && (
+                        {hasEmail && mustVerifyEmail && auth.user.email_verified_at === null && (
                             <div>
                                 <p className="mt-2 text-sm text-neutral-800">
                                     Your email address is unverified.

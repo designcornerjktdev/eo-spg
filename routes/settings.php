@@ -19,7 +19,7 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('settings/appearance');
     })->name('appearance');
 
-    Route::middleware('role:superadmin')->group(function () {
+    Route::middleware('role:superadmin,admin')->group(function () {
         Route::get('settings/company', [CompanyController::class, 'edit'])->name('company.edit');
         Route::post('settings/company', [CompanyController::class, 'update'])->name('company.update');
     });

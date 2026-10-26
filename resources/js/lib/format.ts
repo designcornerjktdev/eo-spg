@@ -43,7 +43,7 @@ const labels = {
     campaignStatus: { draft: 'Draft', active: 'Active', closed: 'Closed' },
     formStatus: { draft: 'Draft', published: 'Published', locked: 'Locked' },
     submissionStatus: { submitted: 'Submitted', void: 'Voided' },
-    role: { superadmin: 'EO Admin', client: 'Client' },
+    role: { superadmin: 'Super admin', admin: 'Admin', client: 'Client' },
     fieldType: {
         short_text: 'Short text',
         long_text: 'Long text',

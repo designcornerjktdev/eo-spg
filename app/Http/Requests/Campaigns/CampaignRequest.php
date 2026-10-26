@@ -8,7 +8,7 @@ class CampaignRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->isSuperadmin() ?? false;
+        return $this->user()?->isStaff() ?? false;
     }
 
     /**

@@ -24,15 +24,15 @@ Route::post('f/{token}', [PublicFormController::class, 'store'])->middleware('th
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
-    Route::middleware('role:superadmin,client')->group(function () {
+    Route::middleware('role:superadmin,admin,client')->group(function () {
         Route::get('submissions', [SubmissionController::class, 'index'])->name('submissions.index');
         Route::get('submissions/export', [SubmissionController::class, 'export'])->name('submissions.export');
         Route::get('submissions/{submission}', [SubmissionController::class, 'show'])->whereNumber('submission')->name('submissions.show');
         Route::get('submissions/{submission}/files/{field}', [SubmissionController::class, 'file'])->whereNumber('submission')->name('submissions.file');
     });
 
-    Route::middleware('role:superadmin')->group(function () {
-        // Campaign management (incl. public links) is EO-only; clients see results via dashboard & entries.
+    Route::middleware('role:superadmin,admin')->group(function () {
+        // Campaign management (incl. public links) is EO staff only; clients see results via dashboard & entries.
         Route::resource('campaigns', CampaignController::class);
         Route::post('campaigns/{campaign}/activate', [CampaignController::class, 'activate'])->name('campaigns.activate');
         Route::post('campaigns/{campaign}/close', [CampaignController::class, 'close'])->name('campaigns.close');
@@ -43,6 +43,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('forms/{form}/version', [FormTemplateController::class, 'version'])->name('forms.version');
 
         Route::post('submissions/{submission}/void', [SubmissionController::class, 'void'])->name('submissions.void');
+    });
+
+    Route::middleware('role:superadmin')->group(function () {
         Route::get('audit', [AuditLogController::class, 'index'])->name('audit.index');
         Route::resource('users', UserController::class)->except(['show']);
         Route::put('users/{user}/password', [UserController::class, 'resetPassword'])->name('users.password');

@@ -49,12 +49,25 @@ class User extends Authenticatable
 
     public function canViewCampaign(int $campaignId): bool
     {
-        return $this->isSuperadmin() || ($this->isClient() && $this->campaigns()->whereKey($campaignId)->exists());
+        return $this->isStaff() || ($this->isClient() && $this->campaigns()->whereKey($campaignId)->exists());
     }
 
     public function isSuperadmin(): bool
     {
         return $this->role === UserRole::Superadmin;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === UserRole::Admin;
+    }
+
+    /**
+     * EO staff (superadmin or admin) see and run every campaign; only clients are limited to granted ones.
+     */
+    public function isStaff(): bool
+    {
+        return $this->isSuperadmin() || $this->isAdmin();
     }
 
     public function isClient(): bool

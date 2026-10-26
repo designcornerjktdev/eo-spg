@@ -1,9 +1,9 @@
+import Link from '@/components/link';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavGroup, type SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
-import Link from '@/components/link';
 import { FileSpreadsheet, LayoutGrid, ListChecks, MapPin, ScrollText, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
@@ -30,6 +30,9 @@ const eoNav: NavGroup[] = [
     },
 ];
 
+// Admins run campaigns day to day; account management and the audit log stay with the superadmin.
+const adminNav: NavGroup[] = eoNav.filter((group) => group.title !== 'Administration');
+
 const clientNav: NavGroup[] = [
     {
         title: 'Menu',
@@ -43,7 +46,7 @@ const clientNav: NavGroup[] = [
 export function AppSidebar() {
     const { auth } = usePage<SharedData>().props;
     const role = auth.user?.role;
-    const groups = role === 'client' ? clientNav : eoNav;
+    const groups = role === 'client' ? clientNav : role === 'admin' ? adminNav : eoNav;
 
     return (
         <Sidebar collapsible="icon" variant="inset">

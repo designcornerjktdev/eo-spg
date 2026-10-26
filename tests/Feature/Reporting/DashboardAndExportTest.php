@@ -60,14 +60,23 @@ class DashboardAndExportTest extends TestCase
         $this->actingAs($world['userB'])->get('/campaigns/'.$world['campaign']->id)->assertForbidden();
     }
 
-    public function test_csv_export_follows_visibility(): void
+    public function test_empty_filters_are_not_passed_to_the_page(): void
+    {
+        $world = $this->world();
+
+        // Submitting the filter bar with nothing chosen sends empty values; they must not come back as "null".
+        $this->actingAs($world['eo'])->get('/submissions?campaign_id=&location_id=&q=')
+            ->assertInertia(fn ($page) => $page->where('filters', []));
+    }
+
+    public function test_export_follows_visibility(): void
     {
         $world = $this->world();
         $world['form']->fields()->where('key', 'pekerjaan')->update(['visible_to_client' => false]);
 
         $this->submitPublicEntry($world['location'])->assertSessionHasNoErrors();
 
-        $csv = $this->actingAs($world['userA'])->get('/submissions/export')->assertOk()->streamedContent();
+        $csv = $this->exportedText($this->actingAs($world['userA'])->get('/submissions/export')->assertOk());
         $this->assertStringNotContainsString('Karyawan', $csv);
         $this->assertStringContainsString('submitted_at', $csv);
     }

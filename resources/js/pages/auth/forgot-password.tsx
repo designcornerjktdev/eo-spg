@@ -22,11 +22,11 @@ export default function ForgotPassword({ status }: { status?: string }) {
     };
 
     return (
-        <AuthLayout title="Forgot password" description="Self-service reset is only for EO admin accounts.">
+        <AuthLayout title="Forgot password" description="Enter your email to receive a password reset link.">
             <Head title="Forgot password" />
 
             <div className="bg-muted rounded-md p-3 text-sm">
-                <span className="font-medium">Client account?</span> Contact the EO admin to reset your password.
+                <span className="font-medium">Client account?</span> Contact your administrator to reset your password.
             </div>
 
             {status && <div className="text-center text-sm font-medium text-green-600">{status}</div>}
@@ -34,7 +34,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
             <div className="space-y-6">
                 <form onSubmit={submit}>
                     <div className="grid gap-2">
-                        <Label htmlFor="email">EO admin email</Label>
+                        <Label htmlFor="email">Email</Label>
                         <Input
                             id="email"
                             type="email"

@@ -27,7 +27,7 @@ export default function CampaignsIndex({
     campaigns: { data: CampaignRow[]; links: { url: string | null; label: string; active: boolean }[] };
     filters: { search?: string; status?: string | null };
 }) {
-    const canEdit = usePage<SharedData>().props.auth.user?.role === 'superadmin';
+    const canEdit = usePage<SharedData>().props.auth.user?.role !== 'client';
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Campaign', href: '/campaigns' }]}>

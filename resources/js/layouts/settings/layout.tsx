@@ -27,9 +27,9 @@ const sidebarNavItems: NavItem[] = [
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
     const currentPath = stripBase(window.location.pathname);
-    const isEo = usePage<SharedData>().props.auth.user?.role === 'superadmin';
-    // Company branding is application-wide, so only the superadmin sees it.
-    const navItems = isEo ? [...sidebarNavItems, { title: 'Company', url: '/settings/company', icon: null }] : sidebarNavItems;
+    const isStaff = usePage<SharedData>().props.auth.user?.role !== 'client';
+    // Company branding is application-wide, so only EO staff (superadmin, admin) see it.
+    const navItems = isStaff ? [...sidebarNavItems, { title: 'Company', url: '/settings/company', icon: null }] : sidebarNavItems;
 
     return (
         <div className="px-4 py-6">

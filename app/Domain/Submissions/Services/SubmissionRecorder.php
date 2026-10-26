@@ -23,6 +23,7 @@ class SubmissionRecorder
         private readonly DynamicFormValidator $validator,
         private readonly FormDefinitionService $forms,
         private readonly Geofence $geofence,
+        private readonly ImageOptimizer $images,
     ) {}
 
     /**
@@ -114,7 +115,7 @@ class SubmissionRecorder
             $file = $answers[$field->key] ?? null;
 
             if ($field->type === FieldType::Image && $file instanceof UploadedFile) {
-                $paths[$field->key] = $file->store('submissions/'.$campaignId, self::IMAGE_DISK);
+                $paths[$field->key] = $this->images->store($file, 'submissions/'.$campaignId, self::IMAGE_DISK);
             }
         }
 

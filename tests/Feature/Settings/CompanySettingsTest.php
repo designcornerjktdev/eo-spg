@@ -92,13 +92,23 @@ class CompanySettingsTest extends TestCase
         $this->assertNull(Setting::get('company_name'));
     }
 
-    public function test_only_superadmin_can_manage_company_settings(): void
+    public function test_clients_cannot_manage_company_settings(): void
     {
-        foreach ([User::factory()->clientUser()->create()] as $user) {
-            $this->actingAs($user)->get('/settings/company')->assertForbidden();
-            $this->actingAs($user)->post('/settings/company', ['company_name' => 'Hacked'])->assertForbidden();
-        }
+        $client = User::factory()->clientUser()->create();
+
+        $this->actingAs($client)->get('/settings/company')->assertForbidden();
+        $this->actingAs($client)->post('/settings/company', ['company_name' => 'Hacked'])->assertForbidden();
 
         $this->assertSame(config('app.name'), Branding::companyName());
+    }
+
+    public function test_admin_can_manage_company_settings(): void
+    {
+        $admin = User::factory()->adminUser()->create();
+
+        $this->actingAs($admin)->get('/settings/company')->assertOk();
+        $this->actingAs($admin)->post('/settings/company', ['company_name' => 'Ops Events'])->assertSessionHasNoErrors();
+
+        $this->assertSame('Ops Events', Branding::companyName());
     }
 }

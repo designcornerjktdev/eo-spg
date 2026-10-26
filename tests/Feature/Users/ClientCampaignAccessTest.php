@@ -45,7 +45,7 @@ class ClientCampaignAccessTest extends TestCase
         $this->actingAs($world['userA'])->get('/dashboard')
             ->assertInertia(fn ($page) => $page->where('summary.totals.submissions', 1)->where('summary.totals.campaigns', 1));
 
-        $csv = $this->actingAs($world['userA'])->get('/submissions/export')->streamedContent();
+        $csv = $this->exportedText($this->actingAs($world['userA'])->get('/submissions/export'));
         $this->assertStringContainsString('Sampling Kopi Lepas Haus', $csv);
         $this->assertStringNotContainsString('Campaign IMOBY', $csv);
     }

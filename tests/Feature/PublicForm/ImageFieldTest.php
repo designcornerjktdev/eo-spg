@@ -6,6 +6,7 @@ use App\Models\FormSubmission;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\Concerns\BuildsCampaignWorld;
 use Tests\TestCase;
 
@@ -49,6 +50,47 @@ class ImageFieldTest extends TestCase
 
         $this->actingAs($world['eo'])->get('/submissions/'.$entry->id)
             ->assertInertia(fn ($page) => $page->where('submission.answers.foto_struk', url($url)));
+    }
+
+    public function test_photo_is_converted_to_resized_webp(): void
+    {
+        Storage::fake('local');
+        $world = $this->world();
+        $this->withPhotoField($world);
+
+        $this->submitPublicEntry($world['location'], ['foto_struk' => UploadedFile::fake()->image('struk.jpg', 4000, 3000)])
+            ->assertSessionHasNoErrors();
+
+        $path = FormSubmission::query()->sole()->answers['foto_struk'];
+        $this->assertStringEndsWith('.webp', $path);
+        [$width, $height, $type] = getimagesizefromstring(Storage::disk('local')->get($path));
+        $this->assertSame(IMAGETYPE_WEBP, $type);
+        $this->assertSame([1600, 1200], [$width, $height]);
+    }
+
+    public function test_excel_export_embeds_photo_thumbnails(): void
+    {
+        Storage::fake('local');
+        $world = $this->world();
+        $this->withPhotoField($world);
+        $this->submitPublicEntry($world['location'], ['foto_struk' => UploadedFile::fake()->image('struk.jpg', 800, 600)]);
+        $this->submitPublicEntry($world['location']->fresh(), ['foto_struk' => UploadedFile::fake()->image('dua.jpg', 800, 600)]);
+
+        $response = $this->actingAs($world['eo'])->get('/submissions/export');
+        $response->assertOk()->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        $file = tempnam(sys_get_temp_dir(), 'xlsx');
+        file_put_contents($file, $response->streamedContent());
+        $sheet = IOFactory::load($file)->getActiveSheet();
+        unlink($file);
+
+        $this->assertSame('Receipt photo', $sheet->getCell('Q1')->getValue());
+        $this->assertCount(2, $sheet->getDrawingCollection());
+        $this->assertNull($sheet->getCell('Q2')->getValue());
+        $this->assertFalse($sheet->getCell('Q2')->hasHyperlink());
+        $this->assertSame('Siti Aminah', $sheet->getCell('H2')->getValue());
+
+        $this->actingAs($world['userB'])->get('/submissions/export')->assertOk();
     }
 
     public function test_photo_hidden_from_clients_cannot_be_opened_by_them(): void

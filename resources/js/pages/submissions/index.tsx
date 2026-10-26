@@ -37,7 +37,7 @@ export default function SubmissionsIndex({
     return (
         <AppLayout breadcrumbs={[{ title: 'Entries', href: '/submissions' }]}>
             <Head title="Entries" />
-            <PageHeader title="Campaign entries" description="Filters also apply to the CSV export." />
+            <PageHeader title="Campaign entries" description="Filters also apply to the Excel export." />
             <form onSubmit={apply} className="grid gap-3 rounded-lg border p-4 md:grid-cols-6">
                 <FilterSelect name="campaign_id" label="Campaign" value={filters.campaign_id} options={campaigns} />
                 <FilterSelect name="location_id" label="Location" value={filters.location_id} options={locations} />
@@ -56,7 +56,7 @@ export default function SubmissionsIndex({
                 <div className="flex items-end gap-2 md:col-span-6">
                     <Button type="submit">Filter</Button>
                     <Button asChild variant="outline">
-                        <a href={`${route('submissions.export')}?${new URLSearchParams(filters).toString()}`}>Export CSV</a>
+                        <a href={`${route('submissions.export')}?${new URLSearchParams(Object.entries(filters).filter(([, value]) => value)).toString()}`}>Export Excel</a>
                     </Button>
                 </div>
             </form>

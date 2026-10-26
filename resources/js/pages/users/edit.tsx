@@ -2,6 +2,7 @@ import CampaignAccessPicker, { type CampaignOption } from '@/components/campaign
 import DangerZone from '@/components/danger-zone';
 import FormPage from '@/components/form-page';
 import InputError from '@/components/input-error';
+import Link from '@/components/link';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -9,14 +10,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { Head, useForm } from '@inertiajs/react';
-import Link from '@/components/link';
 import { FormEvent } from 'react';
 
 interface EditableUser {
     id: number;
     name: string;
     username: string | null;
-    role: 'client';
+    email: string | null;
+    role: 'client' | 'admin';
     campaign_ids: number[];
     is_active: boolean;
 }
@@ -25,6 +26,7 @@ export default function UserEdit({ user, campaigns }: { user: EditableUser; camp
     const { data, setData, put, processing, errors } = useForm({
         name: user.name,
         username: user.username ?? '',
+        ...(user.role === 'admin' ? { email: user.email ?? '' } : {}),
         campaign_ids: user.campaign_ids,
         is_active: user.is_active,
     });
@@ -43,7 +45,10 @@ export default function UserEdit({ user, campaigns }: { user: EditableUser; camp
         >
             <Head title={`Edit ${user.name}`} />
             <FormPage>
-                <PageHeader title="Edit account" description="Client account" />
+                <PageHeader
+                    title="Edit account"
+                    description={user.role === 'admin' ? 'Admin account: sees and runs every campaign' : 'Client account'}
+                />
 
                 <form onSubmit={submit} className="grid gap-4 rounded-xl border p-4 sm:p-6">
                     <div className="grid gap-2">
@@ -62,12 +67,30 @@ export default function UserEdit({ user, campaigns }: { user: EditableUser; camp
                         <p className="text-muted-foreground text-xs">Changing the username means this account must sign in with the new one.</p>
                         <InputError message={errors.username} />
                     </div>
-                    <CampaignAccessPicker
-                        campaigns={campaigns}
-                        value={data.campaign_ids}
-                        onChange={(ids) => setData('campaign_ids', ids)}
-                        error={errors.campaign_ids}
-                    />
+                    {user.role === 'admin' && (
+                        <div className="grid gap-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                autoComplete="off"
+                                value={data.email ?? ''}
+                                onChange={(e) => setData('email', e.target.value)}
+                            />
+                            <p className="text-muted-foreground text-xs">
+                                Admins can sign in with this email or the username, and reset a forgotten password themselves.
+                            </p>
+                            <InputError message={errors.email} />
+                        </div>
+                    )}
+                    {user.role === 'client' && (
+                        <CampaignAccessPicker
+                            campaigns={campaigns}
+                            value={data.campaign_ids}
+                            onChange={(ids) => setData('campaign_ids', ids)}
+                            error={errors.campaign_ids}
+                        />
+                    )}
                     <label className="flex items-start gap-2 text-sm">
                         <Checkbox checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked === true)} />
                         <span>

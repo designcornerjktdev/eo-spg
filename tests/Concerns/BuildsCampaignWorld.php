@@ -10,6 +10,7 @@ use App\Models\CampaignLocation;
 use App\Models\FormTemplate;
 use App\Models\User;
 use Illuminate\Testing\TestResponse;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 trait BuildsCampaignWorld
 {
@@ -108,6 +109,19 @@ trait BuildsCampaignWorld
             'answers' => [...$this->validAnswers(), ...$overrides],
             'consent_accepted' => true,
         ]);
+    }
+
+    /**
+     * All cell values of a downloaded Excel export, joined into one string for contains-checks.
+     */
+    protected function exportedText(TestResponse $response): string
+    {
+        $file = tempnam(sys_get_temp_dir(), 'xlsx');
+        file_put_contents($file, $response->streamedContent());
+        $rows = IOFactory::load($file)->getActiveSheet()->toArray();
+        unlink($file);
+
+        return implode("\n", array_map(fn ($row) => implode(',', $row), $rows));
     }
 
     /**

@@ -23,7 +23,9 @@ class StoreUserRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:50', 'regex:/^[a-z0-9._-]+$/', 'unique:users,username'],
             'password' => ['required', Password::defaults()],
-            'role' => ['required', Rule::in([UserRole::Client->value])],
+            'role' => ['required', Rule::in([UserRole::Client->value, UserRole::Admin->value])],
+            // Admins need an email to sign in with it and reset their own password; clients have none.
+            'email' => ['nullable', 'required_if:role,admin', 'prohibited_unless:role,admin', 'email', 'max:255', 'unique:users,email'],
             'campaign_ids' => ['array'],
             'campaign_ids.*' => ['integer', 'exists:campaigns,id'],
         ];
