@@ -42,7 +42,7 @@ export function formatDateTimeRange(start: string | null | undefined, end: strin
 const labels = {
     campaignStatus: { draft: 'Draft', active: 'Active', closed: 'Closed' },
     formStatus: { draft: 'Draft', published: 'Published', locked: 'Locked' },
-    submissionStatus: { submitted: 'Submitted', void: 'Voided' },
+    submissionStatus: { submitted: 'Valid', void: 'Invalid' },
     role: { superadmin: 'Super admin', admin: 'Admin', client: 'Client' },
     fieldType: {
         short_text: 'Short text',
@@ -77,7 +77,7 @@ const labels = {
         'assignment.updated': 'Assignment updated',
         'assignment.cancelled': 'Assignment cancelled',
         'assignment.deleted': 'Assignment deleted',
-        'submission.voided': 'Entry voided',
+        'submission.voided': 'Entry marked as invalid',
         'submission.corrected': 'Entry corrected by SPG',
         'user.created': 'Account created',
         'user.updated': 'Account updated',

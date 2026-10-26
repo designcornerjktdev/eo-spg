@@ -1,41 +1,58 @@
-# Checklist production MVP
+# Checklist production
 
-Gunakan sebelum go-live. Perubahan skema production hanya lewat migrasi.
+Gunakan checklist ini sebelum go-live dan setiap kali deploy. Perubahan skema database di production hanya boleh lewat migrasi.
 
 ## Hosting dan environment
 
-- [ ] Versi PHP production dikonfirmasi (>= 8.2)
-- [ ] Database production dikonfirmasi (PostgreSQL diutamakan, MySQL jika shared hosting mensyaratkan)
-- [ ] `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL` memakai HTTPS
-- [ ] `TRUSTED_PROXIES` diisi IP/CIDR proxy atau load balancer yang benar-benar dipakai (kosong jika tanpa proxy). Jangan `*` kecuali server hanya bisa diakses lewat proxy itu: IP pengunjung (rate limit form publik) dan host (link reset password) bisa dipalsukan.
-- [ ] `APP_KEY` unik, jangan copy dari development
-- [ ] Session `secure` / HTTPS, CSRF aktif
-- [ ] Rate limit login tetap aktif
-- [ ] Seeder production **tidak** dijalankan dengan akun dummy Mayora
+- [ ] PHP ≥ 8.2 dengan ekstensi `gd` (dukungan WebP), `zip`, `xml`, `mbstring`, `fileinfo`. Ekstensi `exif` disarankan. Cek dengan `php -m`.
+- [ ] Database production sudah dikonfirmasi: PostgreSQL diutamakan, atau MySQL kalau shared hosting mensyaratkannya.
+- [ ] **Document root diarahkan ke folder `public/`**, misalnya lewat subdomain. Root project tidak boleh bisa diakses dari web, karena `.env` berisi kredensial.
+- [ ] HTTPS aktif. Geolocation di form publik hanya jalan lewat HTTPS.
+- [ ] `APP_ENV=production`, `APP_DEBUG=false`, dan `APP_URL` memakai HTTPS.
+- [ ] `APP_KEY` unik. Jangan menyalin dari development.
+- [ ] `TRUSTED_PROXIES` diisi IP/CIDR proxy atau load balancer yang benar-benar dipakai, atau dikosongkan kalau tanpa proxy.
+  - Jangan isi `*`, kecuali server hanya bisa diakses lewat proxy tersebut.
+  - Kalau diisi sembarangan, IP pengunjung (dipakai untuk rate limit form publik) dan host (dipakai di link reset password) bisa dipalsukan.
+- [ ] `MAIL_*` sudah dikonfigurasi dengan SMTP asli, supaya email reset password untuk Super admin dan Admin benar-benar terkirim.
+- [ ] Sesi `secure` di HTTPS dan CSRF aktif.
+- [ ] Rate limit login dan form publik tetap aktif.
+- [ ] `upload_max_filesize` dan `post_max_size` di PHP minimal 12 MB. Foto dibatasi 10 MB per field.
+
+## Penyimpanan file
+
+- [ ] Folder `storage/` bisa ditulis dan **tidak ikut terhapus saat deploy**. Foto entri ada di `storage/app/private/submissions`, logo perusahaan di `storage/app/public`, dan keduanya tidak tersimpan di Git.
+- [ ] `php artisan storage:link` sudah dijalankan.
+- [ ] Folder `storage/` ikut di-backup bersama database.
 
 ## Backup dan log
 
-- [ ] Backup database terjadwal (harian minimal)
-- [ ] Uji restore backup berhasil sebelum go-live
-- [ ] `LOG_CHANNEL` aktif dan bisa dibaca saat insiden
-- [ ] Rotasi log tidak menimpa bukti audit
+- [ ] Backup database dan `storage/` terjadwal, minimal harian.
+- [ ] Restore dari backup sudah diuji dan berhasil sebelum go-live.
+- [ ] `LOG_CHANNEL` aktif dan log bisa dibaca saat ada insiden.
+- [ ] Rotasi log tidak menimpa bukti audit.
 
-## Keamanan data
+## Keamanan dan data
 
-- [ ] Tes IDOR lintas client dan SPG lulus (`php artisan test`)
-- [ ] Field `visible_to_client` dan masking identitas ditinjau per campaign
-- [ ] Kebijakan retensi data konsumen setelah campaign ditutup sudah disetujui legal
-- [ ] Konfirmasi kepatuhan UU PDP No. 27 Tahun 2022
+- [ ] Semua tes lulus (`php artisan test`), termasuk tes isolasi akses antar client.
+- [ ] Pengaturan `visible_to_client` per field dan masking identitas per campaign sudah ditinjau.
+- [ ] Radius geofence setiap lokasi sudah diuji langsung di venue. Default-nya 300 m.
+- [ ] Kebijakan retensi data konsumen (termasuk foto) setelah campaign ditutup sudah disetujui legal.
+- [ ] Kepatuhan UU PDP No. 27 Tahun 2022 sudah dikonfirmasi.
+- [ ] **Seeder demo tidak dijalankan di production.** Seeder membuat akun dengan password `password` dan menghapus folder foto entri.
+- [ ] Akun Super admin pertama dibuat manual, misalnya lewat `php artisan tinker`, dengan password yang kuat.
 
-## Mobile SPG
+## Form publik di ponsel
 
-- [ ] Form diuji di lebar ~360px dan ~390px
-- [ ] Tombol Ya/Tidak bisa ditekan satu tangan
-- [ ] Error simpan terlihat jelas jika jaringan putus
+- [ ] Checklist di [`mobile-qa.md`](mobile-qa.md) sudah dijalankan, minimal di satu Android dan satu iPhone.
 
-## Cutover
+## Langkah deploy (shared hosting, tanpa Node)
 
-- [ ] `php artisan migrate --force`
-- [ ] `php artisan config:cache && php artisan route:cache && php artisan view:cache`
-- [ ] `npm run build` dan aset production di-upload
-- [ ] Akun EO pertama dibuat manual, bukan dari seeder demo
+1. Di lokal: jalankan `npm run build`, lalu commit (termasuk `public/build`) dan push.
+2. Di server:
+   ```bash
+   git pull
+   composer install --no-dev --optimize-autoloader
+   php artisan migrate --force
+   php artisan optimize
+   ```
+3. Buka aplikasi, lalu coba login, buka satu link form publik, dan lakukan export Excel.

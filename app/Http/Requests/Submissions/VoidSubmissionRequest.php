@@ -20,4 +20,12 @@ class VoidSubmissionRequest extends FormRequest
             'void_reason' => ['required', 'string', 'min:3'],
         ];
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return ['void_reason' => 'reason'];
+    }
 }

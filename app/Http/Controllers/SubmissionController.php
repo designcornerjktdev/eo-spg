@@ -7,6 +7,7 @@ use App\Domain\Reporting\Services\SubmissionXlsxExporter;
 use App\Domain\Submissions\Services\SubmissionRecorder;
 use App\Domain\Submissions\Services\SubmissionVoider;
 use App\Enums\FieldType;
+use App\Enums\SubmissionStatus;
 use App\Http\Requests\Submissions\VoidSubmissionRequest;
 use App\Models\Campaign;
 use App\Models\CampaignLocation;
@@ -77,7 +78,7 @@ class SubmissionController extends Controller
     {
         $voider->void($submission, $request->user(), $request->string('void_reason')->toString());
 
-        return back()->with('success', 'Entry voided.');
+        return back()->with('success', 'Entry marked as invalid.');
     }
 
     /**
@@ -87,7 +88,10 @@ class SubmissionController extends Controller
     {
         $this->authorize('export', FormSubmission::class);
 
-        return $exporter->download($request->user(), $this->filtered($request)->get());
+        // Invalid entries stay visible in the app for the record, but are left out of the report.
+        $submissions = $this->filtered($request)->where('status', '!=', SubmissionStatus::Void)->get();
+
+        return $exporter->download($request->user(), $submissions);
     }
 
     private function filtered(Request $request)

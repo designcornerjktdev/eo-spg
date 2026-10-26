@@ -37,7 +37,7 @@ export default function SubmissionsIndex({
     return (
         <AppLayout breadcrumbs={[{ title: 'Entries', href: '/submissions' }]}>
             <Head title="Entries" />
-            <PageHeader title="Campaign entries" description="Filters also apply to the Excel export." />
+            <PageHeader title="Campaign entries" description="Filters also apply to the Excel export. Invalid entries are not exported." />
             <form onSubmit={apply} className="grid gap-3 rounded-lg border p-4 md:grid-cols-6">
                 <FilterSelect name="campaign_id" label="Campaign" value={filters.campaign_id} options={campaigns} />
                 <FilterSelect name="location_id" label="Location" value={filters.location_id} options={locations} />

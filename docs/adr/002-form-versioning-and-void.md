@@ -3,6 +3,8 @@
 **Status:** Diterima  
 **Tanggal:** 2026-10-20
 
+> **Pembaruan:** sejak ADR 004 jawaban berasal dari konsumen lewat form publik, bukan dari SPG. Di UI, "void" sekarang disebut **Mark as invalid** dan berstatus **Invalid**. Entri Invalid tidak dihitung di dashboard dan tidak ikut ter-export (ADR 008). Admin juga bisa menandai entri invalid (ADR 007).
+
 ## Keputusan
 
 - Jawaban SPG disimpan sebagai JSON di `form_submissions.answers`. Tidak ada tabel baru per form.

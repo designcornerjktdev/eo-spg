@@ -1,298 +1,253 @@
 # PRD: Aplikasi Manajemen Campaign EO (MVP)
 
-Oct 20, 2026 · @Rahmat Tomy
+Dibuat 20 Okt 2026, diperbarui 26 Okt 2026 · @Rahmat Tomy
 
-> **Update 2026-10-23:** alur bisnis berubah. Role SPG dan penugasan dihapus; konsumen mengisi form sendiri lewat link/QR publik per lokasi campaign. Bagian dokumen ini yang menyebut SPG sudah tidak berlaku — lihat ADR 004 (`docs/adr/004-public-location-forms.md`).
+> **Versi 2 (sesuai yang sudah dibangun).** Draf pertama memakai SPG yang login, penugasan, data perusahaan client, dan produk. Sejak 23 Okt 2026 alurnya berubah menjadi model "Google Form": konsumen mengisi sendiri lewat link/QR publik per lokasi. Alasan setiap perubahan tercatat di [`docs/adr/`](adr/), yaitu ADR 004 sampai 008.
 
 ## Ringkasan
 
-MVP ini adalah aplikasi web tempat EO membuat form sendiri untuk setiap campaign, SPG mengisinya dari ponsel dengan timestamp otomatis dari server, dan client melihat data campaign serta produknya sendiri. Penjualan, stok, dan merchandise sengaja ditunda ke versi berikutnya.
+EO membuat campaign dan lokasinya, lalu menyusun form sendiri untuk campaign tersebut. Setiap lokasi punya link dan QR code yang dibuka konsumen di ponselnya masing-masing. Konsumen mengisi form tanpa login, hanya bisa mengirim dari area event, dan bisa melampirkan foto. Client melihat dashboard dan data entri dari campaign yang diberikan kepadanya, serta bisa mengunduhnya sebagai Excel.
 
 | Item | Keputusan |
 | --- | --- |
-| Role | Superadmin (EO), Client, SPG |
-| Inti produk | Form builder oleh EO, input form oleh SPG, tampilan data oleh Client |
-| Platform | Web responsif, mobile-first untuk SPG |
-| Stack | Laravel, Inertia, React, TypeScript, Tailwind, shadcn/ui |
-| Hosting awal | Shared hosting (MySQL atau PostgreSQL, belum dikonfirmasi) |
-| Status dokumen | Draf untuk ditinjau stakeholder |
+| Role login | Super admin, Admin (operasional EO), Client |
+| Pengisi form | Konsumen, tanpa akun, lewat link/QR per lokasi |
+| Inti produk | Form builder oleh EO, form publik dengan geofence, dashboard dan export untuk client |
+| Platform | Web responsif. Form publik dirancang mobile-first |
+| Stack | Laravel 12, Inertia v2, React 19, TypeScript, Tailwind, shadcn/ui |
+| Hosting | Shared hosting (Hostinger), PHP 8.2, MySQL/PostgreSQL |
 
 ## Latar belakang dan masalah
 
-Saat ini data lapangan dicatat di kertas, direkap ke Excel, lalu disusun manual menjadi laporan PPTX per hari. Proses ini lambat, rawan salah ketik, dan sulit diaudit.
+Selama ini data lapangan dicatat di kertas, direkap ke Excel, lalu disusun manual menjadi laporan PPTX harian. Prosesnya lambat, rawan salah ketik, dan sulit diaudit.
 
-Dua contoh nyata dari EO menunjukkan masalahnya:
+Contoh nyata:
 
-- **Form sampling Kopi Lepas Haus (Mayora)** berupa tabel kertas dengan kolom Nama, Usia, No HP, Pekerjaan, Domisili, Akun Instagram, dan tiga pertanyaan Ya/Tidak. Header Tanggal, Area, Lokasi, dan Nama SPG ditulis tangan.
-- **Laporan IMOBY 2026 Bandung** berisi rekap harian dalam PPTX dan tabel Excel yang ditempel sebagai gambar. Client tidak bisa memfilter atau menelusuri data sendiri.
+- **Form sampling Kopi Lepas Haus (Mayora)** berupa tabel kertas berisi Nama, Usia, No HP, Pekerjaan, Domisili, Akun Instagram, dan tiga pertanyaan Ya/Tidak.
+- **Laporan IMOBY 2026 Bandung** berupa rekap PPTX dengan tabel Excel yang ditempel sebagai gambar. Client tidak bisa memfilter data sendiri.
 
 Masalah utama:
 
-- Struktur form berbeda untuk setiap campaign, sehingga aplikasi dengan kolom tetap tidak akan cukup.
-- Tidak ada timestamp yang tepercaya untuk setiap data yang dicatat.
-- Client harus menunggu laporan manual dari EO.
-- Data personal konsumen (nama, HP, Instagram) tersebar di kertas dan file tanpa kontrol akses.
+- Struktur form berbeda di setiap campaign.
+- Tidak ada timestamp yang tepercaya.
+- Client harus menunggu laporan manual.
+- Data personal konsumen tersebar tanpa kontrol akses.
 
 ## Tujuan, non-tujuan, dan metrik
-
-Tujuan MVP adalah mengganti form kertas dan rekap Excel dengan input digital yang bisa dipantau EO dan client secara langsung.
 
 **Tujuan**
 
 - EO membuat dan mengubah form campaign tanpa bantuan developer.
-- SPG mengisi data dari ponsel dengan cepat, baris demi baris.
-- Setiap data tercatat dengan timestamp server yang tidak bisa diubah.
-- Client melihat data campaign dan produknya sendiri tanpa menunggu laporan manual.
-- Akses data dibatasi ketat per role dan per client.
+- Konsumen mengisi sendiri dalam beberapa menit, dari lokasi event.
+- Setiap entri tercatat dengan waktu server yang tidak bisa diubah.
+- Client memantau hasil secara langsung, lengkap dengan foto dokumentasi, tanpa menunggu laporan manual.
+- Akses data dibatasi ketat per role dan per campaign.
 
 **Non-tujuan (versi ini)**
 
-- Pencatatan penjualan, SKU, harga promo, merchandise, dan stok.
-- Event multi-brand, role Team Leader, Crew, dan Logistic dengan login.
-- Check-in, GPS, mode offline, notifikasi, dan PPTX otomatis.
+- Pencatatan penjualan, SKU, merchandise, dan stok.
+- Mode offline, notifikasi, dan PPTX otomatis.
+- Logika kondisional di dalam form.
 
-**Metrik keberhasilan** (target angka perlu dikonfirmasi stakeholder)
+**Metrik keberhasilan** (target angka menunggu stakeholder)
 
 | Metrik | Cara ukur | Target |
 | --- | --- | --- |
-| Waktu EO membuat form baru | Uji coba dengan form Mayora | Belum ditetapkan |
-| Waktu SPG mengisi satu baris | Uji coba lapangan | Belum ditetapkan |
-| Data yang masuk lewat aplikasi, bukan kertas | Jumlah submission dibanding perkiraan | Belum ditetapkan |
-| Kebocoran data antar client atau antar SPG | Tes otomatis lintas role | 0 kasus |
+| Waktu EO menyiapkan campaign dan form baru | Uji coba dengan form Mayora | Belum ditetapkan |
+| Waktu konsumen mengisi form | Uji lapangan | Belum ditetapkan |
+| Entri dari luar area event | Ditolak geofence | 0 yang lolos tanpa manipulasi GPS |
+| Kebocoran data antar client | Tes otomatis lintas role | 0 kasus |
 
 ## Pengguna dan role
 
-Ada tiga role login. Satu akun hanya punya satu role, dan akun Client terikat ke satu perusahaan client.
-
-| Role | Siapa | Kebutuhan utama | Perangkat |
+| Role | Siapa | Login | Kebutuhan utama |
 | --- | --- | --- | --- |
-| Superadmin (EO) | Tim EO | Membuat client, produk, campaign, form, dan assignment; memantau semua data | Desktop |
-| Client | Perusahaan pemilik produk | Melihat produk, campaign, dan data yang boleh dilihat | Desktop dan ponsel |
-| SPG | Petugas lapangan | Melihat tugas dan mengisi form dengan cepat | Ponsel |
+| Super admin | Pemilik atau kepala EO | email | Semua fitur, termasuk akun, audit log, dan hapus campaign |
+| Admin | Tim operasional EO | email atau username | Menjalankan campaign, form, entries, dan branding untuk semua campaign |
+| Client | Brand atau pemilik produk | username | Melihat dashboard dan entries dari campaign yang diberikan, lalu export |
+| Konsumen | Pengunjung booth | tidak login | Mengisi form lewat link/QR di lokasi |
 
-## Cakupan MVP
+Super admin dan Admin bisa mereset password sendiri lewat email. Password Client direset oleh Super admin.
 
-MVP mencakup satu alur lengkap: EO menyiapkan campaign dan form, SPG mengisi, client melihat hasilnya.
+## Cakupan
 
 | Modul | Status |
 | --- | --- |
-| Autentikasi dan 3 role | Masuk |
-| Manajemen client dan akun client | Masuk |
-| Manajemen produk | Masuk |
-| Campaign dan lokasi | Masuk |
-| Assignment SPG ke campaign, lokasi, dan jadwal | Masuk |
-| Form builder (EO) | Masuk |
-| Input form (SPG, mobile) dengan timestamp server | Masuk |
-| Daftar data, filter, dan pencarian | Masuk |
-| Dashboard EO dan client | Masuk |
-| Audit log perubahan penting | Masuk |
-| Export CSV | Usulan masuk, perlu persetujuan |
-| Upload foto dan video dokumentasi | Perlu keputusan |
+| Autentikasi dan 3 role login | Selesai |
+| Akun dan akses campaign untuk client | Selesai |
+| Campaign dan lokasi (map picker, radius geofence) | Selesai |
+| Link dan QR publik per lokasi | Selesai |
+| Form builder (9 tipe field, versi, kunci) | Selesai |
+| Form publik: geofence, upload foto dengan WebP, anti-spam, selalu tema terang | Selesai |
+| Daftar entri, filter, dan tandai Invalid | Selesai |
+| Dashboard interaktif | Selesai |
+| Export Excel dengan thumbnail foto | Selesai |
+| Branding perusahaan (logo, nama, favicon) | Selesai |
+| Audit log | Selesai |
 | Penjualan, SKU, merchandise, stok | Ditunda |
-| Event multi-brand, role TL, Crew, Logistic | Ditunda |
-| Check-in, GPS, offline, notifikasi, PPTX otomatis | Ditunda |
+| Offline, notifikasi, PPTX otomatis | Ditunda |
+| Rotasi link publik (ganti token) | Usulan |
 
-## Alur kerja dan siklus status
+## Alur kerja
 
-Alur utama: EO membuat client, produk, campaign, dan form; EO menugaskan SPG; SPG mengirim data baris demi baris; EO memantau dan mengoreksi; client melihat data yang diizinkan; EO menutup campaign.
+1. Super admin atau Admin membuat **campaign** dan **lokasinya**. Setiap lokasi diberi pin di peta dan radius, dengan default 300 m.
+2. Super admin atau Admin menyusun **form**, mempratinjaunya, lalu mem-**publish**. Setelah form menerima entri pertama, form terkunci. Perubahan berikutnya dibuat sebagai versi baru.
+3. Campaign diaktifkan. Link/QR setiap lokasi dibagikan di booth.
+4. Konsumen membuka link, dan posisinya dicek. Kalau berada di luar area, form tidak ditampilkan. Kalau di dalam area, konsumen mengisi form, mencentang consent, lalu mengirim.
+5. Entri langsung muncul di dashboard dan Entries. Entri yang salah, misalnya ganda atau data uji coba, **ditandai Invalid** beserta alasannya.
+6. Client memantau dashboard dan mengunduh Excel.
+7. Campaign ditutup. Setelah itu link menolak entri baru.
 
-&#91;embedded content: siklus status · 4 objek\]
+**Status**
 
-Submission yang sudah dikirim tidak bisa ditimpa. Di hari yang sama SPG bisa memperbaiki (baris lama di-void, baris baru dibuat) atau membatalkan dengan alasan; setelah itu koreksi dilakukan EO dengan void dan alasan (ADR 003).
+| Objek | Status |
+| --- | --- |
+| Campaign | `draft` → `active` → `closed` |
+| Form | `draft` → `published` → `locked` (otomatis setelah entri pertama) |
+| Entri | `Valid` atau `Invalid` (dengan alasan wajib, dan tidak bisa dibatalkan) |
 
 ## User stories dan kriteria penerimaan
 
-Setiap story dianggap selesai hanya jika kriteria fungsional dan tes akses-nya lulus.
-
 | ID | Sebagai | Saya ingin | Kriteria penerimaan |
 | --- | --- | --- | --- |
-| U1 | EO | membuat client dan akun client | Client tersimpan; akun client hanya terikat ke client itu; password di-hash |
-| U2 | EO | menambah produk milik client | Produk hanya terlihat oleh EO dan client pemiliknya |
-| U3 | EO | membuat campaign dengan tanggal, lokasi, dan produk | Campaign berstatus draft sampai diaktifkan; tanggal selesai tidak boleh sebelum tanggal mulai |
-| U4 | EO | membuat form dengan tipe field dasar | Field dapat diurutkan; form bisa dipratinjau; form terkunci setelah submission pertama |
-| U5 | EO | menugaskan SPG ke campaign, lokasi, dan jadwal | Sistem menolak jadwal SPG yang bentrok |
-| U6 | SPG | melihat tugas yang ditugaskan kepada saya | Hanya assignment milik saya yang tampil; akses ke ID lain ditolak |
-| U7 | SPG | mengisi form dan langsung menambah baris berikutnya | Field wajib divalidasi di server; timestamp diisi server; baris muncul di daftar hari ini |
-| U8 | SPG | melihat data yang sudah saya kirim | Hanya submission saya yang tampil; tidak bisa ditimpa; perbaiki/batalkan hanya di hari yang sama |
-| U9 | EO | melihat, memfilter, dan mengoreksi data | Filter tanggal, lokasi, SPG; pembatalan (void) wajib beralasan dan tercatat di audit log |
-| U10 | Client | melihat data campaign saya | Hanya campaign client saya; hanya field yang ditandai terlihat untuk client |
-| U11 | Client | melihat ringkasan dan grafik | Angka dihitung dari data yang sama dengan daftar data |
-| U12 | EO | mengekspor data ke CSV (jika disetujui) | File memuat kolom form dan timestamp; mematuhi aturan visibilitas |
+| U1 | Super admin | membuat akun Admin dan Client | Admin wajib punya email. Client tanpa email dan dicentang akses campaign-nya. Password di-hash |
+| U2 | Super admin / Admin | membuat campaign dan lokasi di peta | Tanggal selesai tidak boleh sebelum tanggal mulai. Setiap lokasi otomatis punya link publik unik |
+| U3 | Super admin / Admin | menyusun form | Field bisa diurutkan dan dipratinjau. Form terkunci setelah entri pertama, dan perubahan membuat versi baru |
+| U4 | Konsumen | mengisi form dari link di booth | Tanpa login. Validasi dijalankan di server. Waktu diisi server. Hanya bisa dikirim dari dalam radius lokasi |
+| U5 | Konsumen | melampirkan foto | Bisa dari kamera atau galeri. Foto diperkecil otomatis. Tombol kirim menunggu sampai foto siap |
+| U6 | Super admin / Admin | memfilter entri dan menandai Invalid | Filter campaign, lokasi, tanggal, dan teks. Tandai Invalid wajib beralasan dan tercatat di audit log |
+| U7 | Client | melihat entri campaign saya | Hanya campaign yang diberikan, hanya field yang ditandai terlihat untuk client, dan identitas dimasking kalau diaktifkan |
+| U8 | Client | melihat ringkasan dan grafik | Angka dihitung dari entri Valid, sama seperti daftar entri |
+| U9 | Client / EO | mengunduh Excel | Mengikuti filter, aturan visibilitas, dan masking. Foto tampil sebagai thumbnail. Entri Invalid tidak ikut |
+| U10 | Super admin / Admin | mengganti logo dan nama perusahaan | Tampil di sidebar, halaman login, favicon, dan form publik |
 
-## Form builder dan input SPG
+## Form builder dan form publik
 
-Struktur form disimpan sebagai data, dan jawaban SPG disimpan sebagai JSON per baris. Tidak ada tabel database baru yang dibuat saat EO membuat form.
+Struktur form disimpan sebagai data, dan jawaban disimpan sebagai JSON per entri. Membuat form tidak membuat tabel database baru.
 
-**Tipe field MVP**
+**Tipe field**
 
 | Tipe | Contoh | Catatan |
 | --- | --- | --- |
-| Teks pendek | Nama, Domisili, Akun Instagram | Bisa ditandai identitas (data personal) |
-| Teks panjang | Catatan | Tidak bisa dipakai di dashboard |
-| Angka | Usia | Mendukung nilai minimum dan maksimum |
-| Nomor telepon | No Handphone | Validasi format |
-| Pilihan tunggal | Pekerjaan | Opsi ditentukan EO |
-| Pilihan ganda | Varian yang dicoba | Opsi ditentukan EO |
-| Ya/Tidak | Mengonsumsi CSD minimal 2x sebulan | Tampil sebagai tombol cepat |
-| Tanggal | Tanggal lahir |  |
+| Short text | Nama, Domisili, Instagram | Bisa ditandai identitas |
+| Long text | Catatan | |
+| Number | Usia | Ada batas minimum dan maksimum. Bisa tampil di dashboard (histogram) |
+| Phone number | No HP | Validasi format |
+| Single choice | Tahu acara dari mana | Bisa tampil di dashboard (donut) |
+| Multiple choice | Varian yang ingin dicoba | Bisa tampil di dashboard (bar) |
+| Yes/No | Konsumsi CSD minimal 2x sebulan | Dipakai untuk aturan kualifikasi, tidak tampil sebagai grafik sendiri |
+| Date | Tanggal lahir | |
+| Image upload | Foto dokumentasi | Maksimal 10 MB. Disimpan privat dalam format WebP |
 
-**Pengaturan per field:** label, kunci unik, wajib atau tidak, urutan, terlihat untuk client, ditandai identitas, dipakai di dashboard.
+**Pengaturan per field:** label, kunci unik, wajib atau tidak, urutan, terlihat oleh client, ditandai identitas, dan tampil di dashboard.
 
-**Pengaturan per form:** nama, versi, status (draft, published, locked), consent wajib atau tidak beserta teksnya, dan aturan kualifikasi sederhana (misalnya konsumen lolos jika semua pertanyaan Ya/Tidak terjawab Ya).
+**Pengaturan per form:** nama, versi, status, consent beserta teksnya, dan aturan kualifikasi. Aturan kualifikasi: konsumen dianggap *qualified* kalau semua pertanyaan Yes/No dijawab Yes.
 
 **Aturan penting**
 
-1. Tanggal, area, lokasi, dan nama SPG tidak diisi manual. Semuanya diambil dari assignment dan akun SPG.
-2. `submitted_at` diisi oleh server saat data disimpan dan tidak bisa diubah, bukan dari jam ponsel SPG.
-3. Form yang sudah punya submission tidak boleh diubah. Perubahan membuat versi baru, dan data lama tetap terbaca dengan versi lamanya.
-4. Validasi dibangun dari definisi field dan dijalankan di backend. Validasi di frontend hanya untuk kenyamanan.
-5. SPG bisa mengirim banyak baris per assignment. Setelah simpan, tombol "Simpan & tambah berikutnya" membuka form kosong.
-6. SPG tidak bisa menimpa data setelah dikirim. Di hari yang sama SPG bisa memperbaiki atau membatalkan (void + baris pengganti, tercatat di audit log); setelah itu koreksi dilakukan EO dengan void dan alasan.
-7. Jika consent diaktifkan, SPG wajib mencentang sebelum menyimpan, dan versi teks consent ikut tersimpan.
-
-**Contoh: form Sampling Kopi Lepas Haus**
-
-| Urutan | Label | Tipe | Wajib | Identitas |
-| --- | --- | --- | --- | --- |
-| 1 | Nama | Teks pendek | Ya | Ya |
-| 2 | Usia | Angka | Ya | Tidak |
-| 3 | No Handphone | Nomor telepon | Ya | Ya |
-| 4 | Pekerjaan | Teks pendek | Ya | Tidak |
-| 5 | Domisili | Teks pendek | Ya | Tidak |
-| 6 | Akun Instagram | Teks pendek | Tidak | Ya |
-| 7 | Mengunjungi POI minimal 2x seminggu | Ya/Tidak | Ya | Tidak |
-| 8 | Biasa bekerja, belajar, atau berlibur di area tersebut | Ya/Tidak | Ya | Tidak |
-| 9 | Mengonsumsi CSD minimal 2x sebulan | Ya/Tidak | Ya | Tidak |
+1. Waktu entri (`submitted_at`) diisi oleh server, bukan diambil dari jam ponsel.
+2. Lokasi entri diambil dari link yang dibuka. Konsumen tidak memilih lokasi sendiri.
+3. Geofence dicek di browser saat halaman dibuka, lalu dicek ulang di server saat dikirim (ADR 006).
+4. Link hanya menerima entri selama campaign berstatus Active dan memiliki form yang sudah di-publish.
+5. Anti-spam: maksimal 10 kiriman per menit per IP per link, ditambah honeypot.
+6. Entri tidak bisa diedit atau dihapus. Koreksi dilakukan dengan menandai entri Invalid.
+7. Kalau consent diaktifkan, konsumen wajib mencentangnya, dan versi teks consent ikut tersimpan.
 
 ## Dashboard dan pelaporan
 
-Metrik inti dihitung dari kolom tetap, sedangkan grafik dari field custom hanya muncul untuk field yang ditandai khusus oleh EO.
+- **Kotak angka:** jumlah entri, jumlah entri Invalid, dan jumlah campaign.
+- **Grafik:**
+  - tren entri harian atau kumulatif, dipisah qualified dan tidak
+  - gauge persentase qualified
+  - jam ramai
+  - donut per lokasi, yang bisa diklik untuk memfilter
+  - grafik untuk setiap pertanyaan yang ditandai dashboard
+- **Filter:** campaign, lokasi, dan rentang tanggal. Filter langsung diterapkan saat dipilih.
+- **Entries:** tabel dengan pencarian dan pagination, lalu halaman detail yang menampilkan foto. Client hanya melihat field `visible_to_client`, dan identitasnya dimasking kalau campaign mengaktifkan masking.
+- **Export:** file Excel (.xlsx) berisi daftar yang sedang difilter, dengan thumbnail foto. Entri Invalid tidak ikut ter-export.
 
-**Metrik inti (tanpa konfigurasi)**
+## Model data
 
-- Total submission per campaign, per hari, per lokasi, dan per SPG.
-- Jumlah konsumen yang lolos kualifikasi (jika aturan kualifikasi aktif).
-- Status assignment (terjadwal, aktif, selesai, batal).
-- Submission yang dibatalkan (void).
+Tabel utama:
 
-**Metrik dari field custom**
+| Tabel | Isi |
+| --- | --- |
+| `users` | Akun dengan `role` (superadmin, admin, client), `username`, `email` (opsional untuk client), dan `is_active` |
+| `campaigns` | Nama, tanggal, status, dan pengaturan masking |
+| `campaign_user` | Akses campaign per akun client |
+| `campaign_locations` | Lokasi dengan alamat, `latitude`, `longitude`, `radius_meters`, dan `public_token` |
+| `form_templates` / `form_fields` | Definisi form per campaign beserta versinya |
+| `form_submissions` | Entri: campaign, lokasi, versi form, `answers` (JSON), `submitted_at`, posisi dan jarak, status, alasan invalid |
+| `submission_field_values` | Salinan jawaban yang ditandai dashboard, untuk agregasi cepat |
+| `audit_logs` | Siapa, aksi apa, nilai lama dan baru, serta kapan |
+| `settings` | Nama perusahaan dan path logo |
 
-- Hanya field bertipe pilihan, Ya/Tidak, atau angka yang bisa dipakai, dengan centang "tampilkan di dashboard".
-- Pilihan dan Ya/Tidak ditampilkan sebagai hitungan per opsi; angka ditampilkan sebagai jumlah atau rata-rata.
-- Nilai field dashboard disalin ke tabel indeks `submission_field_values` saat submit, sehingga agregasi cepat di MySQL maupun PostgreSQL.
-
-**Filter:** rentang tanggal, lokasi, dan SPG (khusus EO). Client memakai filter tanggal dan lokasi.
-
-**Daftar data:** tabel dengan pencarian dan pagination. Client hanya melihat kolom dari field `visible_to_client`. Field identitas bisa dimasking untuk client (keputusan terbuka).
-
-**Export:** CSV dari daftar yang sedang difilter, mengikuti aturan visibilitas yang sama dengan layar.
-
-## Model data dan ERD
-
-&#91;embedded content: ERD · 11 tabel utama\]
-
-Panah menunjukkan relasi satu ke banyak dari atas ke bawah, kecuali campaigns dan products yang N:N lewat tabel campaign\_products. Skema final harus divalidasi ulang setelah pertanyaan terbuka dijawab.
-
-**Aturan data**
-
-- `users.client_id` terisi hanya untuk akun client; EO dan SPG bernilai null.
-- `form_submissions` menyimpan `campaign_id`, `assignment_id`, `template_id`, `submitted_by`, `answers` (JSON), `submitted_at` (server), dan `status`.
-- `submission_field_values` hanya diisi untuk field yang ditandai dashboard, sebagai salinan untuk laporan.
-- Client, produk, dan campaign memakai soft delete.
-- `audit_logs` bersifat polimorfik: pengguna, aksi, nilai lama, nilai baru, dan waktu.
+File foto disimpan di `storage/app/private/submissions`, tidak di database.
 
 ## Matriks hak akses
 
 Setiap aksi dicek di server dengan Policy dan query scope. Menyembunyikan menu di frontend tidak dianggap sebagai pembatasan akses.
 
-| Aksi | EO | Client | SPG |
+| Aksi | Super admin | Admin | Client |
 | --- | --- | --- | --- |
-| Kelola user, client, dan akun client | Penuh | Tidak | Tidak |
-| Produk | Penuh | Lihat milik sendiri | Lihat produk campaign yang ditugaskan |
-| Campaign dan lokasi | Penuh | Lihat milik sendiri | Lihat yang ditugaskan |
-| Buat dan ubah form | Penuh | Tidak | Tidak |
-| Assignment SPG | Penuh | Tidak | Lihat milik sendiri |
-| Isi form | Penuh | Tidak | Hanya assignment aktif miliknya |
-| Lihat data submission | Semua | Campaign sendiri, field yang diizinkan | Submission sendiri |
-| Ubah atau batalkan submission | Void dengan alasan dan audit log | Tidak | Tidak |
-| Dashboard | Semua | Campaign sendiri | Tidak |
-| Export CSV | Penuh | Usulan: campaign sendiri, jika disetujui | Tidak |
-| Audit log | Penuh | Tidak | Tidak |
+| Kelola akun dan akses campaign | Ya | Tidak | Tidak |
+| Campaign dan lokasi: buat, ubah, aktifkan, tutup | Ya | Ya | Tidak |
+| Hapus campaign | Ya | Tidak | Tidak |
+| Form builder | Ya | Ya | Tidak |
+| Lihat entri | Semua | Semua | Campaign yang diberikan, field yang diizinkan |
+| Tandai entri Invalid | Ya | Ya | Tidak |
+| Dashboard dan export Excel | Semua | Semua | Campaign yang diberikan |
+| Company settings | Ya | Ya | Tidak |
+| Audit log | Ya | Tidak | Tidak |
 
-**Aturan pengujian wajib**
+**Aturan pengujian wajib** (semuanya dicakup tes otomatis)
 
-- Client A tidak bisa membuka campaign, produk, atau submission Client B lewat ID mana pun (uji IDOR).
-- SPG tidak bisa membuka assignment atau submission SPG lain.
-- Client tidak pernah menerima field yang tidak ditandai terlihat, termasuk lewat export.
+- Client A tidak bisa membuka campaign, entri, foto, atau export milik campaign lain lewat ID mana pun.
+- Client tidak pernah menerima field yang tidak ditandai terlihat, termasuk lewat foto dan export.
+- Admin tidak bisa membuka Users atau Audit log, dan tidak bisa menghapus campaign.
+- `/register` tidak tersedia. Akun hanya dibuat oleh Super admin.
 
 ## Kebutuhan non-fungsional
 
 | Area | Kebutuhan |
 | --- | --- |
-| Keamanan | Otorisasi di server untuk setiap aksi; hashing password; sesi aman; HTTPS; proteksi CSRF; rate limiting login |
-| Integritas data | Timestamp server; submission tidak bisa diedit, hanya di-void; audit log untuk perubahan form, assignment, dan void |
-| Privasi | Hanya kumpulkan data yang diperlukan; field identitas dapat dimasking; consent dicatat dengan versi teksnya; konfirmasi kepatuhan UU PDP No. 27 Tahun 2022 ke pihak legal |
-| Mobile | Form SPG dapat dipakai satu tangan di ponsel; target besar untuk tombol Ya/Tidak; diuji di minimal dua ukuran layar |
-| Performa | Daftar data memakai pagination; dashboard memakai tabel indeks; target waktu respons belum ditetapkan |
-| Ketersediaan | Backup database terjadwal dan log error aktif sejak hari pertama; uji pemulihan sebelum go-live |
-| Pengujian | Tes otomatis untuk aturan bisnis kritis dan akses lintas role dan lintas client |
-| Deployment | Shared hosting dengan migrasi untuk setiap perubahan skema; tidak ada perubahan skema manual di production |
+| Keamanan | Otorisasi di server, hashing password, HTTPS, CSRF, rate limit login dan form publik, `TRUSTED_PROXIES` yang spesifik |
+| Integritas data | Waktu dari server. Entri tidak bisa diedit, hanya ditandai Invalid. Audit log untuk perubahan penting |
+| Privasi | Field identitas bisa dimasking, consent tercatat bersama versi teksnya, foto disimpan privat. Kepatuhan UU PDP No. 27/2022 dikonfirmasi ke pihak legal |
+| Mobile | Form publik nyaman dipakai satu tangan dan diuji di Android dan iPhone ([`mobile-qa.md`](mobile-qa.md)) |
+| Performa | Pagination, tabel indeks dashboard, dan foto diperkecil sebelum upload |
+| Ketersediaan | Backup database dan `storage/` terjadwal, restore diuji sebelum go-live |
+| Deployment | Migrasi untuk setiap perubahan skema. Aset frontend di-commit, jadi hosting tidak butuh Node ([`production-checklist.md`](production-checklist.md)) |
 
-Angka volume (jumlah SPG, submission per hari) dan target performa menunggu jawaban stakeholder.
+## Arsitektur
 
-## Arsitektur dan tech stack
+Aplikasi berbentuk modular monolith: satu aplikasi Laravel dengan antarmuka React lewat Inertia, tanpa REST API terpisah. Aturan bisnis berada di `app/Domain/*/Services`:
 
-Aplikasi dibangun sebagai modular monolith: satu aplikasi Laravel dengan antarmuka React lewat Inertia, tanpa microservice dan tanpa REST API terpisah di MVP.
+- **Forms:** validasi form dinamis dan versi form.
+- **Submissions:** pencatatan entri, geofence, optimasi foto, dan penandaan Invalid.
+- **Reporting:** dashboard, masking, dan export Excel.
+- **Audit:** audit log.
 
-| Lapisan | Pilihan |
-| --- | --- |
-| Backend | Laravel, Eloquent, Form Request, Policy, middleware |
-| Frontend | React, TypeScript, Inertia.js, Tailwind CSS, shadcn/ui |
-| Database | PostgreSQL diutamakan; MySQL/MariaDB jika hosting mensyaratkan |
-| Hosting awal | Shared hosting; VPS atau managed hosting di masa depan |
-
-**Prinsip**
-
-- Aturan bisnis (validasi form dinamis, kualifikasi, status) berada di layer service Laravel, bukan di komponen React, agar dapat dipakai ulang oleh API di masa depan.
-- Modul dipisah menurut domain: Klien, Produk, Campaign, Form, Assignment, Submission, Pelaporan.
-- Perubahan skema selalu lewat migrasi.
-- Hindari abstraksi spekulatif dan optimasi dini.
-- Dokumentasikan keputusan arsitektur penting dalam catatan singkat.
-
-## Rencana fase dan vertical slice
-
-Pengembangan berjalan per vertical slice. Setiap slice mencakup migrasi, validasi backend, otorisasi, UI, dan tes, dan hanya dianggap selesai jika tes aksesnya lulus. Estimasi waktu belum dibuat karena deadline dan ukuran tim belum diketahui.
-
-| Fase | Isi | Syarat selesai |
-| --- | --- | --- |
-| 1. Foundation | Setup Laravel, Inertia, React, TS, Tailwind, shadcn/ui; autentikasi; 3 role; Policy; seeder; kerangka tes akses | Login per role dan tes akses dasar lulus |
-| 2. Master data | 2.1 Client dan akun client; 2.2 Produk; 2.3 Campaign dan lokasi; 2.4 Assignment SPG dan cek bentrok jadwal | Tes isolasi antar client lulus |
-| 3. Form dan input | 3.1 Form builder EO; 3.2 Halaman SPG mobile; 3.3 Validasi dinamis, timestamp server, consent | Form Mayora dapat dibuat dan diisi end-to-end |
-| 4. Monitoring | Daftar data dengan filter; tampilan client dengan masking; dashboard; export CSV (jika disetujui) | Client hanya melihat field yang diizinkan |
-| 5. QA dan deploy | Tes lintas role, uji mobile, konfigurasi production, backup, log | Checklist production terpenuhi |
-
-Upload foto dan video menjadi slice tambahan di fase 3 jika diputuskan masuk MVP.
+Keputusan penting dicatat di [`docs/adr/`](adr/).
 
 ## Risiko dan mitigasi
 
 | Risiko | Dampak | Mitigasi |
 | --- | --- | --- |
-| Sinyal internet buruk di venue event | SPG gagal menyimpan data | Tanyakan kondisi venue sejak awal; offline ditunda tetapi dicatat sebagai risiko utama |
-| Form builder terlalu rumit | Jadwal mundur | Batasi ke 8 tipe field tanpa logika kondisional |
-| Data personal bocor ke client yang salah | Pelanggaran privasi dan UU PDP | Policy dan query scope, masking field identitas, tes IDOR otomatis |
-| Form diubah setelah data masuk | Data lama tidak konsisten | Penguncian form dan versioning |
-| Hosting shared membatasi PHP, upload, atau JSON | Fitur tertunda | Konfirmasi hosting sebelum fase 1 |
-| Kebutuhan penjualan muncul cepat | Skema perlu diubah | Domain dipisah per modul; penjualan dirancang sebagai modul terpisah |
+| Sinyal buruk di venue | Konsumen gagal mengirim | Foto diperkecil sebelum upload. Mode offline ditunda dan dicatat sebagai risiko |
+| GPS di dalam mal tidak akurat | Konsumen yang ada di lokasi ikut tertolak | Toleransi akurasi sampai 100 m. Radius diatur per lokasi dan diuji di venue |
+| Lokasi dipalsukan | Ada entri dari luar area | Geofence hanya mencegah link disebar. Entri mencurigakan ditandai Invalid |
+| Link disebar di luar lokasi | Spam | Geofence, rate limit, honeypot. Rotasi token sebagai usulan |
+| Data personal bocor ke client yang salah | Pelanggaran UU PDP | Policy dan scope, masking, tes isolasi otomatis |
+| Folder `storage/` hilang saat deploy | Foto entri hilang | Folder `storage/` di-backup dan tidak ditimpa saat deploy |
 
 ## Pertanyaan terbuka
 
-1. Apakah upload foto dan video dokumentasi masuk MVP?
-2. Apakah client boleh melihat data personal konsumen (nama, HP, Instagram), atau hanya data yang dimasking atau agregat?
-3. ~~Apakah SPG boleh mengedit data setelah dikirim?~~ Diputuskan: boleh perbaiki/batalkan di hari yang sama lewat void + baris pengganti (ADR 003).
-4. Apakah export CSV wajib di MVP?
-5. Hosting dan database apa yang tersedia (MySQL atau PostgreSQL, versi PHP, batas upload)?
-6. Berapa jumlah SPG, submission per hari, dan ukuran media yang diperkirakan?
-7. Apa deadline MVP dan berapa orang tim pengembang?
-8. Apakah satu SPG boleh bekerja di beberapa campaign pada hari yang sama?
-9. Apakah satu campaign boleh memiliki beberapa produk dan beberapa template form?
-10. Bagaimana kebijakan retensi data konsumen setelah campaign ditutup?
+1. ~~Apakah upload foto masuk MVP?~~ Ya, sudah dibangun sebagai field Image upload (ADR 008).
+2. ~~Apakah client boleh melihat data personal?~~ Bisa diatur per campaign lewat masking identitas dan visibilitas per field.
+3. ~~Apakah export wajib ada?~~ Ya, dalam bentuk Excel dengan foto (ADR 008).
+4. ~~Hosting apa yang dipakai?~~ Hostinger dengan PHP 8.2. Database production masih perlu dikonfirmasi.
+5. Berapa perkiraan jumlah entri per hari dan berapa foto per campaign? Ini menentukan kebutuhan storage dan waktu export.
+6. Bagaimana kebijakan retensi data dan foto konsumen setelah campaign ditutup?
+7. Apakah link publik perlu bisa dirotasi (token diganti) kalau link sudah tersebar?
+8. Apakah perlu field "Nama promotor" untuk mengukur kinerja per petugas booth, sebagai pengganti peran SPG?

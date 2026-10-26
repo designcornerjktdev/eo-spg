@@ -16,6 +16,7 @@ The original flow had SPG accounts logging in, receiving time-boxed assignments 
 - **Spam protection**: 10 submissions per minute per IP per link (`throttle:public-form`) and a hidden honeypot field; honeypot hits are silently dropped.
 - **SPG role removed entirely**: SPG accounts, assignments (`assignments` table), the SPG task pages, SPG self-correction (`corrects_submission_id`), and the per-SPG dashboard chart. Only the EO superadmin and client accounts remain.
 - Voiding by the EO (ADR 002) is unchanged and is the only way to correct an entry.
+- Later additions: geofencing (ADR 006), the admin role (ADR 007), and photo answers (ADR 008). The public page always uses the light theme.
 
 ## Migration
 

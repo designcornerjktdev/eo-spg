@@ -10,8 +10,8 @@ enum SubmissionStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::Submitted => 'Submitted',
-            self::Void => 'Voided',
+            self::Submitted => 'Valid',
+            self::Void => 'Invalid',
         };
     }
 }

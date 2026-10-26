@@ -69,6 +69,20 @@ class DashboardAndExportTest extends TestCase
             ->assertInertia(fn ($page) => $page->where('filters', []));
     }
 
+    public function test_invalid_entries_are_left_out_of_the_export(): void
+    {
+        $world = $this->world();
+        $this->submitPublicEntry($world['location'], ['nama' => 'Valid Visitor'])->assertSessionHasNoErrors();
+        $this->submitPublicEntry($world['location'], ['nama' => 'Duplicate Visitor'])->assertSessionHasNoErrors();
+        $duplicate = FormSubmission::query()->latest('id')->first();
+
+        $this->actingAs($world['eo'])->post('/submissions/'.$duplicate->id.'/void', ['void_reason' => 'Filled in twice'])->assertSessionHasNoErrors();
+
+        $export = $this->exportedText($this->actingAs($world['eo'])->get('/submissions/export')->assertOk());
+        $this->assertStringContainsString('Valid Visitor', $export);
+        $this->assertStringNotContainsString('Duplicate Visitor', $export);
+    }
+
     public function test_export_follows_visibility(): void
     {
         $world = $this->world();

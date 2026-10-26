@@ -12,7 +12,7 @@ Clients only read results: the dashboard and the entries of their campaigns. Mod
 
 - **No client companies.** A client is a read-only user account. When creating or editing the account, the EO ticks the campaigns it may view (`campaign_user` pivot, `Campaign::viewers()` / `User::campaigns()`).
 - **No products.** The Products module, `products` and `campaign_products` tables are removed; campaigns no longer have a `client_id`.
-- **Client access = Dashboard + Entries (incl. Excel export)** for granted campaigns only. Campaign management, forms, public links, users and audit log are EO-only. Identity masking (`mask_identity_for_client`) still applies.
+- **Client access = Dashboard + Entries (incl. Excel export)** for granted campaigns only. Campaign management, forms, public links, users and audit log are EO-only (the superadmin, and since ADR 007 partly the admin role). Identity masking (`mask_identity_for_client`) still applies.
 - Access changes take effect immediately because visibility is checked against the pivot on every request (`Campaign::scopeVisibleTo`, `User::canViewCampaign`).
 
 ## Migration

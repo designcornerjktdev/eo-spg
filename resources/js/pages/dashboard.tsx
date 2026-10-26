@@ -72,7 +72,7 @@ export default function Dashboard({
     return (
         <AppLayout breadcrumbs={[{ title: 'Dashboard', href: '/dashboard' }]}>
             <Head title="Dashboard" />
-            <PageHeader title="Dashboard" description="Live results from the public form links. Voided entries are excluded." />
+            <PageHeader title="Dashboard" description="Live results from the public form links. Invalid entries are not counted." />
 
             {/* Filters: one row above the charts. */}
             <div className="flex flex-wrap items-end gap-3 rounded-lg border p-3">
@@ -136,7 +136,7 @@ export default function Dashboard({
             {/* Headline numbers. */}
             <div className="grid gap-4 sm:grid-cols-3">
                 <StatTile icon={ListChecks} title="Entries" value={totals.submissions.toLocaleString('en-GB')} />
-                <StatTile icon={Ban} title="Voided" value={totals.voided.toLocaleString('en-GB')} hint="Excluded from charts" />
+                <StatTile icon={Ban} title="Invalid" value={totals.voided.toLocaleString('en-GB')} hint="Not counted in charts" />
                 <StatTile
                     icon={Link2}
                     title="Open links"

@@ -52,7 +52,7 @@ class SubmissionTable
             'location' => $submission->location?->name,
             'area' => $submission->location?->area,
             'submitted_at' => $submission->submitted_at?->toDateTimeString(),
-            'status' => $submission->status->value,
+            'status' => $submission->status->label(),
             'qualified' => $submission->qualified === null ? '' : ($submission->qualified ? 'yes' : 'no'),
         ];
 

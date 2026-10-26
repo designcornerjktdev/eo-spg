@@ -1,4 +1,5 @@
 import FormPage from '@/components/form-page';
+import InputError from '@/components/input-error';
 import PageHeader from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,7 +31,7 @@ interface Submission {
 }
 
 export default function SubmissionShow({ submission }: { submission: Submission }) {
-    const { data, setData, post, processing } = useForm({ void_reason: '' });
+    const { data, setData, post, processing, errors } = useForm({ void_reason: '' });
 
     const voidSubmit = (event: FormEvent) => {
         event.preventDefault();
@@ -53,7 +54,7 @@ export default function SubmissionShow({ submission }: { submission: Submission 
 
                 {submission.void_reason && (
                     <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
-                        Void reason: {submission.void_reason}
+                        Reason marked invalid: {submission.void_reason}
                     </p>
                 )}
 
@@ -102,13 +103,19 @@ export default function SubmissionShow({ submission }: { submission: Submission 
 
                 {submission.can_void && (
                     <form onSubmit={voidSubmit} className="grid gap-3 rounded-xl border border-red-200 p-4 sm:p-6 dark:border-red-900">
-                        <h2 className="font-semibold">Void entry</h2>
+                        <h2 className="font-semibold">Mark as invalid</h2>
                         <p className="text-muted-foreground text-sm">
-                            Voiding requires a reason and is recorded in the audit log. Data is never overwritten.
+                            Use this for duplicates, test entries or fake data. The entry is kept for the record but no longer counted in the
+                            dashboard. Please write down why.
                         </p>
-                        <Textarea value={data.void_reason} onChange={(e) => setData('void_reason', e.target.value)} placeholder="Void reason" />
+                        <Textarea
+                            value={data.void_reason}
+                            onChange={(e) => setData('void_reason', e.target.value)}
+                            placeholder="Reason, e.g. same person filled the form twice"
+                        />
+                        <InputError message={errors.void_reason} />
                         <Button variant="destructive" className="justify-self-start" disabled={processing}>
-                            Void entry
+                            Mark as invalid
                         </Button>
                     </form>
                 )}
