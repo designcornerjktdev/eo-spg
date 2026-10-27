@@ -42,6 +42,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('forms/{form}/publish', [FormTemplateController::class, 'publish'])->name('forms.publish');
         Route::post('forms/{form}/version', [FormTemplateController::class, 'version'])->name('forms.version');
 
+        Route::post('submissions/import', [SubmissionController::class, 'import'])->name('submissions.import');
+        Route::get('submissions/import/template', [SubmissionController::class, 'importTemplate'])->name('submissions.import-template');
         Route::post('submissions/{submission}/void', [SubmissionController::class, 'void'])->name('submissions.void');
 
         // Admins may list clients and change their campaign access; the policy limits them to client accounts.

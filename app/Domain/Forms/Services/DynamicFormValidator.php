@@ -13,14 +13,19 @@ class DynamicFormValidator
 
     /**
      * @param  array<string, mixed>  $answers
+     * @param  bool  $skipImages  spreadsheet imports carry no photos, so image fields are left out
      * @return array<string, mixed>
      */
-    public function validate(FormTemplate $template, array $answers, bool $consentAccepted = false): array
+    public function validate(FormTemplate $template, array $answers, bool $consentAccepted = false, bool $skipImages = false): array
     {
         $rules = [];
         $attributes = [];
 
         foreach ($template->fields as $field) {
+            if ($skipImages && $field->type === FieldType::Image) {
+                continue;
+            }
+
             $key = 'answers.'.$field->key;
             $attributes[$key] = $field->label;
             $fieldRules = $field->required ? ['required'] : ['nullable'];

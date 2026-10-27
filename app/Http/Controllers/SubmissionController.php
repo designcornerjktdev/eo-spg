@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Audit\Services\AuditLogger;
 use App\Domain\Reporting\Services\IdentityMasker;
 use App\Domain\Reporting\Services\SubmissionXlsxExporter;
+use App\Domain\Submissions\Services\SubmissionImporter;
 use App\Domain\Submissions\Services\SubmissionRecorder;
 use App\Domain\Submissions\Services\SubmissionVoider;
 use App\Enums\FieldType;
@@ -13,6 +15,7 @@ use App\Models\Campaign;
 use App\Models\CampaignLocation;
 use App\Models\FormSubmission;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -38,6 +41,7 @@ class SubmissionController extends Controller
             // Drop empty filters so links built from them never carry "null" values.
             'filters' => array_filter($request->only(['campaign_id', 'location_id', 'from', 'to', 'q']), 'filled'),
             'campaigns' => Campaign::query()->visibleTo($request->user())->orderBy('name')->get(['id', 'name']),
+            'canImport' => $request->user()->can('import', FormSubmission::class),
             'locations' => CampaignLocation::query()
                 ->whereHas('campaign', fn ($query) => $query->visibleTo($request->user()))
                 ->orderBy('name')
@@ -92,6 +96,41 @@ class SubmissionController extends Controller
         $submissions = $this->filtered($request)->where('status', '!=', SubmissionStatus::Void)->get();
 
         return $exporter->download($request->user(), $submissions);
+    }
+
+    /**
+     * Adds entries from an Excel/CSV file to one campaign location.
+     */
+    public function import(Request $request, SubmissionImporter $importer, AuditLogger $audit): RedirectResponse
+    {
+        $this->authorize('import', FormSubmission::class);
+
+        $data = $request->validate([
+            'location_id' => ['required', 'integer', 'exists:campaign_locations,id'],
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv,txt', 'max:10240'],
+        ]);
+
+        $location = CampaignLocation::query()->with('campaign')->findOrFail($data['location_id']);
+        $count = $importer->import($location, $request->file('file'));
+
+        $audit->record($request->user(), 'submissions.imported', $location, null, [
+            'count' => $count,
+            'file' => $request->file('file')->getClientOriginalName(),
+        ]);
+
+        return back()->with('success', $count.' entries imported.');
+    }
+
+    /**
+     * Empty Excel sheet with the import columns for a location's current form.
+     */
+    public function importTemplate(Request $request, SubmissionImporter $importer): StreamedResponse
+    {
+        $this->authorize('import', FormSubmission::class);
+
+        $location = CampaignLocation::query()->with('campaign')->findOrFail($request->integer('location_id'));
+
+        return $importer->templateDownload($location);
     }
 
     private function filtered(Request $request)

@@ -35,6 +35,11 @@ class FormSubmissionPolicy
         return $user->isStaff();
     }
 
+    public function import(User $user): bool
+    {
+        return $user->isStaff();
+    }
+
     public function export(User $user): bool
     {
         return $user->isStaff() || $user->isClient();

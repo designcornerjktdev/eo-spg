@@ -9,6 +9,7 @@ use App\Enums\SubmissionStatus;
 use App\Models\CampaignLocation;
 use App\Models\FormSubmission;
 use App\Models\FormTemplate;
+use Carbon\CarbonInterface;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -60,12 +61,38 @@ class SubmissionRecorder
     }
 
     /**
+     * Records one entry from a spreadsheet import: no geofence, no photos, consent taken on paper,
+     * and accepted even when the campaign is closed.
+     *
+     * @param  array<string, mixed>  $answers
+     */
+    public function import(CampaignLocation $location, FormTemplate $template, array $answers, CarbonInterface $submittedAt): FormSubmission
+    {
+        $template->loadMissing('fields');
+        $validated = $this->validator->validate($template, $answers, consentAccepted: true, skipImages: true);
+        $validated = $this->normalize($template, $validated);
+
+        return $this->persist($location->campaign, $location, $template, $validated, true, [], $submittedAt);
+    }
+
+    /**
+     * Checks one import row without saving it.
+     *
+     * @param  array<string, mixed>  $answers
+     */
+    public function validateImport(FormTemplate $template, array $answers): void
+    {
+        $template->loadMissing('fields');
+        $this->validator->validate($template, $answers, consentAccepted: true, skipImages: true);
+    }
+
+    /**
      * @param  array<string, mixed>  $validated
      * @param  array<string, mixed>  $geo
      */
-    private function persist($campaign, CampaignLocation $location, FormTemplate $template, array $validated, bool $consentAccepted, array $geo): FormSubmission
+    private function persist($campaign, CampaignLocation $location, FormTemplate $template, array $validated, bool $consentAccepted, array $geo, ?CarbonInterface $submittedAt = null): FormSubmission
     {
-        return DB::transaction(function () use ($campaign, $location, $template, $validated, $consentAccepted, $geo) {
+        return DB::transaction(function () use ($campaign, $location, $template, $validated, $consentAccepted, $geo, $submittedAt) {
             $submission = FormSubmission::query()->create([
                 'campaign_id' => $campaign->id,
                 'location_id' => $location->id,
@@ -75,7 +102,7 @@ class SubmissionRecorder
                 'consent_accepted' => $template->requires_consent ? true : $consentAccepted,
                 'consent_text_version' => $template->requires_consent ? $template->consent_text : null,
                 'qualified' => $this->qualifies($template, $validated),
-                'submitted_at' => now(),
+                'submitted_at' => $submittedAt ?? now(),
                 'status' => SubmissionStatus::Submitted,
             ]);
 
