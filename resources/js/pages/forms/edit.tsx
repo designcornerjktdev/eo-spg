@@ -11,7 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import { Head, router, useForm } from '@inertiajs/react';
+import { ArrowDown, ArrowUp, GripVertical } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 interface Field {
@@ -114,7 +116,11 @@ export default function FormEdit({
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
-        transform((form) => ({ ...form, fields: withGeneratedKeys(form.fields, savedKeys) }));
+        transform((form) => ({
+            ...form,
+            // Saved fields still carry their old sort_order; the list position is the order now.
+            fields: withGeneratedKeys(form.fields, savedKeys).map((field, index) => ({ ...field, sort_order: index + 1 })),
+        }));
         if (template) {
             put(route('forms.update', template.id));
         } else {
@@ -136,6 +142,19 @@ export default function FormEdit({
             fields: preset ? preset.fields.map((field) => ({ ...emptyField(), ...field })) : [emptyField()],
         });
     };
+
+    const moveField = (from: number, to: number) => {
+        if (to < 0 || to >= data.fields.length || from === to) return;
+        const next = [...data.fields];
+        const [moved] = next.splice(from, 1);
+        next.splice(to, 0, moved);
+        setData('fields', next);
+    };
+
+    // Dragging starts only from the grip, so text in the inputs can still be selected.
+    const [dragArmed, setDragArmed] = useState<number | null>(null);
+    const [dragFrom, setDragFrom] = useState<number | null>(null);
+    const [dragOver, setDragOver] = useState<number | null>(null);
 
     const updateField = (index: number, patch: Partial<Field>) => {
         const next = [...data.fields];
@@ -233,7 +252,73 @@ export default function FormEdit({
 
                         <div className="space-y-4">
                             {data.fields.map((field, index) => (
-                                <div key={index} className="grid gap-3 rounded-lg border p-4">
+                                <div
+                                    key={index}
+                                    draggable={!locked && dragArmed === index}
+                                    onDragStart={(e) => {
+                                        e.dataTransfer.effectAllowed = 'move';
+                                        setDragFrom(index);
+                                    }}
+                                    onDragOver={(e) => {
+                                        if (dragFrom === null) return;
+                                        e.preventDefault();
+                                        setDragOver(index);
+                                    }}
+                                    onDrop={(e) => {
+                                        e.preventDefault();
+                                        if (dragFrom !== null) moveField(dragFrom, index);
+                                    }}
+                                    onDragEnd={() => {
+                                        setDragFrom(null);
+                                        setDragOver(null);
+                                        setDragArmed(null);
+                                    }}
+                                    className={cn(
+                                        'grid gap-3 rounded-lg border p-4 transition-colors',
+                                        dragFrom === index && 'opacity-50',
+                                        dragOver === index && dragFrom !== index && 'border-primary bg-muted/40',
+                                    )}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        {!locked && (
+                                            <button
+                                                type="button"
+                                                aria-label="Drag to reorder"
+                                                className="text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing"
+                                                onPointerDown={() => setDragArmed(index)}
+                                                onPointerUp={() => setDragArmed(null)}
+                                            >
+                                                <GripVertical className="size-4" />
+                                            </button>
+                                        )}
+                                        <span className="text-muted-foreground text-xs font-medium">Field {index + 1}</span>
+                                        {!locked && (
+                                            <div className="ml-auto flex gap-1">
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="size-7"
+                                                    aria-label="Move up"
+                                                    disabled={index === 0}
+                                                    onClick={() => moveField(index, index - 1)}
+                                                >
+                                                    <ArrowUp className="size-4" />
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="size-7"
+                                                    aria-label="Move down"
+                                                    disabled={index === data.fields.length - 1}
+                                                    onClick={() => moveField(index, index + 1)}
+                                                >
+                                                    <ArrowDown className="size-4" />
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
                                     <div className="grid gap-3 md:grid-cols-[2fr_1fr]">
                                         <Input
                                             placeholder="Label"
