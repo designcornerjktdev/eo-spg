@@ -39,12 +39,13 @@ class TrustedProxiesTest extends TestCase
     {
         $world = $this->world();
 
-        for ($i = 0; $i < 10; $i++) {
-            $this->withHeader('X-Forwarded-For', "198.51.100.$i")->submitPublicEntry($world['location'])->assertSessionHasNoErrors();
+        // A cookie-less client with a new fake X-Forwarded-For each time still counts as one IP.
+        for ($i = 0; $i < AppServiceProvider::PUBLIC_FORM_PER_IP; $i++) {
+            $this->withHeader('X-Forwarded-For', '198.51.'.intdiv($i, 250).'.'.($i % 250))->submitPublicEntry($world['location'])->assertSessionHasNoErrors();
         }
         $this->withHeader('X-Forwarded-For', '198.51.100.99')->submitPublicEntry($world['location'])->assertTooManyRequests();
 
-        $this->assertSame(10, FormSubmission::query()->count());
+        $this->assertSame(AppServiceProvider::PUBLIC_FORM_PER_IP, FormSubmission::query()->count());
     }
 
     public function test_configured_proxies_are_trusted(): void

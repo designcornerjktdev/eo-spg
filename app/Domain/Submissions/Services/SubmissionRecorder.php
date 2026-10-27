@@ -10,6 +10,7 @@ use App\Models\CampaignLocation;
 use App\Models\FormSubmission;
 use App\Models\FormTemplate;
 use Carbon\CarbonInterface;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -32,9 +33,14 @@ class SubmissionRecorder
      *
      * @param  array<string, mixed>  $answers
      * @param  array{latitude?: float|null, longitude?: float|null, accuracy?: float|null}  $position  device location from the browser
+     * @param  string|null  $clientToken  random per filled-in form; a repeat (double tap, retry) returns the first entry
      */
-    public function record(CampaignLocation $location, array $answers, bool $consentAccepted = false, array $position = []): FormSubmission
+    public function record(CampaignLocation $location, array $answers, bool $consentAccepted = false, array $position = [], ?string $clientToken = null): FormSubmission
     {
+        if ($existing = $this->alreadyRecorded($clientToken)) {
+            return $existing;
+        }
+
         $campaign = $location->campaign;
         $template = $campaign?->currentForm();
 
@@ -52,12 +58,22 @@ class SubmissionRecorder
         $validated = [...$validated, ...$stored];
 
         try {
-            return $this->persist($campaign, $location, $template, $validated, $consentAccepted, $geo);
+            return $this->persist($campaign, $location, $template, $validated, $consentAccepted, [...$geo, 'client_token' => $clientToken]);
+        } catch (UniqueConstraintViolationException $exception) {
+            // The same form arrived twice at once and the other request saved first.
+            Storage::disk(self::IMAGE_DISK)->delete(array_values($stored));
+
+            return $this->alreadyRecorded($clientToken) ?? throw $exception;
         } catch (\Throwable $exception) {
             Storage::disk(self::IMAGE_DISK)->delete(array_values($stored));
 
             throw $exception;
         }
+    }
+
+    private function alreadyRecorded(?string $clientToken): ?FormSubmission
+    {
+        return filled($clientToken) ? FormSubmission::query()->where('client_token', $clientToken)->first() : null;
     }
 
     /**

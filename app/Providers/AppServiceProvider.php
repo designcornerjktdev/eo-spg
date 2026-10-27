@@ -11,6 +11,11 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
+    /** Public form submits per minute, per link: one browser, and one IP (shared by a whole booth on Wi-Fi). */
+    public const PUBLIC_FORM_PER_BROWSER = 10;
+
+    public const PUBLIC_FORM_PER_IP = 300;
+
     public function register(): void
     {
         //
@@ -28,7 +33,11 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        // Public form submissions: generous enough for a busy booth on shared Wi-Fi, low enough to blunt spam.
-        RateLimiter::for('public-form', fn (Request $request) => Limit::perMinute(10)->by($request->ip().'|'.$request->route('token')));
+        // Public form submissions. Many phones at one booth share an IP (venue Wi-Fi, carrier NAT), so the tight
+        // limit is per browser session; the per-IP limit only stops floods from clients that drop cookies.
+        RateLimiter::for('public-form', fn (Request $request) => [
+            Limit::perMinute(self::PUBLIC_FORM_PER_BROWSER)->by('session|'.$request->session()->getId().'|'.$request->route('token')),
+            Limit::perMinute(self::PUBLIC_FORM_PER_IP)->by('ip|'.$request->ip().'|'.$request->route('token')),
+        ]);
     }
 }

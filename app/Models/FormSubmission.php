@@ -23,6 +23,7 @@ class FormSubmission extends Model
         'location_accuracy_meters',
         'distance_meters',
         'form_template_id',
+        'client_token',
         'answers',
         'consent_accepted',
         'consent_text_version',

@@ -131,12 +131,14 @@ class PublicFormTest extends TestCase
         $this->assertSame(0, FormSubmission::query()->count());
     }
 
-    public function test_submissions_are_rate_limited_per_ip_and_link(): void
+    public function test_submissions_are_rate_limited_per_browser_and_link(): void
     {
         $world = $this->world();
+        $cookie = config('session.cookie');
 
         for ($i = 0; $i < 10; $i++) {
-            $this->submitPublicEntry($world['location'])->assertSessionHasNoErrors();
+            $response = $this->submitPublicEntry($world['location'])->assertSessionHasNoErrors();
+            $this->withCookie($cookie, $response->getCookie($cookie)->getValue());
         }
         $this->submitPublicEntry($world['location'])->assertTooManyRequests();
 

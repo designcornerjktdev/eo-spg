@@ -138,10 +138,13 @@ function EntryForm({
         answers: Record<string, Answer>;
         consent_accepted: boolean;
         website: string;
+        submission_token: string;
     }>({
         answers: Object.fromEntries(form.fields.map((field) => [field.key, emptyAnswer(field)])),
         consent_accepted: false,
         website: '',
+        // Same token on a retry or double tap, so the server saves this form once; a new one per filled-in form.
+        submission_token: newSubmissionToken(),
     });
     const fieldErrors = errors as Record<string, string>;
 
@@ -162,6 +165,7 @@ function EntryForm({
             preserveScroll: true,
             onSuccess: () => {
                 reset();
+                setData('submission_token', newSubmissionToken());
                 onDone();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             },
@@ -236,6 +240,13 @@ function EntryForm({
 }
 
 /** Same rule as the server's Geofence: GPS accuracy is credited up to a cap. */
+function newSubmissionToken(): string {
+    // randomUUID needs a secure context (https or localhost); fall back for plain-http test setups.
+    return typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
 function distanceFrom(geofence: Geofence, position: DevicePosition) {
     const meters = Math.round(distanceInMeters(geofence.latitude, geofence.longitude, position.latitude, position.longitude));
     const credit = Math.min(position.accuracy, MAX_ACCURACY_CREDIT_METERS);

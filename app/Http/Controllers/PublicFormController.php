@@ -48,6 +48,7 @@ class PublicFormController extends Controller
             'position.latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'position.longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'position.accuracy' => ['nullable', 'numeric', 'min:0'],
+            'submission_token' => ['nullable', 'string', 'max:64'],
         ]);
 
         // Honeypot: real people never see this field, so a filled value means a bot. Pretend it worked.
@@ -58,7 +59,13 @@ class PublicFormController extends Controller
         // A browser without location support sends no position at all; treat it as "unknown".
         // Uploaded images arrive in the file bag, not the input bag.
         $answers = array_replace($request->input('answers', []), $request->file('answers', []));
-        $recorder->record($location, $answers, $request->boolean('consent_accepted'), (array) $request->input('position'));
+        $recorder->record(
+            $location,
+            $answers,
+            $request->boolean('consent_accepted'),
+            (array) $request->input('position'),
+            $request->input('submission_token'),
+        );
 
         return back()->with('submitted', true);
     }
