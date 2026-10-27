@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Setting;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Company name & logo shown in the sidebar, sign-in page and browser title.
@@ -27,6 +28,11 @@ class Branding
     public static function toArray(): array
     {
         $path = static::logoPath();
+
+        // A stale setting (file lost on deploy) would otherwise render a broken image.
+        if ($path && ! Storage::disk(static::DISK)->exists($path)) {
+            $path = null;
+        }
 
         return [
             'name' => static::companyName(),
