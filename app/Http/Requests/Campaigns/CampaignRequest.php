@@ -27,7 +27,7 @@ class CampaignRequest extends FormRequest
             'locations.*.address' => ['nullable', 'string', 'max:255'],
             'locations.*.latitude' => ['nullable', 'numeric', 'between:-90,90', 'required_with:locations.*.longitude'],
             'locations.*.longitude' => ['nullable', 'numeric', 'between:-180,180', 'required_with:locations.*.latitude'],
-            'locations.*.radius_meters' => ['nullable', 'integer', 'between:50,5000'],
+            'locations.*.radius_meters' => ['nullable', 'integer', 'between:50,100000'],
         ];
     }
 }

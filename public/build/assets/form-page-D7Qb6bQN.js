@@ -1,0 +1,1 @@
+import{j as a}from"./app-BtwVg67i.js";import{c as s}from"./app-logo-icon-8Q7nobUm.js";const l={md:"max-w-2xl",lg:"max-w-3xl",xl:"max-w-4xl","2xl":"max-w-7xl"};function r({children:x,width:m="md"}){return a.jsx("div",{className:s("mx-auto w-full space-y-6 py-2",l[m]),children:x})}export{r as F};

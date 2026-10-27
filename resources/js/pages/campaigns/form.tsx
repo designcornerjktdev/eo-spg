@@ -209,7 +209,7 @@ export default function CampaignForm({ campaign, footer }: { footer?: React.Reac
                                                 id={`radius-${index}`}
                                                 type="number"
                                                 min={50}
-                                                max={5000}
+                                                max={100000}
                                                 step={50}
                                                 value={location.radius_meters}
                                                 onChange={(e) => update({ radius_meters: Number(e.target.value) })}

@@ -1,6 +1,0 @@
-import{r,j as e}from"./app-BQj2gEJz.js";import{I as n}from"./index-CEPP-6iA.js";import{a as c,c as p}from"./app-logo-icon-C3woWWk4.js";import{E as l}from"./eye-DHujFl2z.js";/**
- * @license lucide-react v0.475.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */const m=[["path",{d:"M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49",key:"ct8e1f"}],["path",{d:"M14.084 14.158a3 3 0 0 1-4.242-4.242",key:"151rxh"}],["path",{d:"M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143",key:"13bj9a"}],["path",{d:"m2 2 20 20",key:"1ooewy"}]],f=c("EyeOff",m),u=r.forwardRef(({className:o,...t},d)=>{const[s,i]=r.useState(!1);return e.jsxs("div",{className:"relative",children:[e.jsx(n,{ref:d,type:s?"text":"password",className:p("pr-10",o),...t}),e.jsx("button",{type:"button",tabIndex:-1,onMouseDown:a=>a.preventDefault(),onClick:()=>i(a=>!a),className:"text-muted-foreground hover:text-foreground absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-r-md disabled:opacity-50","aria-label":s?"Hide password":"Show password","aria-pressed":s,disabled:t.disabled,children:s?e.jsx(f,{className:"size-4"}):e.jsx(l,{className:"size-4"})})]})});u.displayName="PasswordInput";export{u as P};
