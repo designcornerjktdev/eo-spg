@@ -9,7 +9,10 @@ import AppLayout from '@/layouts/app-layout';
 import { formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { Head, router } from '@inertiajs/react';
-import { Ban, Link2, ListChecks, X } from 'lucide-react';
+import { toPng } from 'html-to-image';
+import { jsPDF } from 'jspdf';
+import { Ban, Download, Link2, ListChecks, X } from 'lucide-react';
+import { useRef, useState } from 'react';
 
 interface Summary {
     totals: { submissions: number; voided: number; qualified: number; campaigns: number };
@@ -70,10 +73,50 @@ export default function Dashboard({
     const activeFilters = Object.values(filters).some(Boolean);
     const today = isoDaysAgo(0);
 
+    const captureRef = useRef<HTMLDivElement>(null);
+    const [downloading, setDownloading] = useState(false);
+
+    // Saves the cards and charts (not the header or filters) as a one-page PDF sized to the content,
+    // so charts are never split across pages. Keeps the current light/dark theme.
+    const download = async () => {
+        const node = captureRef.current;
+        if (!node) return;
+        setDownloading(true);
+        try {
+            // Padding is added to the captured copy only, so the cards don't touch the PDF edges.
+            const padding = 40;
+            const width = node.offsetWidth + padding * 2;
+            const height = node.offsetHeight + padding * 2;
+            const dataUrl = await toPng(node, {
+                pixelRatio: 2,
+                backgroundColor: getComputedStyle(document.body).backgroundColor,
+                width,
+                height,
+                style: { padding: `${padding}px`, width: `${width}px`, height: `${height}px`, boxSizing: 'border-box' },
+            });
+            const pdf = new jsPDF({
+                orientation: width > height ? 'landscape' : 'portrait',
+                unit: 'px',
+                format: [width, height],
+                hotfixes: ['px_scaling'],
+            });
+            pdf.addImage(dataUrl, 'PNG', 0, 0, width, height);
+            pdf.save(`dashboard-${today}.pdf`);
+        } finally {
+            setDownloading(false);
+        }
+    };
+
     return (
         <AppLayout breadcrumbs={[{ title: 'Dashboard', href: '/dashboard' }]}>
             <Head title="Dashboard" />
-            <PageHeader title="Dashboard" description="Live results from the public form links. Invalid entries are not counted." />
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <PageHeader title="Dashboard" description="Live results from the public form links. Invalid entries are not counted." />
+                <Button type="button" variant="outline" onClick={download} disabled={downloading}>
+                    <Download />
+                    {downloading ? 'Preparing…' : 'Download PDF'}
+                </Button>
+            </div>
 
             {/* Filters: one row above the charts. */}
             <div className="flex flex-wrap items-end gap-3 rounded-lg border p-3">
@@ -134,124 +177,126 @@ export default function Dashboard({
                 </div>
             </div>
 
-            {/* Headline numbers. */}
-            <div className="grid gap-4 sm:grid-cols-3">
-                <StatTile icon={ListChecks} title="Entries" value={totals.submissions.toLocaleString('en-GB')} />
-                <StatTile icon={Ban} title="Invalid" value={totals.voided.toLocaleString('en-GB')} hint="Not counted in charts" />
-                <StatTile
-                    icon={Link2}
-                    title="Open links"
-                    value={`${summary.links.open} / ${summary.links.total}`}
-                    hint="Locations accepting responses"
-                />
-            </div>
+            <div ref={captureRef} className="bg-background flex flex-col gap-4">
+                {/* Headline numbers. */}
+                <div className="grid gap-4 sm:grid-cols-3">
+                    <StatTile icon={ListChecks} title="Entries" value={totals.submissions.toLocaleString('en-GB')} />
+                    <StatTile icon={Ban} title="Invalid" value={totals.voided.toLocaleString('en-GB')} hint="Not counted in charts" />
+                    <StatTile
+                        icon={Link2}
+                        title="Open links"
+                        value={`${summary.links.open} / ${summary.links.total}`}
+                        hint="Locations accepting responses"
+                    />
+                </div>
 
-            <div className="grid gap-4 lg:grid-cols-3">
-                <Card className="lg:col-span-2">
-                    <CardHeader>
-                        <CardTitle>Entries over time</CardTitle>
-                        <CardDescription>Daily qualified and not qualified responses, or the running total</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <TrendChart rows={summary.per_day} />
-                        {summary.per_day.length > 0 && (
-                            <details className="mt-3 text-sm">
-                                <summary className="text-muted-foreground cursor-pointer">View as table</summary>
-                                <div className="mt-2 max-h-64 overflow-y-auto rounded-md border">
-                                    <table className="w-full">
-                                        <thead className="bg-muted/50 sticky top-0">
-                                            <tr>
-                                                <th className="px-3 py-1.5 text-left font-medium">Day</th>
-                                                <th className="px-3 py-1.5 text-right font-medium">Qualified</th>
-                                                <th className="px-3 py-1.5 text-right font-medium">Not qualified</th>
-                                                <th className="px-3 py-1.5 text-right font-medium">Total</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {summary.per_day.map((row) => (
-                                                <tr key={row.day} className="border-t tabular-nums">
-                                                    <td className="px-3 py-1.5">{formatDate(row.day)}</td>
-                                                    <td className="px-3 py-1.5 text-right">{row.qualified}</td>
-                                                    <td className="px-3 py-1.5 text-right">{row.total - row.qualified}</td>
-                                                    <td className="px-3 py-1.5 text-right font-medium">{row.total}</td>
+                <div className="grid gap-4 lg:grid-cols-3">
+                    <Card className="lg:col-span-2">
+                        <CardHeader>
+                            <CardTitle>Entries over time</CardTitle>
+                            <CardDescription>Daily qualified and not qualified responses, or the running total</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <TrendChart rows={summary.per_day} />
+                            {summary.per_day.length > 0 && (
+                                <details className="mt-3 text-sm">
+                                    <summary className="text-muted-foreground cursor-pointer">View as table</summary>
+                                    <div className="mt-2 max-h-64 overflow-y-auto rounded-md border">
+                                        <table className="w-full">
+                                            <thead className="bg-muted/50 sticky top-0">
+                                                <tr>
+                                                    <th className="px-3 py-1.5 text-left font-medium">Day</th>
+                                                    <th className="px-3 py-1.5 text-right font-medium">Qualified</th>
+                                                    <th className="px-3 py-1.5 text-right font-medium">Not qualified</th>
+                                                    <th className="px-3 py-1.5 text-right font-medium">Total</th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </details>
-                        )}
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Qualification rate</CardTitle>
-                        <CardDescription>Entries that answered Yes to every qualifying question</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex items-center justify-center">
-                        <QualifiedGauge qualified={totals.qualified} total={totals.submissions} />
-                    </CardContent>
-                </Card>
-            </div>
+                                            </thead>
+                                            <tbody>
+                                                {summary.per_day.map((row) => (
+                                                    <tr key={row.day} className="border-t tabular-nums">
+                                                        <td className="px-3 py-1.5">{formatDate(row.day)}</td>
+                                                        <td className="px-3 py-1.5 text-right">{row.qualified}</td>
+                                                        <td className="px-3 py-1.5 text-right">{row.total - row.qualified}</td>
+                                                        <td className="px-3 py-1.5 text-right font-medium">{row.total}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </details>
+                            )}
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Qualification rate</CardTitle>
+                            <CardDescription>Entries that answered Yes to every qualifying question</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex items-center justify-center">
+                            <QualifiedGauge qualified={totals.qualified} total={totals.submissions} />
+                        </CardContent>
+                    </Card>
+                </div>
 
-            <div className="grid gap-4 lg:grid-cols-2">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Busiest hours</CardTitle>
-                        <CardDescription>Entries by hour of day</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <HourlyChart rows={summary.per_hour} />
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>By location</CardTitle>
-                        <CardDescription>
-                            {filters.location_id ? 'Filtered to one location. ' : ''}Click a slice or row to filter by that location.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <ShareDonut
-                            rows={summary.per_location}
-                            selectedId={filters.location_id ? Number(filters.location_id) : null}
-                            onSelect={(id) => apply({ location_id: String(id) === filters.location_id ? '' : String(id) })}
-                        />
-                    </CardContent>
-                </Card>
-            </div>
+                <div className="grid gap-4 lg:grid-cols-2">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Busiest hours</CardTitle>
+                            <CardDescription>Entries by hour of day</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <HourlyChart rows={summary.per_hour} />
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>By location</CardTitle>
+                            <CardDescription>
+                                {filters.location_id ? 'Filtered to one location. ' : ''}Click a slice or row to filter by that location.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <ShareDonut
+                                rows={summary.per_location}
+                                selectedId={filters.location_id ? Number(filters.location_id) : null}
+                                onSelect={(id) => apply({ location_id: String(id) === filters.location_id ? '' : String(id) })}
+                            />
+                        </CardContent>
+                    </Card>
+                </div>
 
-            {summary.custom_fields.length > 0 && (
-                <>
-                    <h2 className="text-lg font-semibold">Answers</h2>
-                    <div className="grid gap-4 md:grid-cols-2">
-                        {summary.custom_fields.map((field) => (
-                            <Card key={field.key} className={cn(field.type === 'number' && 'md:col-span-2')}>
-                                <CardHeader>
-                                    <CardTitle className="text-base">{field.label}</CardTitle>
-                                    <CardDescription>{field.responses.toLocaleString('en-GB')} responses</CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    {field.type === 'number' ? (
-                                        <>
-                                            <div className="grid grid-cols-3 gap-3 text-sm">
-                                                <MiniStat label="Average" value={field.avg} />
-                                                <MiniStat label="Lowest" value={field.min} />
-                                                <MiniStat label="Highest" value={field.max} />
-                                            </div>
-                                            <Histogram bins={field.bins ?? []} />
-                                        </>
-                                    ) : field.type === 'single_choice' ? (
-                                        <ShareDonut rows={field.options ?? []} />
-                                    ) : (
-                                        <RankedBars rows={field.options ?? []} name="Responses" />
-                                    )}
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                </>
-            )}
+                {summary.custom_fields.length > 0 && (
+                    <>
+                        <h2 className="text-lg font-semibold">Answers</h2>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            {summary.custom_fields.map((field) => (
+                                <Card key={field.key} className={cn(field.type === 'number' && 'md:col-span-2')}>
+                                    <CardHeader>
+                                        <CardTitle className="text-base">{field.label}</CardTitle>
+                                        <CardDescription>{field.responses.toLocaleString('en-GB')} responses</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        {field.type === 'number' ? (
+                                            <>
+                                                <div className="grid grid-cols-3 gap-3 text-sm">
+                                                    <MiniStat label="Average" value={field.avg} />
+                                                    <MiniStat label="Lowest" value={field.min} />
+                                                    <MiniStat label="Highest" value={field.max} />
+                                                </div>
+                                                <Histogram bins={field.bins ?? []} />
+                                            </>
+                                        ) : field.type === 'single_choice' ? (
+                                            <ShareDonut rows={field.options ?? []} />
+                                        ) : (
+                                            <RankedBars rows={field.options ?? []} name="Responses" />
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    </>
+                )}
+            </div>
         </AppLayout>
     );
 }
