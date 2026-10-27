@@ -24,7 +24,6 @@ interface Campaign {
     starts_on: string;
     ends_on: string;
     notes: string | null;
-    mask_identity_for_client: boolean;
     locations: Location[];
 }
 
@@ -52,7 +51,6 @@ export default function CampaignForm({ campaign, footer }: { footer?: React.Reac
         starts_on: campaign?.starts_on?.slice(0, 10) ?? '',
         ends_on: campaign?.ends_on?.slice(0, 10) ?? '',
         notes: campaign?.notes ?? '',
-        mask_identity_for_client: campaign?.mask_identity_for_client ?? true,
         locations: campaign?.locations?.length
             ? campaign.locations.map(
                   (location): FormLocation => ({

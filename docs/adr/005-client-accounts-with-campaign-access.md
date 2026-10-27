@@ -12,12 +12,12 @@ Clients only read results: the dashboard and the entries of their campaigns. Mod
 
 - **No client companies.** A client is a read-only user account. When creating or editing the account, the EO ticks the campaigns it may view (`campaign_user` pivot, `Campaign::viewers()` / `User::campaigns()`).
 - **No products.** The Products module, `products` and `campaign_products` tables are removed; campaigns no longer have a `client_id`.
-- **Client access = Dashboard + Entries (incl. Excel export)** for granted campaigns only. Campaign management, forms, public links, users and audit log are EO-only (the superadmin, and since ADR 007 partly the admin role). Identity masking (`mask_identity_for_client`) still applies.
+- **Client access = Dashboard + Entries (incl. Excel export)** for granted campaigns only. Campaign management, forms, public links, users and audit log are EO-only (the superadmin, and since ADR 007 partly the admin role).
 - Access changes take effect immediately because visibility is checked against the pivot on every request (`Campaign::scopeVisibleTo`, `User::canViewCampaign`).
 
 ## Migration
 
-`2026_10_23_120000_simplify_clients_and_drop_products` creates `campaign_user`, grants every existing client account all campaigns its former company owned, then drops `client_id` from `campaigns` and `users`, and drops `campaign_products`, `products` and `clients`. It is not reversible; restore a backup to go back.
+The migrations were squashed into one migration per final table before the first deploy, so the schema is created in its final shape and there is no data migration for this change.
 
 ## Consequences
 

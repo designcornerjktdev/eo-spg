@@ -20,12 +20,14 @@ Only one EO account (the superadmin) could run campaigns. Operations staff neede
   | Forms | yes | yes | no |
   | Entries: view, export, mark invalid | yes | yes | view and export only, granted campaigns |
   | Settings → Company | yes | yes | no |
-  | Users, audit log | yes | no | no |
+  | Users: link existing campaigns to clients | yes | yes | no |
+  | Users: create, edit, delete, reset password; audit log | yes | no | no |
 
 - **Sign-in.** Admins sign in with email or username, and can reset their own password by email (`UserRole::withEmailLogin()`). Clients sign in with a username only and cannot use self-service reset, even if their account has an email.
 - The superadmin creates admins under **Users**. Email is required for admins and not allowed for clients.
+- **Admins link clients to campaigns** (added 2026-10-27). Under **Users** they see only client accounts and can change only their campaign access (`UserPolicy::manageCampaignAccess`). Other fields sent by an admin are ignored. Creating accounts, deleting them and resetting passwords stay with the superadmin.
 
 ## Consequences
 
 - No migration is needed, because `users.role` is a string column.
-- Admins see identity fields unmasked, like the superadmin. Masking (`mask_identity_for_client`) still applies to clients only.
+- Identity fields are never masked; clients only lose fields not marked `visible_to_client`.

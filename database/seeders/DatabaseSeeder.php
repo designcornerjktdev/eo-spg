@@ -112,7 +112,6 @@ class DatabaseSeeder extends Seeder
             'starts_on' => now()->subDays($startedDaysAgo)->toDateString(),
             'ends_on' => now()->addDays(14)->toDateString(),
             'status' => CampaignStatus::Active,
-            'mask_identity_for_client' => true,
         ]);
 
         $models = collect($locations)->map(fn (array $location) => CampaignLocation::query()->create([

@@ -20,7 +20,6 @@ class CampaignFactory extends Factory
             'starts_on' => $start,
             'ends_on' => now()->addDays(7)->toDateString(),
             'status' => CampaignStatus::Draft,
-            'mask_identity_for_client' => true,
             'notes' => null,
         ];
     }

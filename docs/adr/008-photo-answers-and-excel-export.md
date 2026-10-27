@@ -25,7 +25,7 @@ Booths want documentation photos (for example a receipt, or a visitor with the p
 - If saving the entry fails, the stored files are deleted.
 
 **Excel export replaces CSV**
-- `/submissions/export` downloads an `.xlsx` file (PhpSpreadsheet). It uses the same columns and masking as the screen (`SubmissionTable`) and follows the active filters.
+- `/submissions/export` downloads an `.xlsx` file (PhpSpreadsheet). It uses the same columns and field visibility as the screen (`SubmissionTable`) and follows the active filters.
 - Photos appear as JPEG thumbnails generated during the export, because Excel cannot show WebP. Photo cells hold no text or link.
 - Entries marked invalid are left out of the export.
 

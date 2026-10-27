@@ -143,7 +143,7 @@ class SubmissionController extends Controller
 
         return [
             'id' => $submission->id,
-            'campaign' => $submission->campaign?->only(['id', 'name', 'mask_identity_for_client']),
+            'campaign' => $submission->campaign?->only(['id', 'name']),
             'location' => $submission->location?->only(['id', 'name', 'area']),
             'distance_meters' => $submission->distance_meters,
             'location_accuracy_meters' => $submission->location_accuracy_meters,

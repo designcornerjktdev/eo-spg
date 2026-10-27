@@ -52,7 +52,6 @@ class CampaignController extends Controller
         $campaign = DB::transaction(function () use ($request, $audit) {
             $campaign = Campaign::query()->create([
                 ...$request->safe()->only(['name', 'starts_on', 'ends_on', 'notes']),
-                'mask_identity_for_client' => $request->boolean('mask_identity_for_client', true),
                 'status' => CampaignStatus::Draft,
             ]);
 
@@ -96,7 +95,6 @@ class CampaignController extends Controller
         DB::transaction(function () use ($request, $campaign) {
             $campaign->update([
                 ...$request->safe()->only(['name', 'starts_on', 'ends_on', 'notes']),
-                'mask_identity_for_client' => $request->boolean('mask_identity_for_client', true),
             ]);
             $this->syncLocations($campaign, $request->input('locations', []));
         });

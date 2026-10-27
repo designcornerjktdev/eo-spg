@@ -36,7 +36,6 @@ trait BuildsCampaignWorld
         $campaign = Campaign::factory()->create([
             'name' => 'Sampling Kopi Lepas Haus',
             'status' => CampaignStatus::Active,
-            'mask_identity_for_client' => true,
         ]);
         $campaign->viewers()->attach($userA);
 

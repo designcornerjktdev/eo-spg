@@ -22,10 +22,10 @@ Ringkasan produk ada di [`docs/PRD Aplikasi Manajemen Campaign EO (MVP).md`](doc
 | Role | Login | Lupa password | Akses |
 | --- | --- | --- | --- |
 | Super admin | email | reset sendiri | Semua, termasuk Users, Audit log, dan hapus campaign |
-| Admin (operasional) | email atau username | reset sendiri | Semua campaign: campaign, form, entries, dan Company settings |
+| Admin (operasional) | email atau username | reset sendiri | Semua campaign: campaign, form, entries, Company settings, dan menghubungkan campaign ke client |
 | Client | username | direset Super admin | Dashboard dan Entries (termasuk export) dari campaign yang diberikan |
 
-Super admin mengatur akun dan akses campaign untuk client di menu **Users**.
+Super admin membuat dan mengatur akun di menu **Users**. Admin juga bisa membuka menu ini, tapi hanya melihat akun client dan hanya bisa mengubah akses campaign-nya.
 
 ## Stack
 
@@ -58,7 +58,7 @@ npx tsc --noEmit
 npm run build
 ```
 
-Hasil build frontend (`public/build`) ikut di-commit, sehingga hosting tanpa Node cukup menjalankan `git pull`. **Jalankan `npm run build` sebelum commit** setiap kali ada perubahan frontend.
+Hasil build frontend (`public/build`) ikut di-commit, sehingga hosting tanpa Node cukup menjalankan `git pull`. **Jalankan `npm run build` sebelum commit** setiap kali ada perubahan frontend. Kalau aplikasi dipasang di subfolder (misalnya `https://socialcore.agency/eo-spg`), build dengan `VITE_APP_BASE=/eo-spg npm run build` dan isi `APP_URL` dengan alamat lengkap termasuk subfolder.
 
 ## Akun demo (`php artisan db:seed`)
 

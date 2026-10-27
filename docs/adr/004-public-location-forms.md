@@ -20,7 +20,7 @@ The original flow had SPG accounts logging in, receiving time-boxed assignments 
 
 ## Migration
 
-`2026_10_23_100000_switch_to_public_location_forms` backfills `public_token` for every location, re-links existing entries to their location through their former assignment, then drops assignments, SPG authorship and SPG accounts. It is not reversible; restore a backup to go back.
+The migrations were squashed into one migration per final table before the first deploy, so the schema is created in its final shape and there is no data migration for this change.
 
 ## Consequences
 

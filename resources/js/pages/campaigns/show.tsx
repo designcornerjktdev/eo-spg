@@ -15,7 +15,6 @@ interface CampaignShow {
     status: string;
     starts_on: string;
     ends_on: string;
-    mask_identity_for_client: boolean;
     viewers: { id: number; name: string; username: string | null }[];
     locations: (LinkLocation & { address: string | null; latitude: number | null; longitude: number | null })[];
     form_templates: { id: number; name: string; version: number; status: string }[];

@@ -21,7 +21,6 @@ class CampaignRequest extends FormRequest
             'starts_on' => ['required', 'date'],
             'ends_on' => ['required', 'date', 'after_or_equal:starts_on'],
             'notes' => ['nullable', 'string'],
-            'mask_identity_for_client' => ['sometimes', 'boolean'],
             'locations' => ['required', 'array', 'min:1'],
             'locations.*.name' => ['required', 'string', 'max:255'],
             'locations.*.area' => ['nullable', 'string', 'max:255'],

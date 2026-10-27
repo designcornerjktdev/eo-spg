@@ -8,7 +8,7 @@ Gunakan checklist ini sebelum go-live dan setiap kali deploy. Perubahan skema da
 - [ ] Database production sudah dikonfirmasi: PostgreSQL diutamakan, atau MySQL kalau shared hosting mensyaratkannya.
 - [ ] **Document root diarahkan ke folder `public/`**, misalnya lewat subdomain. Root project tidak boleh bisa diakses dari web, karena `.env` berisi kredensial.
 - [ ] HTTPS aktif. Geolocation di form publik hanya jalan lewat HTTPS.
-- [ ] `APP_ENV=production`, `APP_DEBUG=false`, dan `APP_URL` memakai HTTPS.
+- [ ] `APP_ENV=production`, `APP_DEBUG=false`, dan `APP_URL` memakai HTTPS. Kalau dipasang di subfolder, `APP_URL` menyertakan subfolder-nya (misalnya `https://socialcore.agency/eo-spg`), karena dipakai untuk link reset password.
 - [ ] `APP_KEY` unik. Jangan menyalin dari development.
 - [ ] `TRUSTED_PROXIES` diisi IP/CIDR proxy atau load balancer yang benar-benar dipakai, atau dikosongkan kalau tanpa proxy.
   - Jangan isi `*`, kecuali server hanya bisa diakses lewat proxy tersebut.
@@ -34,7 +34,7 @@ Gunakan checklist ini sebelum go-live dan setiap kali deploy. Perubahan skema da
 ## Keamanan dan data
 
 - [ ] Semua tes lulus (`php artisan test`), termasuk tes isolasi akses antar client.
-- [ ] Pengaturan `visible_to_client` per field dan masking identitas per campaign sudah ditinjau.
+- [ ] Pengaturan `visible_to_client` per field sudah ditinjau. Data identitas tidak dimasking, jadi field yang tidak boleh dilihat client harus disembunyikan lewat pengaturan ini.
 - [ ] Radius geofence setiap lokasi sudah diuji langsung di venue. Default-nya 300 m.
 - [ ] Kebijakan retensi data konsumen (termasuk foto) setelah campaign ditutup sudah disetujui legal.
 - [ ] Kepatuhan UU PDP No. 27 Tahun 2022 sudah dikonfirmasi.
@@ -47,7 +47,7 @@ Gunakan checklist ini sebelum go-live dan setiap kali deploy. Perubahan skema da
 
 ## Langkah deploy (shared hosting, tanpa Node)
 
-1. Di lokal: jalankan `npm run build`, lalu commit (termasuk `public/build`) dan push.
+1. Di lokal: jalankan `npm run build` (atau `VITE_APP_BASE=/eo-spg npm run build` kalau dipasang di subfolder), lalu commit (termasuk `public/build`) dan push. Tanpa `VITE_APP_BASE`, CSS dan halaman gagal dimuat dengan error MIME type `text/html`.
 2. Di server:
    ```bash
    git pull

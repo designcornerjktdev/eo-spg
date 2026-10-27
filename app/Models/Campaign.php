@@ -22,7 +22,6 @@ class Campaign extends Model
         'starts_on',
         'ends_on',
         'status',
-        'mask_identity_for_client',
         'notes',
     ];
 
@@ -32,7 +31,6 @@ class Campaign extends Model
             'starts_on' => 'date',
             'ends_on' => 'date',
             'status' => CampaignStatus::class,
-            'mask_identity_for_client' => 'boolean',
         ];
     }
 

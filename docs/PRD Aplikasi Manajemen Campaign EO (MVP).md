@@ -1,6 +1,6 @@
 # PRD: Aplikasi Manajemen Campaign EO (MVP)
 
-Dibuat 20 Okt 2026, diperbarui 26 Okt 2026 · @Rahmat Tomy
+Dibuat 20 Okt 2026, diperbarui 27 Okt 2026 · @Rahmat Tomy
 
 > **Versi 2 (sesuai yang sudah dibangun).** Draf pertama memakai SPG yang login, penugasan, data perusahaan client, dan produk. Sejak 23 Okt 2026 alurnya berubah menjadi model "Google Form": konsumen mengisi sendiri lewat link/QR publik per lokasi. Alasan setiap perubahan tercatat di [`docs/adr/`](adr/), yaitu ADR 004 sampai 008.
 
@@ -111,14 +111,15 @@ Super admin dan Admin bisa mereset password sendiri lewat email. Password Client
 | ID | Sebagai | Saya ingin | Kriteria penerimaan |
 | --- | --- | --- | --- |
 | U1 | Super admin | membuat akun Admin dan Client | Admin wajib punya email. Client tanpa email dan dicentang akses campaign-nya. Password di-hash |
+| U1b | Admin | menghubungkan campaign ke client | Hanya akun client yang terlihat. Admin hanya bisa mengubah akses campaign, bukan data akun atau password |
 | U2 | Super admin / Admin | membuat campaign dan lokasi di peta | Tanggal selesai tidak boleh sebelum tanggal mulai. Setiap lokasi otomatis punya link publik unik |
 | U3 | Super admin / Admin | menyusun form | Field bisa diurutkan dan dipratinjau. Form terkunci setelah entri pertama, dan perubahan membuat versi baru |
 | U4 | Konsumen | mengisi form dari link di booth | Tanpa login. Validasi dijalankan di server. Waktu diisi server. Hanya bisa dikirim dari dalam radius lokasi |
 | U5 | Konsumen | melampirkan foto | Bisa dari kamera atau galeri. Foto diperkecil otomatis. Tombol kirim menunggu sampai foto siap |
 | U6 | Super admin / Admin | memfilter entri dan menandai Invalid | Filter campaign, lokasi, tanggal, dan teks. Tandai Invalid wajib beralasan dan tercatat di audit log |
-| U7 | Client | melihat entri campaign saya | Hanya campaign yang diberikan, hanya field yang ditandai terlihat untuk client, dan identitas dimasking kalau diaktifkan |
+| U7 | Client | melihat entri campaign saya | Hanya campaign yang diberikan, hanya field yang ditandai terlihat untuk client, tanpa masking |
 | U8 | Client | melihat ringkasan dan grafik | Angka dihitung dari entri Valid, sama seperti daftar entri |
-| U9 | Client / EO | mengunduh Excel | Mengikuti filter, aturan visibilitas, dan masking. Foto tampil sebagai thumbnail. Entri Invalid tidak ikut |
+| U9 | Client / EO | mengunduh Excel | Mengikuti filter dan aturan visibilitas. Foto tampil sebagai thumbnail. Entri Invalid tidak ikut |
 | U10 | Super admin / Admin | mengganti logo dan nama perusahaan | Tampil di sidebar, halaman login, favicon, dan form publik |
 
 ## Form builder dan form publik
@@ -163,7 +164,7 @@ Struktur form disimpan sebagai data, dan jawaban disimpan sebagai JSON per entri
   - donut per lokasi, yang bisa diklik untuk memfilter
   - grafik untuk setiap pertanyaan yang ditandai dashboard
 - **Filter:** campaign, lokasi, dan rentang tanggal. Filter langsung diterapkan saat dipilih.
-- **Entries:** tabel dengan pencarian dan pagination, lalu halaman detail yang menampilkan foto. Client hanya melihat field `visible_to_client`, dan identitasnya dimasking kalau campaign mengaktifkan masking.
+- **Entries:** tabel dengan pencarian dan pagination, lalu halaman detail yang menampilkan foto. Client hanya melihat field `visible_to_client`. Data identitas tidak dimasking.
 - **Export:** file Excel (.xlsx) berisi daftar yang sedang difilter, dengan thumbnail foto. Entri Invalid tidak ikut ter-export.
 
 ## Model data
@@ -173,7 +174,7 @@ Tabel utama:
 | Tabel | Isi |
 | --- | --- |
 | `users` | Akun dengan `role` (superadmin, admin, client), `username`, `email` (opsional untuk client), dan `is_active` |
-| `campaigns` | Nama, tanggal, status, dan pengaturan masking |
+| `campaigns` | Nama, tanggal, dan status |
 | `campaign_user` | Akses campaign per akun client |
 | `campaign_locations` | Lokasi dengan alamat, `latitude`, `longitude`, `radius_meters`, dan `public_token` |
 | `form_templates` / `form_fields` | Definisi form per campaign beserta versinya |
@@ -190,7 +191,8 @@ Setiap aksi dicek di server dengan Policy dan query scope. Menyembunyikan menu d
 
 | Aksi | Super admin | Admin | Client |
 | --- | --- | --- | --- |
-| Kelola akun dan akses campaign | Ya | Tidak | Tidak |
+| Kelola akun (buat, ubah, hapus, reset password) | Ya | Tidak | Tidak |
+| Hubungkan campaign ke client | Ya | Ya | Tidak |
 | Campaign dan lokasi: buat, ubah, aktifkan, tutup | Ya | Ya | Tidak |
 | Hapus campaign | Ya | Tidak | Tidak |
 | Form builder | Ya | Ya | Tidak |
@@ -204,7 +206,7 @@ Setiap aksi dicek di server dengan Policy dan query scope. Menyembunyikan menu d
 
 - Client A tidak bisa membuka campaign, entri, foto, atau export milik campaign lain lewat ID mana pun.
 - Client tidak pernah menerima field yang tidak ditandai terlihat, termasuk lewat foto dan export.
-- Admin tidak bisa membuka Users atau Audit log, dan tidak bisa menghapus campaign.
+- Admin hanya melihat akun client di Users dan hanya bisa mengubah akses campaign-nya. Admin tidak bisa membuka Audit log atau menghapus campaign.
 - `/register` tidak tersedia. Akun hanya dibuat oleh Super admin.
 
 ## Kebutuhan non-fungsional
@@ -213,7 +215,7 @@ Setiap aksi dicek di server dengan Policy dan query scope. Menyembunyikan menu d
 | --- | --- |
 | Keamanan | Otorisasi di server, hashing password, HTTPS, CSRF, rate limit login dan form publik, `TRUSTED_PROXIES` yang spesifik |
 | Integritas data | Waktu dari server. Entri tidak bisa diedit, hanya ditandai Invalid. Audit log untuk perubahan penting |
-| Privasi | Field identitas bisa dimasking, consent tercatat bersama versi teksnya, foto disimpan privat. Kepatuhan UU PDP No. 27/2022 dikonfirmasi ke pihak legal |
+| Privasi | Field bisa disembunyikan dari client lewat `visible_to_client`, consent tercatat bersama versi teksnya, foto disimpan privat. Kepatuhan UU PDP No. 27/2022 dikonfirmasi ke pihak legal |
 | Mobile | Form publik nyaman dipakai satu tangan dan diuji di Android dan iPhone ([`mobile-qa.md`](mobile-qa.md)) |
 | Performa | Pagination, tabel indeks dashboard, dan foto diperkecil sebelum upload |
 | Ketersediaan | Backup database dan `storage/` terjadwal, restore diuji sebelum go-live |
@@ -225,7 +227,7 @@ Aplikasi berbentuk modular monolith: satu aplikasi Laravel dengan antarmuka Reac
 
 - **Forms:** validasi form dinamis dan versi form.
 - **Submissions:** pencatatan entri, geofence, optimasi foto, dan penandaan Invalid.
-- **Reporting:** dashboard, masking, dan export Excel.
+- **Reporting:** dashboard dan export Excel.
 - **Audit:** audit log.
 
 Keputusan penting dicatat di [`docs/adr/`](adr/).
@@ -238,13 +240,13 @@ Keputusan penting dicatat di [`docs/adr/`](adr/).
 | GPS di dalam mal tidak akurat | Konsumen yang ada di lokasi ikut tertolak | Toleransi akurasi sampai 100 m. Radius diatur per lokasi dan diuji di venue |
 | Lokasi dipalsukan | Ada entri dari luar area | Geofence hanya mencegah link disebar. Entri mencurigakan ditandai Invalid |
 | Link disebar di luar lokasi | Spam | Geofence, rate limit, honeypot. Rotasi token sebagai usulan |
-| Data personal bocor ke client yang salah | Pelanggaran UU PDP | Policy dan scope, masking, tes isolasi otomatis |
+| Data personal bocor ke client yang salah | Pelanggaran UU PDP | Policy dan scope, visibilitas field, tes isolasi otomatis |
 | Folder `storage/` hilang saat deploy | Foto entri hilang | Folder `storage/` di-backup dan tidak ditimpa saat deploy |
 
 ## Pertanyaan terbuka
 
 1. ~~Apakah upload foto masuk MVP?~~ Ya, sudah dibangun sebagai field Image upload (ADR 008).
-2. ~~Apakah client boleh melihat data personal?~~ Bisa diatur per campaign lewat masking identitas dan visibilitas per field.
+2. ~~Apakah client boleh melihat data personal?~~ Boleh. Data identitas tidak dimasking; field yang tidak boleh dilihat client disembunyikan lewat visibilitas per field.
 3. ~~Apakah export wajib ada?~~ Ya, dalam bentuk Excel dengan foto (ADR 008).
 4. ~~Hosting apa yang dipakai?~~ Hostinger dengan PHP 8.2. Database production masih perlu dikonfirmasi.
 5. Berapa perkiraan jumlah entri per hari dan berapa foto per campaign? Ini menentukan kebutuhan storage dan waktu export.
