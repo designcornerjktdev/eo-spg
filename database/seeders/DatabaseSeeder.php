@@ -153,7 +153,6 @@ class DatabaseSeeder extends Seeder
                 'required' => $required,
                 'sort_order' => count($fields) + $index + 1,
                 'visible_to_client' => true,
-                'is_identity' => false,
                 'show_on_dashboard' => $dashboard,
                 'options' => $options,
             ]);

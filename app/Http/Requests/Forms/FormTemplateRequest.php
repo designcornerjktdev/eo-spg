@@ -31,7 +31,6 @@ class FormTemplateRequest extends FormRequest
             'fields.*.required' => ['sometimes', 'boolean'],
             'fields.*.sort_order' => ['nullable', 'integer'],
             'fields.*.visible_to_client' => ['sometimes', 'boolean'],
-            'fields.*.is_identity' => ['sometimes', 'boolean'],
             'fields.*.show_on_dashboard' => ['sometimes', 'boolean'],
             'fields.*.options' => ['nullable', 'array'],
             'fields.*.min_value' => ['nullable', 'numeric'],

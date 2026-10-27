@@ -20,7 +20,6 @@ interface Field {
     type: string;
     required: boolean;
     visible_to_client: boolean;
-    is_identity: boolean;
     show_on_dashboard: boolean;
     options: string[] | null;
     min_value: number | null;
@@ -45,12 +44,32 @@ const emptyField = (): Field => ({
     type: 'short_text',
     required: true,
     visible_to_client: true,
-    is_identity: false,
     show_on_dashboard: false,
     options: [],
     min_value: null,
     max_value: null,
 });
+
+const slugify = (text: string) =>
+    text
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '')
+        .slice(0, 70) || 'field';
+
+// Saved fields keep their key (answers are stored under it); new fields get a unique key from their label.
+const withGeneratedKeys = (fields: Field[], savedKeys: Set<string>): Field[] => {
+    const used = new Set(fields.filter((field) => savedKeys.has(field.key)).map((field) => field.key));
+    return fields.map((field) => {
+        if (savedKeys.has(field.key)) return field;
+        const base = slugify(field.label);
+        let key = base;
+        for (let n = 2; used.has(key); n++) key = `${base}_${n}`;
+        used.add(key);
+        return { ...field, key };
+    });
+};
 
 // Field types that get a dashboard chart (mirrors FieldType::canShowOnDashboard()).
 const DASHBOARD_TYPES = ['number', 'single_choice', 'multiple_choice'];
@@ -70,7 +89,8 @@ export default function FormEdit({
     locked?: boolean;
     deleteBlocker?: string | null;
 }) {
-    const { data, setData, post, put, processing, errors } = useForm({
+    const savedKeys = new Set((template?.fields ?? []).map((field) => field.key));
+    const { data, setData, post, put, transform, processing, errors } = useForm({
         campaign_id: (template?.campaign_id ?? selectedCampaignId ?? '').toString(),
         name: template?.name ?? 'Form Sampling',
         requires_consent: template?.requires_consent ?? false,
@@ -81,6 +101,7 @@ export default function FormEdit({
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
+        transform((form) => ({ ...form, fields: withGeneratedKeys(form.fields, savedKeys) }));
         if (template) {
             put(route('forms.update', template.id));
         } else {
@@ -172,23 +193,12 @@ export default function FormEdit({
                     <div className="space-y-4">
                         {data.fields.map((field, index) => (
                             <div key={index} className="grid gap-3 rounded-lg border p-4">
-                                <div className="grid gap-3 md:grid-cols-3">
+                                <div className="grid gap-3 md:grid-cols-[2fr_1fr]">
                                     <Input
                                         placeholder="Label"
                                         value={field.label}
                                         disabled={locked}
-                                        onChange={(e) =>
-                                            updateField(index, {
-                                                label: e.target.value,
-                                                key: field.key || e.target.value.toLowerCase().replace(/\s+/g, '_'),
-                                            })
-                                        }
-                                    />
-                                    <Input
-                                        placeholder="Unique key"
-                                        value={field.key}
-                                        disabled={locked}
-                                        onChange={(e) => updateField(index, { key: e.target.value })}
+                                        onChange={(e) => updateField(index, { label: e.target.value })}
                                     />
                                     <SimpleSelect
                                         value={field.type}
@@ -234,14 +244,6 @@ export default function FormEdit({
                                             onCheckedChange={(checked) => updateField(index, { visible_to_client: checked === true })}
                                         />
                                         Visible to client
-                                    </label>
-                                    <label className="flex items-center gap-2">
-                                        <Checkbox
-                                            checked={field.is_identity}
-                                            disabled={locked}
-                                            onCheckedChange={(checked) => updateField(index, { is_identity: checked === true })}
-                                        />
-                                        Identity
                                     </label>
                                     {/* Yes/No and free-text answers have no dashboard chart; Yes/No feeds qualification instead. */}
                                     {DASHBOARD_TYPES.includes(field.type) && (

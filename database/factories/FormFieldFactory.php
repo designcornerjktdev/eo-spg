@@ -25,7 +25,6 @@ class FormFieldFactory extends Factory
             'required' => true,
             'sort_order' => 1,
             'visible_to_client' => true,
-            'is_identity' => false,
             'show_on_dashboard' => false,
             'options' => null,
             'min_value' => null,
