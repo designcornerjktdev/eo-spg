@@ -30,8 +30,10 @@ const eoNav: NavGroup[] = [
     },
 ];
 
-// Admins run campaigns day to day; account management and the audit log stay with the superadmin.
-const adminNav: NavGroup[] = eoNav.filter((group) => group.title !== 'Administration');
+// Admins run campaigns day to day and link clients to campaigns; creating accounts and the audit log stay with the superadmin.
+const adminNav: NavGroup[] = eoNav.map((group) =>
+    group.title === 'Administration' ? { ...group, items: group.items.filter((item) => item.url === '/users') } : group,
+);
 
 const clientNav: NavGroup[] = [
     {

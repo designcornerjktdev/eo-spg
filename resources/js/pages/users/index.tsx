@@ -11,7 +11,8 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { label } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { Head, router, useForm } from '@inertiajs/react';
+import { type SharedData } from '@/types';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { KeyRound, Pencil } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
@@ -38,6 +39,8 @@ export default function UsersIndex({
     users: { data: Row[]; links: { url: string | null; label: string; active: boolean }[] };
     filters: Filters;
 }) {
+    // Admins only see clients and change their campaign access.
+    const isSuperadmin = usePage<SharedData>().props.auth.user?.role === 'superadmin';
     const [resetting, setResetting] = useState<Row | null>(null);
     const [search, setSearch] = useState(filters.search ?? '');
 
@@ -49,9 +52,13 @@ export default function UsersIndex({
         <AppLayout breadcrumbs={[{ title: 'Users', href: '/users' }]}>
             <Head title="Users" />
             <PageHeader
-                title="Accounts"
-                description="Admins run campaigns, forms and entries; clients see results of their granted campaigns. Admins sign in with email or username and can reset their own password; clients use a username and ask you to reset it."
-                action={{ href: route('users.create'), label: 'New account' }}
+                title={isSuperadmin ? 'Accounts' : 'Clients'}
+                description={
+                    isSuperadmin
+                        ? 'Admins run campaigns, forms and entries; clients see results of their granted campaigns. Admins sign in with email or username and can reset their own password; clients use a username and ask you to reset it.'
+                        : 'Clients see results of their granted campaigns. Choose which campaigns each client can see; new accounts and passwords are handled by the superadmin.'
+                }
+                action={isSuperadmin ? { href: route('users.create'), label: 'New account' } : undefined}
             />
 
             <form
@@ -67,16 +74,18 @@ export default function UsersIndex({
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                 />
-                <select
-                    aria-label="Filter role"
-                    className="border-input bg-background h-9 rounded-md border px-2 text-sm"
-                    value={filters.role ?? ''}
-                    onChange={(e) => applyFilters({ role: e.target.value })}
-                >
-                    <option value="">All roles</option>
-                    <option value="admin">Admin</option>
-                    <option value="client">Client</option>
-                </select>
+                {isSuperadmin && (
+                    <select
+                        aria-label="Filter role"
+                        className="border-input bg-background h-9 rounded-md border px-2 text-sm"
+                        value={filters.role ?? ''}
+                        onChange={(e) => applyFilters({ role: e.target.value })}
+                    >
+                        <option value="">All roles</option>
+                        <option value="admin">Admin</option>
+                        <option value="client">Client</option>
+                    </select>
+                )}
                 <select
                     aria-label="Filter status"
                     className="border-input bg-background h-9 rounded-md border px-2 text-sm"
@@ -127,8 +136,12 @@ export default function UsersIndex({
                                 </td>
                                 <td className="px-3 py-1">
                                     <div className="flex gap-1">
-                                        <IconAction icon={Pencil} label="Edit account" href={route('users.edit', user.id)} />
-                                        <IconAction icon={KeyRound} label="Reset password" onClick={() => setResetting(user)} />
+                                        <IconAction
+                                            icon={Pencil}
+                                            label={isSuperadmin ? 'Edit account' : 'Edit campaign access'}
+                                            href={route('users.edit', user.id)}
+                                        />
+                                        {isSuperadmin && <IconAction icon={KeyRound} label="Reset password" onClick={() => setResetting(user)} />}
                                     </div>
                                 </td>
                             </tr>

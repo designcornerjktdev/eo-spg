@@ -19,7 +19,8 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Client and admin account management by the superadmin. The superadmin account itself is not managed here.
+ * Client and admin account management by the superadmin. Admins only see client accounts and change their campaign access.
+ * The superadmin account itself is not managed here.
  */
 class UserController extends Controller
 {
@@ -33,6 +34,7 @@ class UserController extends Controller
             'users' => User::query()
                 ->with('campaigns:id,name')
                 ->where('role', '!=', UserRole::Superadmin)
+                ->when(! $request->user()->isSuperadmin(), fn ($query) => $query->where('role', UserRole::Client))
                 ->when(in_array($filters['role'] ?? null, [UserRole::Client->value, UserRole::Admin->value], true), fn ($query) => $query->where('role', $filters['role']))
                 ->when($filters['search'] ?? null, fn ($query, $search) => $query->where(fn ($query) => $query
                     ->where('name', 'like', '%'.$search.'%')
@@ -74,10 +76,10 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Account created.');
     }
 
-    public function edit(User $user): Response
+    public function edit(Request $request, User $user): Response
     {
-        $this->authorize('update', $user);
         abort_if($user->isSuperadmin(), 403);
+        abort_unless($request->user()->can('update', $user) || $request->user()->can('manageCampaignAccess', $user), 403);
 
         return Inertia::render('users/edit', [
             'user' => [
@@ -96,7 +98,9 @@ class UserController extends Controller
         ];
 
         DB::transaction(function () use ($request, $user) {
-            $user->update($request->safe()->only(['name', 'username', 'email', 'is_active']));
+            if ($request->user()->isSuperadmin()) {
+                $user->update($request->safe()->only(['name', 'username', 'email', 'is_active']));
+            }
             $user->campaigns()->sync($user->isClient() ? $request->input('campaign_ids', []) : []);
         });
 

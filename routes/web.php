@@ -43,11 +43,14 @@ Route::middleware(['auth'])->group(function () {
         Route::post('forms/{form}/version', [FormTemplateController::class, 'version'])->name('forms.version');
 
         Route::post('submissions/{submission}/void', [SubmissionController::class, 'void'])->name('submissions.void');
+
+        // Admins may list clients and change their campaign access; the policy limits them to client accounts.
+        Route::resource('users', UserController::class)->only(['index', 'edit', 'update']);
     });
 
     Route::middleware('role:superadmin')->group(function () {
         Route::get('audit', [AuditLogController::class, 'index'])->name('audit.index');
-        Route::resource('users', UserController::class)->except(['show']);
+        Route::resource('users', UserController::class)->only(['create', 'store', 'destroy']);
         Route::put('users/{user}/password', [UserController::class, 'resetPassword'])->name('users.password');
     });
 

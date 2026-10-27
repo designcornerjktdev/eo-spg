@@ -100,11 +100,39 @@ class AdminRoleTest extends TestCase
         $world['campaign']->update(['status' => CampaignStatus::Draft]);
 
         $this->actingAs($admin);
-        $this->get('/users')->assertForbidden();
         $this->get('/users/create')->assertForbidden();
+        $this->post('/users', ['name' => 'X', 'username' => 'x', 'password' => 'password-123', 'role' => 'client'])->assertForbidden();
+        $this->delete('/users/'.$world['userA']->id)->assertForbidden();
+        $this->put('/users/'.$world['userA']->id.'/password', ['password' => 'new-pass-123', 'password_confirmation' => 'new-pass-123'])->assertForbidden();
+        $this->get('/users/'.$world['eo']->id.'/edit')->assertForbidden();
         $this->get('/audit')->assertForbidden();
         $this->delete('/campaigns/'.$world['campaign']->id)->assertForbidden();
         $this->assertNotNull($world['campaign']->fresh());
+    }
+
+    public function test_admin_links_existing_campaigns_to_clients_only(): void
+    {
+        $world = $this->world();
+        $admin = User::factory()->adminUser()->create();
+        $client = $world['userA'];
+
+        $this->actingAs($admin);
+        $this->get('/users')->assertOk()->assertInertia(fn ($page) => $page->where('users.data', fn ($rows) => collect($rows)->every(fn ($row) => $row['role'] === 'client')));
+        $this->get('/users/'.$client->id.'/edit')->assertOk();
+        $this->get('/users/'.$admin->id.'/edit')->assertForbidden();
+
+        $this->put('/users/'.$client->id, [
+            'name' => 'Renamed',
+            'is_active' => false,
+            'campaign_ids' => [$world['otherCampaign']->id],
+        ])->assertSessionHasNoErrors()->assertRedirect('/users');
+
+        $client->refresh();
+        $this->assertSame([$world['otherCampaign']->id], $client->campaigns()->pluck('campaigns.id')->all());
+        $this->assertNotSame('Renamed', $client->name);
+        $this->assertTrue($client->is_active);
+
+        $this->put('/users/'.$admin->id, ['campaign_ids' => []])->assertForbidden();
     }
 
     public function test_superadmin_creates_admin_without_campaign_grants(): void

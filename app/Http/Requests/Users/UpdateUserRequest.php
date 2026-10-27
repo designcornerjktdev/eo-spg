@@ -11,7 +11,8 @@ class UpdateUserRequest extends FormRequest
     {
         $target = $this->route('user');
 
-        return ($this->user()?->isSuperadmin() ?? false) && ! $target->isSuperadmin();
+        return ! $target->isSuperadmin()
+            && ($this->user()?->can('update', $target) || $this->user()?->can('manageCampaignAccess', $target));
     }
 
     /**
@@ -22,6 +23,14 @@ class UpdateUserRequest extends FormRequest
     public function rules(): array
     {
         $target = $this->route('user');
+
+        // Admins only change which campaigns a client sees.
+        if (! $this->user()->isSuperadmin()) {
+            return [
+                'campaign_ids' => ['array'],
+                'campaign_ids.*' => ['integer', 'exists:campaigns,id'],
+            ];
+        }
 
         return [
             'name' => ['required', 'string', 'max:255'],
