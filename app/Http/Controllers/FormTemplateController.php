@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Audit\Services\AuditLogger;
+use App\Domain\Forms\FormPresets;
 use App\Domain\Forms\Services\FormDefinitionService;
 use App\Enums\FieldType;
 use App\Enums\FormStatus;
@@ -37,6 +38,7 @@ class FormTemplateController extends Controller
             'campaigns' => Campaign::query()->orderBy('name')->get(['id', 'name']),
             'selectedCampaignId' => $request->integer('campaign_id') ?: null,
             'fieldTypes' => $this->fieldTypes(),
+            'presets' => FormPresets::all(),
         ]);
     }
 

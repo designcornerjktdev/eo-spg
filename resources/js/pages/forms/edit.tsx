@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, useForm } from '@inertiajs/react';
-import { FormEvent } from 'react';
+import { FormEvent, useState } from 'react';
 
 interface Field {
     [key: string]: string | number | boolean | string[] | null;
@@ -24,6 +24,16 @@ interface Field {
     options: string[] | null;
     min_value: number | null;
     max_value: number | null;
+}
+
+interface Preset {
+    id: string;
+    name: string;
+    description: string;
+    requires_consent: boolean;
+    consent_text: string;
+    qualification_enabled: boolean;
+    fields: Field[];
 }
 
 interface Template {
@@ -79,9 +89,11 @@ export default function FormEdit({
     campaigns,
     selectedCampaignId,
     fieldTypes,
+    presets = [],
     locked = false,
     deleteBlocker = null,
 }: {
+    presets?: Preset[];
     template: Template | null;
     campaigns: { id: number; name: string }[];
     selectedCampaignId: number | null;
@@ -107,6 +119,21 @@ export default function FormEdit({
         } else {
             post(route('forms.store'));
         }
+    };
+
+    const [presetId, setPresetId] = useState('');
+
+    const applyPreset = (id: string) => {
+        setPresetId(id);
+        const preset = presets.find((item) => item.id === id);
+        setData({
+            ...data,
+            name: preset?.name ?? 'Form Sampling',
+            requires_consent: preset?.requires_consent ?? false,
+            consent_text: preset?.consent_text ?? '',
+            qualification_enabled: preset?.qualification_enabled ?? false,
+            fields: preset ? preset.fields.map((field) => ({ ...emptyField(), ...field })) : [emptyField()],
+        });
     };
 
     const updateField = (index: number, patch: Partial<Field>) => {
@@ -148,6 +175,21 @@ export default function FormEdit({
                     </div>
                 )}
                 <form onSubmit={submit} className="grid gap-6 rounded-xl border p-4 sm:p-6">
+                    {!template && presets.length > 0 && (
+                        <div className="grid gap-2">
+                            <Label>Template</Label>
+                            <SimpleSelect
+                                value={presetId}
+                                onChange={applyPreset}
+                                emptyLabel="Blank form"
+                                options={presets.map((preset) => ({ value: preset.id, label: preset.name }))}
+                            />
+                            <p className="text-muted-foreground text-sm">
+                                {presets.find((preset) => preset.id === presetId)?.description ??
+                                    'Pick a template to prefill the fields. Choosing one replaces the fields below.'}
+                            </p>
+                        </div>
+                    )}
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="grid gap-2">
                             <Label>Campaign</Label>
