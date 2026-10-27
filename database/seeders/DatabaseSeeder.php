@@ -43,12 +43,12 @@ class DatabaseSeeder extends Seeder
         Storage::disk(SubmissionRecorder::IMAGE_DISK)->deleteDirectory('submissions');
 
         $eo = User::factory()->superadmin()->create([
-            'name' => 'Admin',
-            'email' => 'admin@mail.com',
+            'name' => 'Super Admin',
+            'email' => 'superadmin@mail.com',
         ]);
 
         // Operations admin: runs campaigns, forms and entries; signs in with email or username.
-        User::factory()->adminUser()->create(['name' => 'Ops Admin', 'username' => 'ops', 'email' => 'ops@mail.com']);
+        User::factory()->adminUser()->create(['name' => 'Admin', 'username' => 'admin', 'email' => 'admin@mail.com']);
 
         // Client accounts are read-only and only see the campaigns they are granted below.
         $mayora = User::factory()->clientUser()->create(['name' => 'Client Mayora', 'username' => 'mayora']);
