@@ -174,18 +174,48 @@ export default function CampaignForm({ campaign, footer }: { footer?: React.Reac
                                         />
                                     </Suspense>
                                     <InputError message={fieldError('latitude')} />
-                                    <div className="grid gap-1 sm:max-w-xs">
-                                        <Label htmlFor={`radius-${index}`}>Allowed radius (meters)</Label>
-                                        <Input
-                                            id={`radius-${index}`}
-                                            type="number"
-                                            min={50}
-                                            max={5000}
-                                            step={50}
-                                            value={location.radius_meters}
-                                            onChange={(e) => update({ radius_meters: Number(e.target.value) })}
-                                        />
-                                        <InputError message={fieldError('radius_meters')} />
+                                    <div className="grid gap-3 sm:grid-cols-3">
+                                        {/* Typed coordinates, e.g. pasted from Google Maps; the map pin follows them. */}
+                                        <div className="grid gap-1">
+                                            <Label htmlFor={`latitude-${index}`}>Latitude</Label>
+                                            <Input
+                                                id={`latitude-${index}`}
+                                                type="number"
+                                                min={-90}
+                                                max={90}
+                                                step="any"
+                                                placeholder="-6.1100"
+                                                value={location.latitude ?? ''}
+                                                onChange={(e) => update({ latitude: e.target.value === '' ? null : Number(e.target.value) })}
+                                            />
+                                        </div>
+                                        <div className="grid gap-1">
+                                            <Label htmlFor={`longitude-${index}`}>Longitude</Label>
+                                            <Input
+                                                id={`longitude-${index}`}
+                                                type="number"
+                                                min={-180}
+                                                max={180}
+                                                step="any"
+                                                placeholder="106.7400"
+                                                value={location.longitude ?? ''}
+                                                onChange={(e) => update({ longitude: e.target.value === '' ? null : Number(e.target.value) })}
+                                            />
+                                            <InputError message={fieldError('longitude')} />
+                                        </div>
+                                        <div className="grid gap-1">
+                                            <Label htmlFor={`radius-${index}`}>Allowed radius (meters)</Label>
+                                            <Input
+                                                id={`radius-${index}`}
+                                                type="number"
+                                                min={50}
+                                                max={5000}
+                                                step={50}
+                                                value={location.radius_meters}
+                                                onChange={(e) => update({ radius_meters: Number(e.target.value) })}
+                                            />
+                                            <InputError message={fieldError('radius_meters')} />
+                                        </div>
                                     </div>
                                     <p
                                         className={

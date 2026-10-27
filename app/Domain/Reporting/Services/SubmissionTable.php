@@ -20,7 +20,7 @@ class SubmissionTable
      */
     public function headers(User $viewer, Collection $submissions): array
     {
-        $fixed = ['id', 'campaign', 'location', 'area', 'submitted_at', 'status', 'qualified'];
+        $fixed = ['id', 'campaign', 'location', 'area', 'submitted_at', 'status', 'qualified', 'latitude', 'longitude', 'gps_accuracy_m', 'distance_from_location_m'];
         $fieldKeys = [];
 
         foreach ($submissions as $submission) {
@@ -54,6 +54,11 @@ class SubmissionTable
             'submitted_at' => $submission->submitted_at?->toDateTimeString(),
             'status' => $submission->status->label(),
             'qualified' => $submission->qualified === null ? '' : ($submission->qualified ? 'yes' : 'no'),
+            // Device position at submit time; empty for imported entries or when the browser shared none.
+            'latitude' => $submission->latitude === null ? '' : (string) $submission->latitude,
+            'longitude' => $submission->longitude === null ? '' : (string) $submission->longitude,
+            'gps_accuracy_m' => $submission->location_accuracy_meters === null ? '' : (string) $submission->location_accuracy_meters,
+            'distance_from_location_m' => $submission->distance_meters === null ? '' : (string) $submission->distance_meters,
         ];
 
         $row = [];

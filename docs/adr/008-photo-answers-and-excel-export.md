@@ -26,7 +26,7 @@ Booths want documentation photos (for example a receipt, or a visitor with the p
 
 **Excel export replaces CSV**
 - `/submissions/export` downloads an `.xlsx` file (PhpSpreadsheet). It uses the same columns and field visibility as the screen (`SubmissionTable`) and follows the active filters.
-- Photos appear as JPEG thumbnails generated during the export, because Excel cannot show WebP. Photo cells hold no text or link.
+- Photos appear as JPEG thumbnails generated during the export, because Excel cannot show WebP. Each photo column is followed by a "<label> (link)" column holding the full-size photo URL (`GET /submissions/{id}/files/{field}`) as a clickable link; the thumbnail links there too. The link only opens for a signed-in user who may view that entry.
 - Entries marked invalid are left out of the export.
 
 **Multipart booleans**

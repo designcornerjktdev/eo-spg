@@ -84,11 +84,14 @@ class ImageFieldTest extends TestCase
         $sheet = IOFactory::load($file)->getActiveSheet();
         unlink($file);
 
-        $this->assertSame('Receipt photo', $sheet->getCell('Q1')->getValue());
+        $this->assertSame('Receipt photo', $sheet->getCell('U1')->getValue());
         $this->assertCount(2, $sheet->getDrawingCollection());
-        $this->assertNull($sheet->getCell('Q2')->getValue());
-        $this->assertFalse($sheet->getCell('Q2')->hasHyperlink());
-        $this->assertSame('Siti Aminah', $sheet->getCell('H2')->getValue());
+        $this->assertNull($sheet->getCell('U2')->getValue());
+        $this->assertSame('Receipt photo (link)', $sheet->getCell('V1')->getValue());
+        $this->assertStringContainsString('/submissions/', $sheet->getCell('V2')->getValue());
+        $this->assertSame($sheet->getCell('V2')->getValue(), $sheet->getCell('V2')->getHyperlink()->getUrl());
+        $this->assertSame('Siti Aminah', $sheet->getCell('L2')->getValue());
+        $this->assertSame('latitude', $sheet->getCell('H1')->getValue());
 
         $this->actingAs($world['userB'])->get('/submissions/export')->assertOk();
     }
