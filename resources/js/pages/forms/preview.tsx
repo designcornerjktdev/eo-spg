@@ -1,20 +1,10 @@
 import FormPage from '@/components/form-page';
+import FormPreviewCard, { PreviewField as Field } from '@/components/form-preview';
+import Link from '@/components/link';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
-import { label } from '@/lib/format';
 import { Head } from '@inertiajs/react';
-import Link from '@/components/link';
-
-interface Field {
-    key: string;
-    label: string;
-    type: string;
-    required: boolean;
-    options?: string[] | null;
-}
 
 export default function FormPreview({
     template,
@@ -34,31 +24,7 @@ export default function FormPreview({
                     title={`Preview ${template.name} v${template.version}`}
                     description="How the form looks to consumers on the public link."
                 />
-                <div className="space-y-4 rounded-xl border p-4 sm:p-6">
-                    {template.fields.map((field) => (
-                        <div key={field.key} className="grid gap-2">
-                            <Label>
-                                {field.label}
-                                {field.required ? ' *' : ''}
-                            </Label>
-                            {field.type === 'yes_no' ? (
-                                <div className="grid grid-cols-2 gap-2">
-                                    <Button type="button" variant="outline" className="h-14">
-                                        Yes
-                                    </Button>
-                                    <Button type="button" variant="outline" className="h-14">
-                                        No
-                                    </Button>
-                                </div>
-                            ) : field.type === 'long_text' ? (
-                                <textarea className="border-input min-h-24 rounded-md border p-2" disabled />
-                            ) : (
-                                <Input disabled placeholder={label('fieldType', field.type)} />
-                            )}
-                        </div>
-                    ))}
-                    {template.requires_consent && <p className="text-sm">{template.consent_text}</p>}
-                </div>
+                <FormPreviewCard fields={template.fields} requiresConsent={template.requires_consent} consentText={template.consent_text} />
                 <div className="flex justify-end gap-2">
                     <Button asChild variant="outline">
                         <Link href={route('forms.index')}>Back to list</Link>

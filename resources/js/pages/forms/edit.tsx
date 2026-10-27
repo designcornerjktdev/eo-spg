@@ -1,7 +1,7 @@
 import DangerZone from '@/components/danger-zone';
 import FormPage from '@/components/form-page';
+import FormPreviewCard from '@/components/form-preview';
 import InputError from '@/components/input-error';
-import Link from '@/components/link';
 import PageHeader from '@/components/page-header';
 import { SimpleSelect } from '@/components/simple-select';
 import { TagInput } from '@/components/tag-input';
@@ -151,7 +151,7 @@ export default function FormEdit({
             ]}
         >
             <Head title={template ? `Form ${template.name}` : 'Create form'} />
-            <FormPage width="xl">
+            <FormPage width="2xl">
                 <PageHeader
                     title={template ? `${template.name} v${template.version}` : 'Create form'}
                     description={
@@ -160,9 +160,6 @@ export default function FormEdit({
                 />
                 {template && (
                     <div className="flex flex-wrap gap-2">
-                        <Button asChild variant="outline">
-                            <Link href={route('forms.preview', template.id)}>Preview</Link>
-                        </Button>
                         {template.status === 'draft' && (
                             <Button type="button" onClick={() => router.post(route('forms.publish', template.id))}>
                                 Publish
@@ -175,151 +172,157 @@ export default function FormEdit({
                         )}
                     </div>
                 )}
-                <form onSubmit={submit} className="grid gap-6 rounded-xl border p-4 sm:p-6">
-                    {!template && presets.length > 0 && (
-                        <div className="grid gap-2">
-                            <Label>Template</Label>
-                            <SimpleSelect
-                                value={presetId}
-                                onChange={applyPreset}
-                                emptyLabel="Blank form"
-                                options={presets.map((preset) => ({ value: preset.id, label: preset.name }))}
-                            />
-                            <p className="text-muted-foreground text-sm">
-                                {presets.find((preset) => preset.id === presetId)?.description ??
-                                    'Pick a template to prefill the fields. Choosing one replaces the fields below.'}
-                            </p>
+                <div className="grid items-start gap-6 lg:grid-cols-2">
+                    <form onSubmit={submit} className="grid gap-6 rounded-xl border p-4 sm:p-6">
+                        {!template && presets.length > 0 && (
+                            <div className="grid gap-2">
+                                <Label>Template</Label>
+                                <SimpleSelect
+                                    value={presetId}
+                                    onChange={applyPreset}
+                                    emptyLabel="Blank form"
+                                    options={presets.map((preset) => ({ value: preset.id, label: preset.name }))}
+                                />
+                                <p className="text-muted-foreground text-sm">
+                                    {presets.find((preset) => preset.id === presetId)?.description ??
+                                        'Pick a template to prefill the fields. Choosing one replaces the fields below.'}
+                                </p>
+                            </div>
+                        )}
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="grid gap-2">
+                                <Label>Campaign</Label>
+                                <SimpleSelect
+                                    value={String(data.campaign_id ?? '')}
+                                    onChange={(campaignId) => setData('campaign_id', campaignId)}
+                                    disabled={locked}
+                                    placeholder="Select a campaign"
+                                    options={campaigns.map((campaign) => ({ value: String(campaign.id), label: campaign.name }))}
+                                />
+                                <InputError message={errors.campaign_id} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Form name</Label>
+                                <Input value={data.name} onChange={(e) => setData('name', e.target.value)} disabled={locked} />
+                            </div>
                         </div>
-                    )}
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <div className="grid gap-2">
-                            <Label>Campaign</Label>
-                            <SimpleSelect
-                                value={String(data.campaign_id ?? '')}
-                                onChange={(campaignId) => setData('campaign_id', campaignId)}
+                        <label className="flex items-center gap-2 text-sm">
+                            <Checkbox
+                                checked={data.requires_consent}
+                                onCheckedChange={(checked) => setData('requires_consent', checked === true)}
                                 disabled={locked}
-                                placeholder="Select a campaign"
-                                options={campaigns.map((campaign) => ({ value: String(campaign.id), label: campaign.name }))}
                             />
-                            <InputError message={errors.campaign_id} />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label>Form name</Label>
-                            <Input value={data.name} onChange={(e) => setData('name', e.target.value)} disabled={locked} />
-                        </div>
-                    </div>
-                    <label className="flex items-center gap-2 text-sm">
-                        <Checkbox
-                            checked={data.requires_consent}
-                            onCheckedChange={(checked) => setData('requires_consent', checked === true)}
-                            disabled={locked}
-                        />
-                        Require consent
-                    </label>
-                    {data.requires_consent && (
-                        <Textarea
-                            value={data.consent_text}
-                            onChange={(e) => setData('consent_text', e.target.value)}
-                            disabled={locked}
-                            placeholder="Consent text"
-                        />
-                    )}
-                    <label className="flex items-center gap-2 text-sm">
-                        <Checkbox
-                            checked={data.qualification_enabled}
-                            onCheckedChange={(checked) => setData('qualification_enabled', checked === true)}
-                            disabled={locked}
-                        />
-                        Qualification: every Yes/No answer must be Yes
-                    </label>
+                            Require consent
+                        </label>
+                        {data.requires_consent && (
+                            <Textarea
+                                value={data.consent_text}
+                                onChange={(e) => setData('consent_text', e.target.value)}
+                                disabled={locked}
+                                placeholder="Consent text"
+                            />
+                        )}
+                        <label className="flex items-center gap-2 text-sm">
+                            <Checkbox
+                                checked={data.qualification_enabled}
+                                onCheckedChange={(checked) => setData('qualification_enabled', checked === true)}
+                                disabled={locked}
+                            />
+                            Qualification: every Yes/No answer must be Yes
+                        </label>
 
-                    <div className="space-y-4">
-                        {data.fields.map((field, index) => (
-                            <div key={index} className="grid gap-3 rounded-lg border p-4">
-                                <div className="grid gap-3 md:grid-cols-[2fr_1fr]">
-                                    <Input
-                                        placeholder="Label"
-                                        value={field.label}
-                                        disabled={locked}
-                                        onChange={(e) => updateField(index, { label: e.target.value })}
-                                    />
-                                    <SimpleSelect
-                                        value={field.type}
-                                        disabled={locked}
-                                        onChange={(type) =>
-                                            updateField(index, {
-                                                type,
-                                                // Only number/choice fields can be charted; drop the flag for other types.
-                                                ...(DASHBOARD_TYPES.includes(type) ? {} : { show_on_dashboard: false }),
-                                            })
-                                        }
-                                        options={fieldTypes}
-                                    />
-                                </div>
-                                {['single_choice', 'multiple_choice'].includes(field.type) && (
-                                    <TagInput
-                                        disabled={locked}
-                                        placeholder="Add an option, then press Enter"
-                                        value={field.options ?? []}
-                                        onChange={(options) => updateField(index, { options })}
-                                    />
-                                )}
-                                <div className="flex flex-wrap gap-4 text-sm">
-                                    <label className="flex items-center gap-2">
-                                        <Checkbox
-                                            checked={field.required}
+                        <div className="space-y-4">
+                            {data.fields.map((field, index) => (
+                                <div key={index} className="grid gap-3 rounded-lg border p-4">
+                                    <div className="grid gap-3 md:grid-cols-[2fr_1fr]">
+                                        <Input
+                                            placeholder="Label"
+                                            value={field.label}
                                             disabled={locked}
-                                            onCheckedChange={(checked) => updateField(index, { required: checked === true })}
+                                            onChange={(e) => updateField(index, { label: e.target.value })}
                                         />
-                                        Required
-                                    </label>
-                                    <label className="flex items-center gap-2">
-                                        <Checkbox
-                                            checked={field.visible_to_client}
+                                        <SimpleSelect
+                                            value={field.type}
                                             disabled={locked}
-                                            onCheckedChange={(checked) => updateField(index, { visible_to_client: checked === true })}
+                                            onChange={(type) =>
+                                                updateField(index, {
+                                                    type,
+                                                    // Only number/choice fields can be charted; drop the flag for other types.
+                                                    ...(DASHBOARD_TYPES.includes(type) ? {} : { show_on_dashboard: false }),
+                                                })
+                                            }
+                                            options={fieldTypes}
                                         />
-                                        Visible to client
-                                    </label>
-                                    {/* Yes/No and free-text answers have no dashboard chart; Yes/No feeds qualification instead. */}
-                                    {DASHBOARD_TYPES.includes(field.type) && (
+                                    </div>
+                                    {['single_choice', 'multiple_choice'].includes(field.type) && (
+                                        <TagInput
+                                            disabled={locked}
+                                            placeholder="Add an option, then press Enter"
+                                            value={field.options ?? []}
+                                            onChange={(options) => updateField(index, { options })}
+                                        />
+                                    )}
+                                    <div className="flex flex-wrap gap-4 text-sm">
                                         <label className="flex items-center gap-2">
                                             <Checkbox
-                                                checked={field.show_on_dashboard}
+                                                checked={field.required}
                                                 disabled={locked}
-                                                onCheckedChange={(checked) => updateField(index, { show_on_dashboard: checked === true })}
+                                                onCheckedChange={(checked) => updateField(index, { required: checked === true })}
                                             />
-                                            Dashboard
+                                            Required
                                         </label>
+                                        <label className="flex items-center gap-2">
+                                            <Checkbox
+                                                checked={field.visible_to_client}
+                                                disabled={locked}
+                                                onCheckedChange={(checked) => updateField(index, { visible_to_client: checked === true })}
+                                            />
+                                            Visible to client
+                                        </label>
+                                        {/* Yes/No and free-text answers have no dashboard chart; Yes/No feeds qualification instead. */}
+                                        {DASHBOARD_TYPES.includes(field.type) && (
+                                            <label className="flex items-center gap-2">
+                                                <Checkbox
+                                                    checked={field.show_on_dashboard}
+                                                    disabled={locked}
+                                                    onCheckedChange={(checked) => updateField(index, { show_on_dashboard: checked === true })}
+                                                />
+                                                Dashboard
+                                            </label>
+                                        )}
+                                    </div>
+                                    {!locked && data.fields.length > 1 && (
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() =>
+                                                setData(
+                                                    'fields',
+                                                    data.fields.filter((_, i) => i !== index),
+                                                )
+                                            }
+                                        >
+                                            Remove field
+                                        </Button>
                                     )}
                                 </div>
-                                {!locked && data.fields.length > 1 && (
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() =>
-                                            setData(
-                                                'fields',
-                                                data.fields.filter((_, i) => i !== index),
-                                            )
-                                        }
-                                    >
-                                        Remove field
-                                    </Button>
-                                )}
-                            </div>
-                        ))}
-                        {!locked && (
-                            <Button type="button" variant="outline" onClick={() => setData('fields', [...data.fields, emptyField()])}>
-                                Add field
-                            </Button>
-                        )}
-                        <InputError message={errors.fields} />
-                        <InputError message={(errors as Record<string, string>).form} />
-                    </div>
-                    {!locked && <Button disabled={processing}>Save form</Button>}
-                </form>
+                            ))}
+                            {!locked && (
+                                <Button type="button" variant="outline" onClick={() => setData('fields', [...data.fields, emptyField()])}>
+                                    Add field
+                                </Button>
+                            )}
+                            <InputError message={errors.fields} />
+                            <InputError message={(errors as Record<string, string>).form} />
+                        </div>
+                        {!locked && <Button disabled={processing}>Save form</Button>}
+                    </form>
+                    <aside className="space-y-2 lg:sticky lg:top-4 lg:max-h-[calc(100svh-2rem)] lg:overflow-y-auto">
+                        <h2 className="text-muted-foreground text-sm font-medium">Preview</h2>
+                        <FormPreviewCard fields={data.fields} requiresConsent={data.requires_consent} consentText={data.consent_text} />
+                    </aside>
+                </div>
                 {template && (
                     <DangerZone
                         title="Delete form"

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
 import { label } from '@/lib/format';
 import { Head } from '@inertiajs/react';
-import { Eye, Pencil } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 
 interface TemplateRow {
     id: number;
@@ -52,7 +52,6 @@ export default function FormsIndex({
                                 </td>
                                 <td className="px-3 py-1">
                                     <div className="flex gap-1">
-                                        <IconAction icon={Eye} label="Preview form" href={route('forms.preview', template.id)} />
                                         <IconAction icon={Pencil} label="Manage form" href={route('forms.edit', template.id)} />
                                     </div>
                                 </td>
