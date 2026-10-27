@@ -65,8 +65,6 @@ export default function CampaignShow({ campaign, accepting }: { campaign: Campai
                         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
                             <dt className="text-muted-foreground">Period</dt>
                             <dd>{formatDateRange(campaign.starts_on, campaign.ends_on)}</dd>
-                            <dt className="text-muted-foreground">Identity masking</dt>
-                            <dd>{campaign.mask_identity_for_client ? 'Yes, consumer identity is masked for the client' : 'No'}</dd>
                             <dt className="text-muted-foreground">Client access</dt>
                             <dd>
                                 {campaign.viewers.length === 0 ? 'No client accounts yet' : campaign.viewers.map((viewer) => viewer.name).join(', ')}

@@ -33,7 +33,7 @@ class DashboardAndExportTest extends TestCase
         $this->assertGreaterThan(0, AuditLog::query()->count());
     }
 
-    public function test_client_cannot_see_hidden_or_unmasked_identity_fields(): void
+    public function test_client_sees_identity_unmasked_but_not_hidden_fields(): void
     {
         $world = $this->world();
         $world['form']->fields()->where('key', 'pekerjaan')->update(['visible_to_client' => false]);
@@ -44,8 +44,8 @@ class DashboardAndExportTest extends TestCase
         $response = $this->actingAs($world['userA'])->get('/submissions/'.$submission->id);
         $response->assertOk();
         $response->assertDontSee('Karyawan');
-        $response->assertDontSee('081234567890');
-        $response->assertDontSee('Siti Aminah');
+        $response->assertSee('081234567890');
+        $response->assertSee('Siti Aminah');
     }
 
     public function test_client_cannot_open_other_client_submission(): void
