@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class CompanyController extends Controller
 {
@@ -53,12 +53,19 @@ class CompanyController extends Controller
     /**
      * Served through a route instead of storage:link so it also works where symlinks are unavailable.
      */
-    public function logo(): StreamedResponse
+    public function logo(): BinaryFileResponse
     {
         $path = Branding::logoPath();
-        abort_unless($path && Storage::disk(Branding::DISK)->exists($path), 404);
+        $disk = Storage::disk(Branding::DISK);
+        abort_unless($path && $disk->exists($path), 404);
 
-        return Storage::disk(Branding::DISK)->response($path, null, [
+        // Stray buffered output (common on shared hosting) would corrupt the image bytes.
+        while (! app()->runningUnitTests() && ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        return response()->file($disk->path($path), [
+            'Content-Type' => $disk->mimeType($path) ?: 'application/octet-stream',
             'Cache-Control' => 'public, max-age=31536000, immutable',
             'X-Content-Type-Options' => 'nosniff',
         ]);

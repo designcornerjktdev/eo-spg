@@ -36,8 +36,9 @@ class Branding
 
         return [
             'name' => static::companyName(),
+            // Base URL keeps the link working when the app lives in a subfolder (e.g. /eo-spg).
             // Version query busts the browser cache when the logo is replaced.
-            'logo_url' => $path ? route('branding.logo', ['v' => substr(md5($path), 0, 8)], false) : null,
+            'logo_url' => $path ? request()->getBaseUrl().route('branding.logo', ['v' => substr(md5($path), 0, 8)], false) : null,
         ];
     }
 }
