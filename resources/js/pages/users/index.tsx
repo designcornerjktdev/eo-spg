@@ -3,6 +3,7 @@ import InputError from '@/components/input-error';
 import PageHeader from '@/components/page-header';
 import Pagination from '@/components/pagination';
 import { PasswordInput } from '@/components/password-input';
+import { SimpleSelect } from '@/components/simple-select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -75,27 +76,29 @@ export default function UsersIndex({
                     onChange={(e) => setSearch(e.target.value)}
                 />
                 {isSuperadmin && (
-                    <select
+                    <SimpleSelect
                         aria-label="Filter role"
-                        className="border-input bg-background h-9 rounded-md border px-2 text-sm"
+                        className="w-full sm:w-40"
                         value={filters.role ?? ''}
-                        onChange={(e) => applyFilters({ role: e.target.value })}
-                    >
-                        <option value="">All roles</option>
-                        <option value="admin">Admin</option>
-                        <option value="client">Client</option>
-                    </select>
+                        onChange={(role) => applyFilters({ role })}
+                        emptyLabel="All roles"
+                        options={[
+                            { value: 'admin', label: 'Admin' },
+                            { value: 'client', label: 'Client' },
+                        ]}
+                    />
                 )}
-                <select
+                <SimpleSelect
                     aria-label="Filter status"
-                    className="border-input bg-background h-9 rounded-md border px-2 text-sm"
+                    className="w-full sm:w-40"
                     value={filters.status ?? ''}
-                    onChange={(e) => applyFilters({ status: e.target.value })}
-                >
-                    <option value="">All statuses</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                </select>
+                    onChange={(status) => applyFilters({ status })}
+                    emptyLabel="All statuses"
+                    options={[
+                        { value: 'active', label: 'Active' },
+                        { value: 'inactive', label: 'Inactive' },
+                    ]}
+                />
                 <Button type="submit" variant="outline">
                     Search
                 </Button>

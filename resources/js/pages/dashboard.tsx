@@ -1,5 +1,6 @@
 import { Histogram, HourlyChart, QualifiedGauge, RankedBars, ShareDonut, TrendChart } from '@/components/dashboard-charts';
 import PageHeader from '@/components/page-header';
+import { SimpleSelect } from '@/components/simple-select';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -262,19 +263,14 @@ function FilterSelect({ label, value, options, onChange }: { label: string; valu
             <Label htmlFor={id} className="text-xs">
                 {label}
             </Label>
-            <select
+            <SimpleSelect
                 id={id}
-                className="border-input bg-background h-9 min-w-44 rounded-md border px-2 text-sm"
+                className="min-w-44"
                 value={value ?? ''}
-                onChange={(e) => onChange(e.target.value)}
-            >
-                <option value="">All</option>
-                {options.map((option) => (
-                    <option key={option.id} value={option.id}>
-                        {option.name}
-                    </option>
-                ))}
-            </select>
+                onChange={onChange}
+                emptyLabel="All"
+                options={options.map((option) => ({ value: String(option.id), label: option.name }))}
+            />
         </div>
     );
 }

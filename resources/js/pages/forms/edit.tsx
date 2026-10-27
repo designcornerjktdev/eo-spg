@@ -1,7 +1,9 @@
 import DangerZone from '@/components/danger-zone';
 import FormPage from '@/components/form-page';
 import InputError from '@/components/input-error';
+import Link from '@/components/link';
 import PageHeader from '@/components/page-header';
+import { SimpleSelect } from '@/components/simple-select';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -9,7 +11,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, useForm } from '@inertiajs/react';
-import Link from '@/components/link';
 import { FormEvent } from 'react';
 
 interface Field {
@@ -129,19 +130,13 @@ export default function FormEdit({
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="grid gap-2">
                             <Label>Campaign</Label>
-                            <select
-                                className="border-input h-9 rounded-md border px-2"
-                                value={data.campaign_id}
-                                onChange={(e) => setData('campaign_id', e.target.value)}
+                            <SimpleSelect
+                                value={String(data.campaign_id ?? '')}
+                                onChange={(campaignId) => setData('campaign_id', campaignId)}
                                 disabled={locked}
-                            >
-                                <option value="">Select a campaign</option>
-                                {campaigns.map((campaign) => (
-                                    <option key={campaign.id} value={campaign.id}>
-                                        {campaign.name}
-                                    </option>
-                                ))}
-                            </select>
+                                placeholder="Select a campaign"
+                                options={campaigns.map((campaign) => ({ value: String(campaign.id), label: campaign.name }))}
+                            />
                             <InputError message={errors.campaign_id} />
                         </div>
                         <div className="grid gap-2">
@@ -195,24 +190,18 @@ export default function FormEdit({
                                         disabled={locked}
                                         onChange={(e) => updateField(index, { key: e.target.value })}
                                     />
-                                    <select
-                                        className="border-input h-9 rounded-md border px-2"
+                                    <SimpleSelect
                                         value={field.type}
                                         disabled={locked}
-                                        onChange={(e) =>
+                                        onChange={(type) =>
                                             updateField(index, {
-                                                type: e.target.value,
+                                                type,
                                                 // Only number/choice fields can be charted; drop the flag for other types.
-                                                ...(DASHBOARD_TYPES.includes(e.target.value) ? {} : { show_on_dashboard: false }),
+                                                ...(DASHBOARD_TYPES.includes(type) ? {} : { show_on_dashboard: false }),
                                             })
                                         }
-                                    >
-                                        {fieldTypes.map((type) => (
-                                            <option key={type.value} value={type.value}>
-                                                {type.label}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        options={fieldTypes}
+                                    />
                                 </div>
                                 {['single_choice', 'multiple_choice'].includes(field.type) && (
                                     <Input

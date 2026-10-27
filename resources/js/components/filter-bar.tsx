@@ -1,3 +1,4 @@
+import { SimpleSelect } from '@/components/simple-select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { router } from '@inertiajs/react';
@@ -39,20 +40,15 @@ export default function FilterBar({
         >
             <Input className="w-full sm:w-64" placeholder={searchPlaceholder} value={search} onChange={(e) => setSearch(e.target.value)} />
             {selects.map((select) => (
-                <select
+                <SimpleSelect
                     key={select.name}
                     aria-label={select.label}
-                    className="border-input bg-background h-9 rounded-md border px-2 text-sm"
+                    className="w-full sm:w-44"
                     value={String(filters[select.name] ?? '')}
-                    onChange={(e) => apply({ [select.name]: e.target.value })}
-                >
-                    <option value="">{select.label}</option>
-                    {select.options.map((option) => (
-                        <option key={option.value} value={option.value}>
-                            {option.label}
-                        </option>
-                    ))}
-                </select>
+                    onChange={(value) => apply({ [select.name]: value })}
+                    emptyLabel={select.label}
+                    options={select.options.map((option) => ({ value: String(option.value), label: option.label }))}
+                />
             ))}
             <Button type="submit" variant="outline">
                 Search

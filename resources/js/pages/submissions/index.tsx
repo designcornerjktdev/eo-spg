@@ -1,12 +1,13 @@
+import Link from '@/components/link';
 import PageHeader from '@/components/page-header';
 import Pagination from '@/components/pagination';
+import { SimpleSelect } from '@/components/simple-select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { formatDateTime, label } from '@/lib/format';
 import { Head, router } from '@inertiajs/react';
-import Link from '@/components/link';
 import { FormEvent } from 'react';
 
 interface SubmissionRow {
@@ -56,7 +57,11 @@ export default function SubmissionsIndex({
                 <div className="flex items-end gap-2 md:col-span-6">
                     <Button type="submit">Filter</Button>
                     <Button asChild variant="outline">
-                        <a href={`${route('submissions.export')}?${new URLSearchParams(Object.entries(filters).filter(([, value]) => value)).toString()}`}>Export Excel</a>
+                        <a
+                            href={`${route('submissions.export')}?${new URLSearchParams(Object.entries(filters).filter(([, value]) => value)).toString()}`}
+                        >
+                            Export Excel
+                        </a>
                     </Button>
                 </div>
             </form>
@@ -97,14 +102,12 @@ function FilterSelect({ name, label, value, options }: { name: string; label: st
     return (
         <div>
             <Label>{label}</Label>
-            <select name={name} defaultValue={value ?? ''} className="border-input h-9 w-full rounded-md border px-2 text-sm">
-                <option value="">All</option>
-                {options.map((option) => (
-                    <option key={option.id} value={option.id}>
-                        {option.name}
-                    </option>
-                ))}
-            </select>
+            <SimpleSelect
+                name={name}
+                defaultValue={value ?? ''}
+                emptyLabel="All"
+                options={options.map((option) => ({ value: String(option.id), label: option.name }))}
+            />
         </div>
     );
 }

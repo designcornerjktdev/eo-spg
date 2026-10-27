@@ -3,6 +3,7 @@ import FormPage from '@/components/form-page';
 import InputError from '@/components/input-error';
 import PageHeader from '@/components/page-header';
 import { PasswordInput } from '@/components/password-input';
+import { SimpleSelect } from '@/components/simple-select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -61,15 +62,15 @@ export default function UserCreate({ campaigns }: { campaigns: CampaignOption[] 
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="role">Role</Label>
-                        <select
+                        <SimpleSelect
                             id="role"
-                            className="border-input bg-background h-9 rounded-md border px-2 text-sm"
                             value={data.role}
-                            onChange={(e) => setData('role', e.target.value)}
-                        >
-                            <option value="client">Client: dashboard and entries of granted campaigns</option>
-                            <option value="admin">Admin: runs campaigns, forms and entries</option>
-                        </select>
+                            onChange={(role) => setData('role', role)}
+                            options={[
+                                { value: 'client', label: 'Client: dashboard and entries of granted campaigns' },
+                                { value: 'admin', label: 'Admin: runs campaigns, forms and entries' },
+                            ]}
+                        />
                         <InputError message={errors.role} />
                     </div>
                     {data.role === 'admin' && (
