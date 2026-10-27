@@ -4,6 +4,7 @@ import InputError from '@/components/input-error';
 import Link from '@/components/link';
 import PageHeader from '@/components/page-header';
 import { SimpleSelect } from '@/components/simple-select';
+import { TagInput } from '@/components/tag-input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -256,18 +257,11 @@ export default function FormEdit({
                                     />
                                 </div>
                                 {['single_choice', 'multiple_choice'].includes(field.type) && (
-                                    <Input
+                                    <TagInput
                                         disabled={locked}
-                                        placeholder="Options, comma separated"
-                                        value={(field.options ?? []).join(', ')}
-                                        onChange={(e) =>
-                                            updateField(index, {
-                                                options: e.target.value
-                                                    .split(',')
-                                                    .map((item) => item.trim())
-                                                    .filter(Boolean),
-                                            })
-                                        }
+                                        placeholder="Add an option, then press Enter"
+                                        value={field.options ?? []}
+                                        onChange={(options) => updateField(index, { options })}
                                     />
                                 )}
                                 <div className="flex flex-wrap gap-4 text-sm">
